@@ -1,0 +1,537 @@
+﻿<!DOCTYPE html>
+
+<html class="light" lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Adicionar/Editar Servidor - Sys RH SEPLAN</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Material Symbols -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Public+Sans:ital,wght@0,100..900;1,100..900&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Theme Configuration -->
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0d7ff2",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Public Sans", "Noto Sans", "sans-serif"],
+                        "body": ["Public Sans", "Noto Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: "Public Sans", "Noto Sans", sans-serif;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 24px;
+            vertical-align: middle;
+        }
+
+        .icon-fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-[#111418] dark:text-white antialiased overflow-x-hidden">
+    <div class="relative flex h-screen w-full flex-row overflow-hidden">
+        <!-- SideNavBar -->
+        <aside
+            class="w-72 flex-shrink-0 border-r border-[#f0f2f5] dark:border-[#24303f] bg-white dark:bg-[#1A2633] hidden lg:flex flex-col overflow-y-auto">
+            <div class="flex flex-col h-full justify-between p-4">
+                <div class="flex flex-col gap-4">
+                    <!-- User/Org Profile -->
+                    <div class="flex gap-3 items-center mb-6">
+                        <div class="bg-center bg-no-repeat bg-cover rounded-full size-12 shadow-sm border border-gray-100"
+                            data-alt="Official logo of Sao Luis City Hall"
+                            style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAW4_dAQlCe8caYVtoPcFhMOG6S3cyAeEKKdJQyzM0XUoKryoSxeChKv4kWGqMy1L6CERiuTylmHaSCAq3MXaxHP8aOA0QJz68jD1VcgSfIODHUI27BD4P1J2JwjCOmmy17Squ2o2gzm4qu5t6E1uegF8x32KPADQ9Jvd2RlRc9wp0M_KGR7wyLZvqkmBJWgopU11oJBrjFwACLGn4Gk7Byu3rpIAv6rlwYEmbw177xl8sz4rQ5Cj0FAXuFPpGJj80LSbi8n95wMQOk");'>
+                        </div>
+                        <div class="flex flex-col">
+                            <h1 class="text-[#111418] dark:text-white text-base font-bold leading-normal">Pref. São Luís
+                            </h1>
+                            <p class="text-[#60758a] dark:text-gray-400 text-sm font-normal leading-normal">RH SEPLAN
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Navigation Links -->
+                    <nav class="flex flex-col gap-2">
+                        <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#60758a] dark:text-gray-300 hover:bg-[#f0f2f5] dark:hover:bg-[#2A3B4D] transition-colors group"
+                            href="dashboard.html">
+                            <span
+                                class="material-symbols-outlined text-[#60758a] dark:text-gray-400 group-hover:text-[#111418] dark:group-hover:text-white">dashboard</span>
+                            <p
+                                class="text-sm font-medium leading-normal group-hover:text-[#111418] dark:group-hover:text-white">
+                                Painel de Controle</p>
+                        </a>
+                        <!-- Active State -->
+                        <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary dark:text-primary-400"
+                            href="servidores.html">
+                            <span class="material-symbols-outlined icon-fill">group</span>
+                            <p class="text-sm font-bold leading-normal">Servidores</p>
+                        </a>
+
+                        <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#60758a] dark:text-gray-300 hover:bg-[#f0f2f5] dark:hover:bg-[#2A3B4D] transition-colors group"
+                            href="relatorios.html">
+                            <span
+                                class="material-symbols-outlined text-[#60758a] dark:text-gray-400 group-hover:text-[#111418] dark:group-hover:text-white">description</span>
+                            <p
+                                class="text-sm font-medium leading-normal group-hover:text-[#111418] dark:group-hover:text-white">
+                                Relatórios</p>
+                        </a>
+                    </nav>
+                </div>
+                <div class="mt-auto pt-6 border-t border-[#f0f2f5] dark:border-[#24303f]">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#60758a] dark:text-gray-300 hover:bg-[#f0f2f5] dark:hover:bg-[#2A3B4D] transition-colors group"
+                        href="configuracoes.html">
+                        <span
+                            class="material-symbols-outlined text-[#60758a] dark:text-gray-400 group-hover:text-[#111418] dark:group-hover:text-white">settings</span>
+                        <p
+                            class="text-sm font-medium leading-normal group-hover:text-[#111418] dark:group-hover:text-white">
+                            Configurações</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors group"
+                        href="#" onclick="localStorage.removeItem('token'); window.location.href='index.html'">
+                        <span class="material-symbols-outlined text-red-500">logout</span>
+                        <p class="text-sm font-medium leading-normal">Sair</p>
+                    </a>
+                </div>
+            </div>
+        </aside>
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+            <!-- TopNavBar -->
+            <header
+                class="flex-shrink-0 flex items-center justify-between whitespace-nowrap border-b border-solid border-[#f0f2f5] dark:border-[#24303f] bg-white dark:bg-[#1A2633] px-6 lg:px-10 py-3 z-10">
+                <div class="flex items-center gap-4 lg:gap-8">
+                    <!-- Mobile Menu Button (Hidden on LG) -->
+                    <button class="lg:hidden p-2 text-[#60758a] dark:text-gray-300">
+                        <span class="material-symbols-outlined">menu</span>
+                    </button>
+                    <div class="flex items-center gap-4 text-[#111418] dark:text-white">
+                        <div class="size-8 text-primary">
+                            <span class="material-symbols-outlined text-3xl">account_balance</span>
+                        </div>
+                        <h2
+                            class="text-[#111418] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] hidden sm:block">
+                            Sys RH SEPLAN</h2>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-4 lg:gap-8">
+                    <div class="flex gap-2">
+                        <button
+                            class="flex items-center justify-center rounded-lg size-10 bg-[#f0f2f5] dark:bg-[#2A3B4D] text-[#111418] dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                            <span class="material-symbols-outlined" style="font-size: 20px;">notifications</span>
+                        </button>
+                    </div>
+                    <div class="bg-center bg-no-repeat bg-cover rounded-full size-10 ring-2 ring-white dark:ring-[#1A2633] cursor-pointer"
+                        data-alt="User profile photo"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAIbB8vapqqChqGFotUZDrgaVDntqvA6sS7IlmdIXs7zEtaKcDPzr5Vo4cyhuhXrzxCLfC5I_cuubSrXsPMmGfd8Ijo3fFnJSKoRXwP_44hBZq3pGYG_VXuDQSXj_T2ggZZsDPr598v-vbt3Oq0Cw5LgMB-LIJuh0abkHt5R2jJR3DQwg8b9f6gl_u04THAFjED-v0rPlwNe3h6CPq2MA6dpoQhfpvEuq_kxmRRIR7BuwJF28w64cAk3oABqYiLmCQR3JxDW0G2SIaA");'>
+                    </div>
+                </div>
+            </header>
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark">
+                <div class="container mx-auto max-w-5xl px-4 py-6 md:px-8 md:py-10">
+                    <!-- Breadcrumbs -->
+                    <nav class="flex flex-wrap gap-2 mb-6">
+                        <a class="text-[#60758a] dark:text-gray-400 text-sm font-medium leading-normal hover:text-primary transition-colors"
+                            href="dashboard.html">Início</a>
+                        <span class="text-[#60758a] dark:text-gray-500 text-sm font-medium leading-normal">/</span>
+                        <a class="text-[#60758a] dark:text-gray-400 text-sm font-medium leading-normal hover:text-primary transition-colors"
+                            href="servidores.html">Servidores</a>
+                        <span class="text-[#60758a] dark:text-gray-500 text-sm font-medium leading-normal">/</span>
+                        <span id="page-breadcrumb"
+                            class="text-[#111418] dark:text-white text-sm font-medium leading-normal">Adicionar
+                            Novo</span>
+                    </nav>
+                    <!-- Page Heading -->
+                    <div class="flex flex-wrap justify-between items-end gap-4 mb-8">
+                        <div class="flex flex-col gap-2">
+                            <h1 id="page-title"
+                                class="text-[#111418] dark:text-white text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">
+                                Adicionar Novo Servidor</h1>
+                            <p class="text-[#60758a] dark:text-gray-400 text-base font-normal leading-normal max-w-2xl">
+                                Preencha o formulário abaixo para cadastrar ou editar um servidor público no sistema da
+                                Prefeitura.</p>
+                        </div>
+                    </div>
+                    <!-- Main Form Card -->
+                    <form id="servidorForm"
+                        class="bg-white dark:bg-[#1A2633] rounded-xl shadow-sm border border-[#e5e7eb] dark:border-[#24303f]">
+                        <!-- Section: Dados Pessoais -->
+                        <div class="p-6 md:p-8 border-b border-[#f0f2f5] dark:border-[#24303f]">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-primary">
+                                    <span class="material-symbols-outlined">person</span>
+                                </div>
+                                <h3 class="text-[#111418] dark:text-white text-lg font-bold leading-tight">Dados
+                                    Pessoais</h3>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
+                                <!-- Nome Completo -->
+                                <div class="lg:col-span-12">
+                                    <label class="mb-2 block text-sm font-medium text-[#111418] dark:text-white">Nome
+                                        Completo</label>
+                                    <input id="NOME_SERV" name="NOME_SERV"
+                                        class="w-full rounded-lg border border-[#dce0e5] dark:border-gray-600 bg-white dark:bg-[#2A3B4D] px-4 py-2.5 text-[#111418] dark:text-white placeholder:text-[#60758a] dark:placeholder:text-gray-500 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-shadow"
+                                        placeholder="Ex: João da Silva Santos" type="text" required />
+                                </div>
+                                <!-- CPF -->
+                                <div class="lg:col-span-4">
+                                    <label
+                                        class="mb-2 block text-sm font-medium text-[#111418] dark:text-white">CPF</label>
+                                    <input id="CPF_SERV" name="CPF_SERV"
+                                        class="w-full rounded-lg border border-[#dce0e5] dark:border-gray-600 bg-white dark:bg-[#2A3B4D] px-4 py-2.5 text-[#111418] dark:text-white placeholder:text-[#60758a] dark:placeholder:text-gray-500 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-shadow"
+                                        placeholder="000.000.000-00" type="text" />
+                                </div>
+                                <!-- Data de Nascimento -->
+                                <div class="lg:col-span-4">
+                                    <label class="mb-2 block text-sm font-medium text-[#111418] dark:text-white">Data de
+                                        Nascimento</label>
+                                    <input id="NASCIMENTO_SERV" name="NASCIMENTO_SERV"
+                                        class="w-full rounded-lg border border-[#dce0e5] dark:border-gray-600 bg-white dark:bg-[#2A3B4D] px-4 py-2.5 text-[#111418] dark:text-white focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-shadow"
+                                        type="date" />
+                                    <!-- Data de Admissão -->
+                                    <div class="lg:col-span-4">
+                                        <label
+                                            class="mb-2 block text-sm font-medium text-[#111418] dark:text-white">Data
+                                            de
+                                            Admissão</label>
+                                        <input id="ADMISSAO_SERV" name="ADMISSAO_SERV"
+                                            class="w-full rounded-lg border border-[#dce0e5] dark:border-gray-600 bg-white dark:bg-[#2A3B4D] px-4 py-2.5 text-[#111418] dark:text-white focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-shadow"
+                                            type="date" />
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Section: Dados Funcionais -->
+                            <div class="p-6 md:p-8 border-b border-[#f0f2f5] dark:border-[#24303f]">
+                                <div class="flex items-center gap-3 mb-6">
+                                    <div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-primary">
+                                        <span class="material-symbols-outlined">badge</span>
+                                    </div>
+                                    <h3 class="text-[#111418] dark:text-white text-lg font-bold leading-tight">Dados
+                                        Funcionais</h3>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
+                                    <!-- Matrícula -->
+                                    <div class="lg:col-span-3">
+                                        <label
+                                            class="mb-2 block text-sm font-medium text-[#111418] dark:text-white">Matrícula</label>
+                                        <input id="MATRICULA_SERV" name="MATRICULA_SERV"
+                                            class="w-full rounded-lg border border-[#dce0e5] dark:border-gray-600 bg-white dark:bg-[#2A3B4D] px-4 py-2.5 text-[#111418] dark:text-white placeholder:text-[#60758a] dark:placeholder:text-gray-500 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-shadow"
+                                            placeholder="123456" type="text" required />
+                                    </div>
+                                    <!-- Setor -->
+                                    <div class="lg:col-span-5">
+                                        <label
+                                            class="mb-2 block text-sm font-medium text-[#111418] dark:text-white">Secretaria
+                                            / Setor</label>
+                                        <select id="SETOR_LOTACAO_SERV" name="SETOR_LOTACAO_SERV"
+                                            class="w-full rounded-lg border border-[#dce0e5] dark:border-gray-600 bg-white dark:bg-[#2A3B4D] px-4 py-2.5 text-[#111418] dark:text-white focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-shadow appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
+                                            <option value="">Selecione...</option>
+                                            <option value="SEPLAN">SEPLAN - Secretaria de Planejamento</option>
+                                            <option value="SEMUS">SEMUS - Secretaria de Saúde</option>
+                                            <option value="SEMED">SEMED - Secretaria de Educação</option>
+                                            <option value="RH">RH</option>
+                                            <option value="Financeiro">Financeiro</option>
+                                            <option value="Administrativo">Administrativo</option>
+                                        </select>
+                                    </div>
+                                    <!-- Status -->
+                                    <div class="lg:col-span-4">
+                                        <label
+                                            class="mb-2 block text-sm font-medium text-[#111418] dark:text-white">Status</label>
+                                        <select id="ATIVO_SERV" name="ATIVO_SERV"
+                                            class="w-full rounded-lg border border-[#dce0e5] dark:border-gray-600 bg-white dark:bg-[#2A3B4D] px-4 py-2.5 text-[#111418] dark:text-white focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-shadow appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
+                                            <option selected="" value="SIM">Ativo</option>
+                                            <option value="NÃO">Inativo</option>
+                                        </select>
+                                    </div>
+                                    <!-- Vínculo -->
+                                    <div class="lg:col-span-4">
+                                        <label
+                                            class="mb-2 block text-sm font-medium text-[#111418] dark:text-white">Vínculo</label>
+                                        <select id="VINCULO_SERV" name="VINCULO_SERV"
+                                            class="w-full rounded-lg border border-[#dce0e5] dark:border-gray-600 bg-white dark:bg-[#2A3B4D] px-4 py-2.5 text-[#111418] dark:text-white focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-shadow appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
+                                            <option value="EFETIVO">Estatutário</option>
+                                            <option value="COMISSIONADO">Comissionado</option>
+                                            <option value="CONTRATADO">Temporário</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Cargos Split -->
+                                    <div class="lg:col-span-4">
+                                        <label
+                                            class="mb-2 block text-sm font-medium text-[#111418] dark:text-white">Cargo
+                                            Efetivo</label>
+                                        <input id="CARGO_EFETIVO_SERV" name="CARGO_EFETIVO_SERV"
+                                            class="w-full rounded-lg border border-[#dce0e5] dark:border-gray-600 bg-white dark:bg-[#2A3B4D] px-4 py-2.5 text-[#111418] dark:text-white placeholder:text-[#60758a] dark:placeholder:text-gray-500 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-shadow"
+                                            placeholder="Ex: Analista Administrativo" type="text" />
+                                    </div>
+
+                                    <div class="lg:col-span-4">
+                                        <label
+                                            class="mb-2 block text-sm font-medium text-[#111418] dark:text-white">Cargo
+                                            Comissionado</label>
+                                        <input id="CARGO_COMISSIONADO_SERV" name="CARGO_COMISSIONADO_SERV"
+                                            class="w-full rounded-lg border border-[#dce0e5] dark:border-gray-600 bg-white dark:bg-[#2A3B4D] px-4 py-2.5 text-[#111418] dark:text-white placeholder:text-[#60758a] dark:placeholder:text-gray-500 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-shadow"
+                                            placeholder="Ex: Chefe de Setor" type="text" />
+                                    </div>
+
+                                    <div class="lg:col-span-4">
+                                        <label
+                                            class="mb-2 block text-sm font-medium text-[#111418] dark:text-white">Função
+                                            Especial</label>
+                                        <input id="FUNCAO_SP_SERV" name="FUNCAO_SP_SERV"
+                                            class="w-full rounded-lg border border-[#dce0e5] dark:border-gray-600 bg-white dark:bg-[#2A3B4D] px-4 py-2.5 text-[#111418] dark:text-white placeholder:text-[#60758a] dark:placeholder:text-gray-500 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-shadow"
+                                            placeholder="Ex: Membro de Comissão" type="text" />
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Section: Observações -->
+                            <div class="p-6 md:p-8 border-b border-[#f0f2f5] dark:border-[#24303f]">
+                                <div class="flex items-center gap-3 mb-6">
+                                    <div class="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg text-yellow-600">
+                                        <span class="material-symbols-outlined">sticky_note_2</span>
+                                    </div>
+                                    <h3 class="text-[#111418] dark:text-white text-lg font-bold leading-tight">
+                                        Observações</h3>
+                                </div>
+                                <div class="space-y-4">
+                                    <div id="observacoesList" class="space-y-3">
+                                        <!-- Populated by JS -->
+                                        <p class="text-sm text-gray-500 italic">Nenhuma observação registrada.</p>
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="mb-2 block text-sm font-medium text-[#111418] dark:text-white">Nova
+                                            Observação</label>
+                                        <textarea id="OBS_SERV" name="OBS_SERV" rows="3"
+                                            class="w-full rounded-lg border border-[#dce0e5] dark:border-gray-600 bg-white dark:bg-[#2A3B4D] px-4 py-2.5 text-[#111418] dark:text-white placeholder:text-[#60758a] dark:placeholder:text-gray-500 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-shadow"
+                                            placeholder="Digite uma observação..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section: Anexos -->
+                            <div class="p-6 md:p-8 border-b border-[#f0f2f5] dark:border-[#24303f]">
+                                <div class="flex items-center gap-3 mb-6">
+                                    <div class="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-purple-600">
+                                        <span class="material-symbols-outlined">attach_file</span>
+                                    </div>
+                                    <h3 class="text-[#111418] dark:text-white text-lg font-bold leading-tight">Anexos
+                                    </h3>
+                                </div>
+                                <div class="space-y-4">
+                                    <div id="anexosList" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <!-- Populated by JS -->
+                                        <p class="col-span-full text-sm text-gray-500 italic">Nenhum anexo encontrado.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="mb-2 block text-sm font-medium text-[#111418] dark:text-white">Adicionar
+                                            Arquivos</label>
+                                        <input type="file" name="anexos" multiple
+                                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 dark:text-gray-400" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Footer Actions -->
+                            <div
+                                class="flex items-center justify-end gap-3 p-6 md:p-8 bg-gray-50 dark:bg-[#1f2d3a] rounded-b-xl border-t border-[#f0f2f5] dark:border-[#24303f]">
+                                <button type="button"
+                                    class="px-6 py-2.5 rounded-lg border border-[#dce0e5] dark:border-gray-600 bg-transparent text-[#111418] dark:text-white font-bold text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                    onclick="window.location.href='servidores.html'">
+                                    Cancelar
+                                </button>
+                                <button type="submit"
+                                    class="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-primary text-white font-bold text-sm hover:bg-blue-600 transition-colors shadow-sm">
+                                    <span class="material-symbols-outlined" style="font-size: 20px;">save</span>
+                                    Salvar Servidor
+                                </button>
+                            </div>
+                    </form>
+                    <div class="mt-8 mb-4 text-center">
+                        <p class="text-xs text-[#60758a] dark:text-gray-500">© 2024 Prefeitura Municipal de São Luís. RH
+                            SEPLAN.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = 'login.html';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const servidorId = urlParams.get('id');
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (servidorId) {
+                document.getElementById('page-title').innerText = 'Editar Servidor';
+                document.getElementById('page-breadcrumb').innerText = 'Editar';
+                await loadServidor(servidorId);
+            }
+        });
+
+        async function loadServidor(id) {
+            try {
+                const response = await fetch(`/api/servidores/${id}`, {
+                    headers: { 'x-auth-token': token }
+                });
+
+                if (!response.ok) throw new Error('Servidor não encontrado');
+
+                const data = await response.json();
+                const servidor = data.servidor;
+
+                // Populate form fields
+                document.getElementById('NOME_SERV').value = servidor.NOME_SERV || '';
+                document.getElementById('CPF_SERV').value = servidor.CPF_SERV || '';
+                document.getElementById('MATRICULA_SERV').value = servidor.MATRICULA_SERV || '';
+
+                // Mapear campos novos
+                document.getElementById('CARGO_EFETIVO_SERV').value = servidor.CARGO_EFETIVO_SERV || '';
+                document.getElementById('CARGO_COMISSIONADO_SERV').value = servidor.CARGO_COMISSIONADO_SERV || '';
+                document.getElementById('FUNCAO_SP_SERV').value = servidor.FUNCAO_SP_SERV || '';
+
+                document.getElementById('SETOR_LOTACAO_SERV').value = servidor.SETOR_LOTACAO_SERV || '';
+                document.getElementById('ATIVO_SERV').value = servidor.ATIVO_SERV || 'SIM';
+                document.getElementById('VINCULO_SERV').value = servidor.VINCULO_SERV || 'EFETIVO';
+                document.getElementById('OBS_SERV').value = servidor.OBS_SERV || '';
+
+                if (servidor.NASCIMENTO_SERV) {
+                    document.getElementById('NASCIMENTO_SERV').value = new Date(servidor.NASCIMENTO_SERV).toISOString().split('T')[0];
+                }
+
+                if (servidor.ADMISSAO_SERV) {
+                    document.getElementById('ADMISSAO_SERV').value = new Date(servidor.ADMISSAO_SERV).toISOString().split('T')[0];
+                }
+
+                // Renderizar Observações (Array)
+                const obsList = document.getElementById('observacoesList');
+                if (servidor.OBSERVACOES && servidor.OBSERVACOES.length > 0) {
+                    obsList.innerHTML = servidor.OBSERVACOES.map(obs => `
+                        <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <p class="text-sm text-gray-800 dark:text-gray-200">${obs.conteudo}</p>
+                            <div class="mt-1 flex items-center justify-between text-xs text-gray-500">
+                                <span>${obs.autor || 'Sistema'}</span>
+                                <span>${new Date(obs.data).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                // Renderizar Anexos
+                const anexosList = document.getElementById('anexosList');
+                if (servidor.ANEXOS && servidor.ANEXOS.length > 0) {
+                    anexosList.innerHTML = servidor.ANEXOS.map(anexo => `
+                        <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded text-blue-600 dark:text-blue-400">
+                                <span class="material-symbols-outlined">description</span>
+                            </div>
+                            <div class="flex-1 overflow-hidden">
+                                <p class="text-sm font-medium truncate text-gray-900 dark:text-white" title="${anexo.nome}">${anexo.nome}</p>
+                                <p class="text-xs text-gray-500">${new Date(anexo.data).toLocaleDateString()}</p>
+                            </div>
+                            <button type="button" class="text-red-500 hover:text-red-700" title="Excluir" onclick="deleteAnexo('${servidor._id || servidor.IDPK_SERV}', '${anexo._id}')">
+                                <span class="material-symbols-outlined text-[20px]">delete</span>
+                            </button>
+                        </div>
+                    `).join('');
+                }
+
+            } catch (error) {
+                console.error(error);
+                alert('Erro ao carregar dados do servidor');
+            }
+        }
+
+        document.getElementById('servidorForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            const url = servidorId ? `/api/servidores/${servidorId}` : '/api/servidores';
+            const method = servidorId ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    alert('Servidor salvo com sucesso!');
+                    window.location.href = 'servidores.html';
+                } else {
+                    const error = await response.json();
+                    alert('Erro ao salvar: ' + (error.msg || 'Erro desconhecido'));
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Erro de conexão');
+            }
+        });
+        async function deleteAnexo(servidorId, anexoId) {
+            if (!confirm('Tem certeza que deseja excluir este anexo?')) return;
+
+            try {
+                const response = await fetch(`/api/servidores/${servidorId}/anexos/${anexoId}`, {
+                    method: 'DELETE',
+                    headers: { 'x-auth-token': token }
+                });
+
+                if (response.ok) {
+                    alert('Anexo excluído com sucesso!');
+                    loadServidor(servidorId); // Reload to update list
+                } else {
+                    alert('Erro ao excluir anexo');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Erro de conexão');
+            }
+        }
+    </script>
+</body>
+
+</html>

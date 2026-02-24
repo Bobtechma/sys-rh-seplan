@@ -1,0 +1,54 @@
+# ─── Secrets ────────────────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ─── Dependencies ────────────────────────────────────────────────────────────
+node_modules/
+frontend/node_modules/
+
+# ─── Build output ────────────────────────────────────────────────────────────
+frontend/dist/
+frontend/build/
+
+# ─── Vercel ──────────────────────────────────────────────────────────────────
+.vercel/
+
+# ─── Large data/migration files (not part of source code) ────────────────────
+data.json
+data_converted.json
+names_hex_dump.txt
+
+# ─── Temporary debug/patch/migration scripts ─────────────────────────────────
+check_*.js
+debug_*.js
+inspect_*.js
+investigate_*.js
+migrate_*.js
+patch_*.js
+recover_*.js
+reproduce_*.js
+scan_*.js
+test_*.js
+verify_*.js
+analyze_*.js
+fix_types.js
+fix_password.js
+find_*.js
+get_cols.js
+dump_hex.js
+cleanup_users.js
+remove_calendario_index.js
+build_timeline_obs.js
+
+# ─── OS & Editor ─────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/settings.json
+
+# ─── Uploads (binary files uploaded by users) ────────────────────────────────
+uploads/
+
+# ─── PDF files in root (document templates – not source code) ────────────────
+*.pdf

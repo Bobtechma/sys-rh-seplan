@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gerenciamento de Servidores Detalhado - Sys RH SEPLAN</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0d7ff2",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Public Sans", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: "Public Sans", "Noto Sans", sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex flex-col overflow-x-hidden text-[#111418]">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e5e7eb] bg-white px-4 py-3 md:px-10 shadow-sm sticky top-0 z-50">
+<div class="flex items-center gap-4 text-[#111418]">
+<div class="size-8 flex items-center justify-center text-primary bg-primary/10 rounded-lg">
+<span class="material-symbols-outlined text-2xl">account_balance</span>
+</div>
+<div class="flex flex-col">
+<h2 class="text-[#111418] text-lg font-bold leading-tight tracking-[-0.015em]">Sys RH SEPLAN</h2>
+<span class="text-xs text-[#60758a] font-medium">Prefeitura de São Luís</span>
+</div>
+</div>
+<div class="flex flex-1 justify-end gap-4 md:gap-8 items-center">
+<div class="hidden md:flex flex-col items-end mr-2">
+<span class="text-sm font-bold text-[#111418]">Ricardo Oliveira</span>
+<span class="text-xs text-[#60758a]">Administrador RH</span>
+</div>
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-9 px-4 bg-white border border-[#e5e7eb] text-[#111418] text-sm font-bold hover:bg-gray-50 transition-colors">
+<span class="truncate">Sair</span>
+</button>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-[#e5e7eb]" data-alt="Official portrait of a generic male employee" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAFwMbG9ke06e2ggvig-ZGoysvtXvE8xA-e1IGJ5UA17PwB1fh_L_NUkM2DVCdm_j-U1I-gnvnxTq3PAglRPpGpN7glPu0RlmoHAutEmxvFyCWwuSW_eCIRIpp7vHAoAeKPGB-DBXW1SeWpKyI6hmyF4ATjGEMMndWCCmiORUAmdK7yX4WbjtIXy05iXnUZobN_7C7yo6wEIlEdDOg7_hIXHGAf9UehxL_Vp2MOSoQRZbN1a6TBMNhrZixn0fvoFU6IUiufWf-WbuXQ");'></div>
+</div>
+</header>
+<div class="flex flex-1 justify-center py-5 px-4 md:px-10">
+<div class="layout-content-container flex flex-col w-full max-w-[1200px] flex-1">
+<div class="flex flex-wrap gap-2 px-4 py-2 mb-2">
+<a class="text-[#60758a] text-sm font-medium leading-normal hover:text-primary transition-colors flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-[18px]">home</span>
+                Home
+            </a>
+<span class="text-[#60758a] text-sm font-medium leading-normal">/</span>
+<a class="text-[#60758a] text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Recursos Humanos</a>
+<span class="text-[#60758a] text-sm font-medium leading-normal">/</span>
+<span class="text-[#111418] text-sm font-medium leading-normal">Gerenciamento de Servidores</span>
+</div>
+<div class="flex flex-wrap justify-between gap-4 p-4 items-end mb-4">
+<div class="flex min-w-72 flex-col gap-2">
+<h1 class="text-[#111418] text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">Gerenciamento de Servidores</h1>
+<p class="text-[#60758a] text-base font-normal leading-normal max-w-2xl">Gestão e consulta da base de dados dos servidores públicos ativos e inativos da Secretaria Municipal de Planejamento.</p>
+</div>
+<div class="flex gap-2 flex-wrap">
+<button class="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-white border border-[#e5e7eb] text-[#111418] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-gray-50 transition-colors gap-2">
+<span class="material-symbols-outlined text-[20px]">file_upload</span>
+<span class="truncate">Importar Dados</span>
+</button>
+<button class="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-white border border-[#e5e7eb] text-[#111418] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-gray-50 transition-colors gap-2">
+<span class="material-symbols-outlined text-[20px]">file_download</span>
+<span class="truncate">Exportar Dados</span>
+</button>
+<button class="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] shadow-md hover:bg-blue-600 transition-colors gap-2">
+<span class="material-symbols-outlined text-[20px]">add</span>
+<span class="truncate">Adicionar Novo Servidor</span>
+</button>
+</div>
+</div>
+<div class="flex flex-col gap-4 p-4 bg-white rounded-xl shadow-sm border border-[#e5e7eb] mb-6">
+<div class="w-full">
+<label class="flex flex-col h-12 w-full">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full border border-[#e5e7eb] focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all overflow-hidden">
+<div class="text-[#60758a] flex bg-white items-center justify-center pl-4 pr-2">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg text-[#111418] focus:outline-0 bg-white h-full placeholder:text-[#60758a] px-2 text-base font-normal leading-normal" placeholder="Pesquisar por nome, matrícula ou CPF..." value=""/>
+</div>
+</label>
+</div>
+<div class="flex gap-3 flex-wrap items-center">
+<span class="text-sm font-bold text-[#111418] mr-2">Filtrar por:</span>
+<div class="relative group">
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-[#f0f2f5] hover:bg-[#e5e7eb] pl-4 pr-3 transition-colors border border-transparent hover:border-[#d1d5db]">
+<p class="text-[#111418] text-sm font-medium leading-normal">Cargo: Todos</p>
+<span class="material-symbols-outlined text-[20px]">arrow_drop_down</span>
+</button>
+</div>
+<div class="relative group">
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-[#f0f2f5] hover:bg-[#e5e7eb] pl-4 pr-3 transition-colors border border-transparent hover:border-[#d1d5db]">
+<p class="text-[#111418] text-sm font-medium leading-normal">Setor: Todos</p>
+<span class="material-symbols-outlined text-[20px]">arrow_drop_down</span>
+</button>
+</div>
+<div class="relative group">
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-[#f0f2f5] hover:bg-[#e5e7eb] pl-4 pr-3 transition-colors border border-transparent hover:border-[#d1d5db]">
+<p class="text-[#111418] text-sm font-medium leading-normal">Status: Todos</p>
+<span class="material-symbols-outlined text-[20px]">arrow_drop_down</span>
+</button>
+</div>
+<button class="ml-auto text-primary text-sm font-bold hover:underline flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">filter_alt_off</span>
+                    Limpar Filtros
+                </button>
+</div>
+</div>
+<div class="bg-white rounded-xl shadow-sm border border-[#e5e7eb] overflow-hidden flex flex-col">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-[#f9fafb] border-b border-[#e5e7eb]">
+<th class="px-6 py-4 text-xs font-bold text-[#60758a] uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors">
+<div class="flex items-center gap-1">Servidor <span class="material-symbols-outlined text-[16px]">unfold_more</span></div>
+</th>
+<th class="px-6 py-4 text-xs font-bold text-[#60758a] uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors">
+<div class="flex items-center gap-1">Matrícula <span class="material-symbols-outlined text-[16px]">unfold_more</span></div>
+</th>
+<th class="px-6 py-4 text-xs font-bold text-[#60758a] uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors">
+<div class="flex items-center gap-1">Cargo <span class="material-symbols-outlined text-[16px]">unfold_more</span></div>
+</th>
+<th class="px-6 py-4 text-xs font-bold text-[#60758a] uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors">
+<div class="flex items-center gap-1">Setor <span class="material-symbols-outlined text-[16px]">unfold_more</span></div>
+</th>
+<th class="px-6 py-4 text-xs font-bold text-[#60758a] uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors">
+<div class="flex items-center gap-1">Status <span class="material-symbols-outlined text-[16px]">unfold_more</span></div>
+</th>
+<th class="px-6 py-4 text-xs font-bold text-[#60758a] uppercase tracking-wider text-right">Ações</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#e5e7eb]">
+<tr class="hover:bg-blue-50/30 transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 shadow-sm border border-[#e5e7eb]" data-alt="Portrait of Ana Clara" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCN8uM-cRiMh6Oj90dIoDHjc8XOZthdR8Au6l1KUJjgs1pvZ040IPohjSzwr_IWEP5i8aYG0DtWLMqVq6L_7qEOwdSVUXlhwWsfVU1hXoR4jA6vqi7LFOJpA7ue08pZVhJV3F3SOvwIWqz_L5L0rKAKH7pDB1zqE3YRwgxTXJYzrr4T-sAcxxp3Ge334IU7Daena0oW7YJFmuxyA0e1pZH0f6lFTLVz2-bQiws180ZHoBP5T60SqBXy4iTuHwZS6X7ROG4-9xoUlhdy");'></div>
+<div class="flex flex-col">
+<p class="text-[#111418] text-sm font-bold">Ana Clara Souza</p>
+<p class="text-[#60758a] text-xs">ana.souza@saoluis.ma.gov.br</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#111418] font-medium">1029384</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#111418]">Analista Administrativo</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#111418]">Recursos Humanos</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-1 text-xs font-semibold text-green-700 border border-green-200">
+<span class="h-1.5 w-1.5 rounded-full bg-green-600"></span>
+                                        Ativo
+                                    </span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+<div class="flex justify-end gap-2">
+<button class="text-[#60758a] hover:text-primary transition-colors p-1" title="Ver Detalhes">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<button class="text-[#60758a] hover:text-primary transition-colors p-1" title="Editar">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="text-[#60758a] hover:text-red-500 transition-colors p-1" title="Excluir">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-blue-50/30 transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 shadow-sm border border-[#e5e7eb]" data-alt="Portrait of Carlos" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAii3SD-AuoLz7GfE7JNytwSNspubUPoqduIr9WiTSA6elDvEmdimteFLeMO749p0ob3f5Wy-XGOn1eXm5WLA78s_eMV9JFUecENOjCT58yQKEGWGEkQE-Kn2Q5ZtjGjWtPlbDZ1VgOCie-9_k5O9wCrRTdicYh8fES_4L27ZrgTOPmTgVOdEsQE8-ZKtkPEjMMtxgFC7b03o6KsijZW-RjMk-IYbntTots26TZ0quRHZJlPoL5QvodQ8MOyw09M3sIEDqvYQcXgcp0");'></div>
+<div class="flex flex-col">
+<p class="text-[#111418] text-sm font-bold">Carlos Mendes</p>
+<p class="text-[#60758a] text-xs">carlos.mendes@saoluis.ma.gov.br</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#111418] font-medium">8475920</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#111418]">Auditor Fiscal</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#111418]">Tributação</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 rounded-full bg-yellow-50 px-2 py-1 text-xs font-semibold text-yellow-700 border border-yellow-200">
+<span class="h-1.5 w-1.5 rounded-full bg-yellow-600"></span>
+                                        Férias
+                                    </span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+<div class="flex justify-end gap-2">
+<button class="text-[#60758a] hover:text-primary transition-colors p-1" title="Ver Detalhes">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<button class="text-[#60758a] hover:text-primary transition-colors p-1" title="Editar">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="text-[#60758a] hover:text-red-500 transition-colors p-1" title="Excluir">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-blue-50/30 transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="bg-primary/10 text-primary flex items-center justify-center rounded-full size-10 text-sm font-bold border border-primary/20">
+                                    MJ
+                                </div>
+<div class="flex flex-col">
+<p class="text-[#111418] text-sm font-bold">Maria Julia Santos</p>
+<p class="text-[#60758a] text-xs">mj.santos@saoluis.ma.gov.br</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#111418] font-medium">1928374</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#111418]">Assistente Técnico</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#111418]">Obras Públicas</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-1 text-xs font-semibold text-red-700 border border-red-200">
+<span class="h-1.5 w-1.5 rounded-full bg-red-600"></span>
+                                        Licença Médica
+                                    </span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+<div class="flex justify-end gap-2">
+<button class="text-[#60758a] hover:text-primary transition-colors p-1" title="Ver Detalhes">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<button class="text-[#60758a] hover:text-primary transition-colors p-1" title="Editar">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="text-[#60758a] hover:text-red-500 transition-colors p-1" title="Excluir">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-blue-50/30 transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 shadow-sm border border-[#e5e7eb]" data-alt="Portrait of Fernando" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA6Jw0Xv7byOYfqM0Ae5A51FDsX7KkDspmmWTytllMftXpzS_d6zth4E7a6lCYaz4elog7fPwOKO_H3U0UEQQXQpU6QqUAxEatbV2gUEhrQwq2Ov-usyQ78mi0rZGvJK-z9zP-FNzZbehKMwzH0OMXsB-IjMXR0u6oTCzlWhv2Tn-K4XCQrKFU4XG709rqJHK8cI7q_y0vqFAcXhcEpA-nIaWtVIDv3QtYTgstEoGaz9tYvV7HFk69c73EYzQfm9K84s_BLNN5dQAA0");'></div>
+<div class="flex flex-col">
+<p class="text-[#111418] text-sm font-bold">Fernando Oliveira</p>
+<p class="text-[#60758a] text-xs">fernando.o@saoluis.ma.gov.br</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#111418] font-medium">5647382</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#111418]">Gerente de Projetos</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#111418]">Tecnologia</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-1 text-xs font-semibold text-green-700 border border-green-200">
+<span class="h-1.5 w-1.5 rounded-full bg-green-600"></span>
+                                        Ativo
+                                    </span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+<div class="flex justify-end gap-2">
+<button class="text-[#60758a] hover:text-primary transition-colors p-1" title="Ver Detalhes">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<button class="text-[#60758a] hover:text-primary transition-colors p-1" title="Editar">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="text-[#60758a] hover:text-red-500 transition-colors p-1" title="Excluir">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-blue-50/30 transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 shadow-sm border border-[#e5e7eb]" data-alt="Portrait of Patricia" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDzCnFvCFEWIKkf9JoE2xBntGmgWj0AndOQB1msLXhskYan2_9vK35SZOOmNH-TsudMlXjuo_ww_EuWhjdYsuoAhS1vThSMCbyz2pqmSHf56XDoKNeChh8zU-y7pSy1o-RCnzMO2mgXx4RIG5YyV3cAiOo4s18XjAIBvPqvMi5DGDEIhCxIfc99V84vxxea57iHSpxyZo8vulxckglVjYWTOawwwaw8AVlKKnOPGMUw_mb4NGALw3hF3mbnY4-DzSTWV4QbEHiH5HAh");'></div>
+<div class="flex flex-col">
+<p class="text-[#111418] text-sm font-bold">Patricia Lima</p>
+<p class="text-[#60758a] text-xs">patricia.lima@saoluis.ma.gov.br</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#111418] font-medium">9081726</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#111418]">Coordenadora</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#111418]">Educação</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700 border border-gray-200">
+<span class="h-1.5 w-1.5 rounded-full bg-gray-500"></span>
+                                        Inativo
+                                    </span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+<div class="flex justify-end gap-2">
+<button class="text-[#60758a] hover:text-primary transition-colors p-1" title="Ver Detalhes">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<button class="text-[#60758a] hover:text-primary transition-colors p-1" title="Editar">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="text-[#60758a] hover:text-red-500 transition-colors p-1" title="Excluir">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="flex items-center justify-between border-t border-[#e5e7eb] bg-[#f9fafb] px-4 py-3 sm:px-6">
+<div class="flex flex-1 justify-between sm:hidden">
+<button class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Anterior</button>
+<button class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Próximo</button>
+</div>
+<div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+<div>
+<p class="text-sm text-[#60758a]">
+                            Mostrando <span class="font-bold text-[#111418]">1</span> até <span class="font-bold text-[#111418]">5</span> de <span class="font-bold text-[#111418]">97</span> resultados
+                        </p>
+</div>
+<div>
+<nav aria-label="Pagination" class="isolate inline-flex -space-x-px rounded-md shadow-sm">
+<button class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+<span class="sr-only">Previous</span>
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<button aria-current="page" class="relative z-10 inline-flex items-center bg-primary px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">1</button>
+<button class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">2</button>
+<button class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">3</button>
+<span class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-300 focus:outline-offset-0">...</span>
+<button class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">10</button>
+<button class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+<span class="sr-only">Next</span>
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</nav>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</body></html>

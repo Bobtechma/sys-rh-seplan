@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Painel Principal Sys RH SEPLAN - Prefeitura de São Luís</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Material Symbols -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700;900&amp;family=Public+Sans:wght@400;500;700;900&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0d7ff2",
+                        "primary-content": "#ffffff",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1e2936",
+                        "border-light": "#e7edf4",
+                        "border-dark": "#2d3b4e",
+                    },
+                    fontFamily: {
+                        "display": ["Public Sans", "Noto Sans", "sans-serif"],
+                        "body": ["Public Sans", "Noto Sans", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 24px;
+        }
+
+        .icon-fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display antialiased overflow-hidden">
+    <div class="flex h-screen w-full">
+        <!-- Sidebar -->
+        <aside
+            class="w-72 hidden lg:flex flex-col border-r border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark h-full shrink-0">
+            <div class="p-6 pb-2">
+                <div class="flex items-center gap-3">
+                    <div class="bg-center bg-no-repeat bg-cover rounded-lg size-10 shrink-0 shadow-sm"
+                        data-alt="Brasão da cidade de São Luís"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDY97cXhX1fxf-uXaRGQEwfuf0kV_KoLCWrDlYLNLlGL6Y-2Tk-s7zcZsFGuTBQa-bU8lIWs0bw0Qm2TsK53oZCveXcE13e-T7IPxEtQ0Yc2y79GoJW89Hy-_fzuZcoHRU9Omlss3SwNkJKFpBTD5p-9Z62LYcL3gXG79ShSVWfgfzW552skM0DMeiWiIbfeG__Mj1eoMLSsC9Ls1_mkU_Ws1z9ntdZiL4UhnT7IYrGX7u9hgHGysqQCYdZbw8sCh8rT_UF814bCiwe");'>
+                    </div>
+                    <div class="flex flex-col">
+                        <h1 class="text-slate-900 dark:text-white text-base font-bold leading-tight">Sys RH SEPLAN</h1>
+                        <p class="text-slate-500 dark:text-slate-400 text-xs font-normal leading-normal">Prefeitura de
+                            São Luís</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col gap-1 px-4 py-4 flex-1 overflow-y-auto">
+                <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary">
+                    <span class="material-symbols-outlined icon-fill">dashboard</span>
+                    <p class="text-sm font-semibold">Painel Principal</p>
+                </div>
+                <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer group"
+                    onclick="window.location.href='servidores.html'">
+                    <span
+                        class="material-symbols-outlined group-hover:text-slate-900 dark:group-hover:text-white">groups</span>
+                    <p class="text-sm font-medium">Servidores</p>
+                </div>
+
+                <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer group"
+                    onclick="window.location.href='ferias.html'">
+                    <span
+                        class="material-symbols-outlined group-hover:text-slate-900 dark:group-hover:text-white">beach_access</span>
+                    <p class="text-sm font-medium">Férias</p>
+                </div>
+                <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer group"
+                    onclick="window.location.href='relatorios.html'">
+                    <span
+                        class="material-symbols-outlined group-hover:text-slate-900 dark:group-hover:text-white">description</span>
+                    <p class="text-sm font-medium">Relatórios</p>
+                </div>
+                <div class="mt-4 pt-4 border-t border-border-light dark:border-border-dark">
+                    <p class="px-3 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Sistema</p>
+                    <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer group"
+                        onclick="window.location.href='configuracoes.html'">
+                        <span
+                            class="material-symbols-outlined group-hover:text-slate-900 dark:group-hover:text-white">settings</span>
+                        <p class="text-sm font-medium">Configurações</p>
+                    </div>
+                    <div
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer group">
+                        <span
+                            class="material-symbols-outlined group-hover:text-slate-900 dark:group-hover:text-white">help</span>
+                        <p class="text-sm font-medium">Ajuda</p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-border-light dark:border-border-dark">
+                <div class="flex items-center gap-3">
+                    <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 ring-2 ring-white dark:ring-slate-700"
+                        data-alt="User avatar of Maria Silva"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDDqEYl0BadWJOzmzdD_iKHYLaw2MaZIBbUd1WwUtBcO2QOtZ9P9L50lv3S9dRn-ySNK-OJjvsqbK3TaA6yI4tBI0aISNpD0khe8wjHQ7ovNgXSAsxxzhb2HsaUCE-PdcsaC8IZc9AUvM5zHpO0w0zgE9cMFv_CamiuPYEbpes6gQiru8IEMz4TQEosTK0-NUi3v21u4sSsOpgDDIwUD60KVUd2llrBfQj8Oqwmo6sR50goumeX4Rrn2KPdnTA3IYXaTp96QHiOzndk");'>
+                    </div>
+                    <div class="flex flex-col overflow-hidden">
+                        <p class="text-slate-900 dark:text-white text-sm font-semibold truncate">Maria Silva</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-xs truncate">Analista de RH</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col min-w-0 overflow-hidden bg-background-light dark:bg-background-dark">
+            <!-- Top Nav -->
+            <header
+                class="h-16 flex items-center justify-between px-6 lg:px-8 border-b border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark shrink-0">
+                <div class="flex items-center gap-4 lg:hidden">
+                    <button class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
+                        <span class="material-symbols-outlined">menu</span>
+                    </button>
+                    <div class="bg-center bg-no-repeat bg-contain h-8 w-8" data-alt="Brasão da cidade"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCJrAivkgM4mf4j9VkoTpi3Uj3j7VhXMVQiD8ZPP-aXhHuhTZYKvJt08Db-qxg4sL4YfFgIt0i9lnBRNcpxL2EleiCkiZUPAQIdlSY0MCjuCEFA-CvoMDK7Pt-lSFK6tvyG2wamuoDlYRLjf0eIRafMER0a2sO9YKLd3OcWy7PlcDRp0LRJDkjSCWxuMcSB7KDlpSqGG1VP25mVByRS5MoVDhc37y4N-j9ii28LIWsquC_8trgPfYeABqj_tDLpCUB-A0sHlN7e_GyF");'>
+                    </div>
+                </div>
+                <!-- Search -->
+                <div class="hidden md:flex flex-1 max-w-lg">
+                    <div class="relative w-full">
+                        <div
+                            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <span class="material-symbols-outlined" style="font-size: 20px;">search</span>
+                        </div>
+                        <input
+                            class="block w-full pl-10 pr-3 py-2 border-none rounded-lg leading-5 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary sm:text-sm"
+                            placeholder="Buscar servidor por nome, matrícula ou CPF..." type="text" />
+                    </div>
+                </div>
+                <!-- Right Actions -->
+                <div class="flex items-center gap-4">
+                    <button
+                        class="relative p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span
+                            class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+                    </button>
+                    <div class="h-8 w-px bg-border-light dark:bg-border-dark mx-1 hidden sm:block"></div>
+                    <div class="hidden sm:flex flex-col items-end">
+                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">14 de Novembro, 2023</span>
+                    </div>
+                </div>
+            </header>
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto p-4 md:p-8">
+                <div class="max-w-7xl mx-auto flex flex-col gap-8">
+                    <!-- Page Heading -->
+                    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+                                Visão Geral</h2>
+                            <p class="text-slate-500 dark:text-slate-400 mt-1">Bem-vindo ao sistema de gestão, aqui está
+                                o resumo de hoje.</p>
+                        </div>
+                        <div class="flex gap-3">
+
+                            <button
+                                class="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition shadow-sm shadow-blue-200 dark:shadow-none"
+                                onclick="window.location.href='adicionar-servidor.html'">
+                                <span class="material-symbols-outlined" style="font-size: 20px;">add</span>
+                                Novo Servidor
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <!-- Card 1 -->
+                        <div
+                            class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                    <span class="material-symbols-outlined text-primary">groups</span>
+                                </div>
+                                <span
+                                    class="flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400 px-2 py-0.5 rounded-full">
+                                    +1.2%
+                                </span>
+                            </div>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Servidores Ativos</p>
+                            <h3 id="stats-active-servidores"
+                                class="text-2xl font-bold text-slate-900 dark:text-white mt-1">-</h3>
+                        </div>
+                        <!-- Card 2 -->
+                        <div
+                            class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                                    <span
+                                        class="material-symbols-outlined text-purple-600 dark:text-purple-400">cake</span>
+                                </div>
+                            </div>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Aniversariantes (Mês)</p>
+                            <h3 id="stats-aniversariantes"
+                                class="text-2xl font-bold text-slate-900 dark:text-white mt-1">-</h3>
+                        </div>
+                        <!-- Card 3 -->
+                        <div
+                            class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                                    <span
+                                        class="material-symbols-outlined text-orange-600 dark:text-orange-400">assignment_late</span>
+                                </div>
+                                <span
+                                    class="flex items-center text-xs font-medium text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 px-2 py-0.5 rounded-full">
+                                    Pendente
+                                </span>
+                            </div>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Pendências de RH</p>
+                            <h3 id="stats-pendencias" class="text-2xl font-bold text-slate-900 dark:text-white mt-1">-
+                            </h3>
+                        </div>
+                        <!-- Card 4 -->
+                        <div
+                            class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="p-2 bg-teal-50 dark:bg-teal-900/20 rounded-lg">
+                                    <span
+                                        class="material-symbols-outlined text-teal-600 dark:text-teal-400">beach_access</span>
+                                </div>
+                                <span
+                                    class="flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                                    Atual
+                                </span>
+                            </div>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Servidores em Férias</p>
+                            <h3 id="stats-ferias" class="text-2xl font-bold text-slate-900 dark:text-white mt-1">-</h3>
+                        </div>
+                    </div>
+                    <!-- Quick Actions -->
+                    <div class="flex flex-col gap-4">
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white">Acesso Rápido</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                            <!-- Action 1 -->
+                            <button
+                                class="flex flex-col items-center justify-center gap-3 p-4 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/10 dark:hover:border-primary transition group h-32"
+                                onclick="window.location.href='adicionar-servidor.html'">
+                                <div
+                                    class="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full group-hover:bg-white dark:group-hover:bg-blue-900 transition-colors">
+                                    <span class="material-symbols-outlined text-primary">person_add</span>
+                                </div>
+                                <span
+                                    class="text-sm font-semibold text-slate-700 dark:text-slate-200 text-center">Cadastrar<br />Servidor</span>
+                            </button>
+                            <!-- Action 2 -->
+                            <button
+                                class="flex flex-col items-center justify-center gap-3 p-4 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/10 dark:hover:border-primary transition group h-32">
+                                <div
+                                    class="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full group-hover:bg-white dark:group-hover:bg-blue-900 transition-colors">
+                                    <span class="material-symbols-outlined text-primary">edit_calendar</span>
+                                </div>
+                                <span
+                                    class="text-sm font-semibold text-slate-700 dark:text-slate-200 text-center">Lançar<br />Frequência</span>
+                            </button>
+                            <!-- Action 3 -->
+                            <button
+                                class="flex flex-col items-center justify-center gap-3 p-4 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/10 dark:hover:border-primary transition group h-32">
+                                <div
+                                    class="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full group-hover:bg-white dark:group-hover:bg-blue-900 transition-colors">
+                                    <span class="material-symbols-outlined text-primary">receipt_long</span>
+                                </div>
+                                <span
+                                    class="text-sm font-semibold text-slate-700 dark:text-slate-200 text-center">Consultar<br />Holerite</span>
+                            </button>
+                            <!-- Action 4 -->
+                            <button
+                                class="flex flex-col items-center justify-center gap-3 p-4 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/10 dark:hover:border-primary transition group h-32"
+                                onclick="window.location.href='ferias.html'">
+                                <div
+                                    class="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full group-hover:bg-white dark:group-hover:bg-blue-900 transition-colors">
+                                    <span class="material-symbols-outlined text-primary">flight_takeoff</span>
+                                </div>
+                                <span
+                                    class="text-sm font-semibold text-slate-700 dark:text-slate-200 text-center">Agendar<br />Férias</span>
+                            </button>
+                            <!-- Action 5 -->
+                            <button
+                                class="flex flex-col items-center justify-center gap-3 p-4 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/10 dark:hover:border-primary transition group h-32"
+                                onclick="window.location.href='afastamentos.html'">
+                                <div
+                                    class="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full group-hover:bg-white dark:group-hover:bg-blue-900 transition-colors">
+                                    <span class="material-symbols-outlined text-primary">medical_services</span>
+                                </div>
+                                <span
+                                    class="text-sm font-semibold text-slate-700 dark:text-slate-200 text-center">Atestados<br />Médicos</span>
+                            </button>
+                            <!-- Action 6 -->
+                            <button
+                                class="flex flex-col items-center justify-center gap-3 p-4 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/10 dark:hover:border-primary transition group h-32">
+                                <div
+                                    class="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full group-hover:bg-white dark:group-hover:bg-blue-900 transition-colors">
+                                    <span class="material-symbols-outlined text-primary">print</span>
+                                </div>
+                                <span
+                                    class="text-sm font-semibold text-slate-700 dark:text-slate-200 text-center">Declaração<br />Vínculo</span>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Main Section: Recent Activity & Distribution -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Left Column: Recent Activity (Takes 2/3) -->
+                        <div class="lg:col-span-2 flex flex-col gap-4">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Últimas Movimentações</h3>
+                                <button class="text-sm font-medium text-primary hover:text-blue-600 transition">Ver
+                                    todas</button>
+                            </div>
+                            <div
+                                class="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark overflow-hidden shadow-sm">
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                                        <thead
+                                            class="bg-slate-50 dark:bg-slate-800 text-xs uppercase font-semibold text-slate-500 dark:text-slate-400">
+                                            <tr>
+                                                <th class="px-6 py-4">Servidor</th>
+                                                <th class="px-6 py-4">Tipo de Ação</th>
+                                                <th class="px-6 py-4">Data</th>
+                                                <th class="px-6 py-4">Status</th>
+                                                <th class="px-6 py-4"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="recent-activity-list"
+                                            class="divide-y divide-border-light dark:divide-border-dark">
+                                            <!-- Populated by JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Right Column: Distribution & Info (Takes 1/3) -->
+                        <div class="flex flex-col gap-6">
+                            <!-- Distribution Widget -->
+                            <div
+                                class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm h-full flex flex-col">
+                                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Vínculos Empregatícios
+                                </h3>
+                                <div class="flex-1 flex flex-col justify-center gap-4">
+                                    <!-- Simple bar chart simulation using tailwind -->
+                                    <div class="space-y-4">
+                                        <div>
+                                            <div class="flex justify-between text-sm mb-1">
+                                                <span class="text-slate-600 dark:text-slate-300">Efetivos</span>
+                                                <span id="count-efetivos"
+                                                    class="font-bold text-slate-900 dark:text-white">0</span>
+                                            </div>
+                                            <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2.5">
+                                                <div id="bar-efetivos"
+                                                    class="bg-primary h-2.5 rounded-full transition-all duration-1000 ease-out"
+                                                    style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="flex justify-between text-sm mb-1">
+                                                <span class="text-slate-600 dark:text-slate-300">Comissionados</span>
+                                                <span id="count-comissionados"
+                                                    class="font-bold text-slate-900 dark:text-white">0</span>
+                                            </div>
+                                            <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2.5">
+                                                <div id="bar-comissionados"
+                                                    class="bg-purple-500 h-2.5 rounded-full transition-all duration-1000 ease-out"
+                                                    style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="flex justify-between text-sm mb-1">
+                                                <span class="text-slate-600 dark:text-slate-300">Contratados</span>
+                                                <span id="count-contratados"
+                                                    class="font-bold text-slate-900 dark:text-white">0</span>
+                                            </div>
+                                            <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2.5">
+                                                <div id="bar-contratados"
+                                                    class="bg-teal-400 h-2.5 rounded-full transition-all duration-1000 ease-out"
+                                                    style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Donut Chart SVG -->
+                                    <div class="mt-4 flex justify-center">
+                                        <div class="relative size-32 flex items-center justify-center">
+                                            <svg class="size-full -rotate-90" viewBox="0 0 36 36">
+                                                <!-- Background Circle -->
+                                                <circle cx="18" cy="18" r="15.9155" fill="none"
+                                                    class="stroke-slate-100 dark:stroke-slate-700" stroke-width="3.8">
+                                                </circle>
+                                                <!-- Segments -->
+                                                <circle id="donut-segment-efetivos" cx="18" cy="18" r="15.9155"
+                                                    fill="none"
+                                                    class="stroke-primary transition-all duration-1000 ease-out"
+                                                    stroke-width="3.8" stroke-dasharray="0 100"></circle>
+                                                <circle id="donut-segment-comissionados" cx="18" cy="18" r="15.9155"
+                                                    fill="none"
+                                                    class="stroke-purple-500 transition-all duration-1000 ease-out"
+                                                    stroke-width="3.8" stroke-dasharray="0 100" stroke-dashoffset="0">
+                                                </circle>
+                                                <circle id="donut-segment-contratados" cx="18" cy="18" r="15.9155"
+                                                    fill="none"
+                                                    class="stroke-teal-400 transition-all duration-1000 ease-out"
+                                                    stroke-width="3.8" stroke-dasharray="0 100" stroke-dashoffset="0">
+                                                </circle>
+                                            </svg>
+                                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                                <span id="total-vinculos-percent"
+                                                    class="block text-2xl font-bold text-slate-900 dark:text-white">-</span>
+                                                <span class="text-[10px] text-slate-400 uppercase">Total</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Next Holidays/Events Widget -->
+                            <div
+                                class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm">
+                                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Próximos Eventos</h3>
+                                <div class="space-y-4">
+                                    <div class="flex gap-3">
+                                        <div
+                                            class="flex flex-col items-center justify-center w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-lg shrink-0">
+                                            <span class="text-xs font-bold text-primary uppercase">Nov</span>
+                                            <span class="text-lg font-bold text-slate-900 dark:text-white">15</span>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-semibold text-slate-900 dark:text-white">Proclamação
+                                                da República</p>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400">Feriado Nacional</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-3">
+                                        <div
+                                            class="flex flex-col items-center justify-center w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-lg shrink-0">
+                                            <span class="text-xs font-bold text-primary uppercase">Nov</span>
+                                            <span class="text-lg font-bold text-slate-900 dark:text-white">20</span>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-semibold text-slate-900 dark:text-white">Consciência
+                                                Negra</p>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400">Feriado Municipal</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Footer -->
+                    <footer
+                        class="mt-4 border-t border-border-light dark:border-border-dark pt-6 pb-2 text-center text-slate-500 dark:text-slate-400 text-sm">
+                        <p>© 2023 Prefeitura Municipal de São Luís - MA. Todos os direitos reservados.</p>
+                        <p class="text-xs mt-1">Desenvolvido por SEPLAN - Secretaria Municipal de Planejamento.</p>
+                    </footer>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="js/loader.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = 'login.html';
+
+        async function fetchDashboardStats() {
+            try {
+                if (window.Loader) window.Loader.show();
+                const response = await fetch('/api/dashboard');
+                const stats = await response.json();
+
+                // Stats Cards
+                document.getElementById('stats-active-servidores').innerText = stats.activeServidores;
+                document.getElementById('stats-aniversariantes').innerText = stats.aniversariantesCount;
+                document.getElementById('stats-pendencias').innerText = stats.pendencias;
+                document.getElementById('stats-ferias').innerText = stats.ferias;
+
+                // Vínculos
+                document.getElementById('count-efetivos').innerText = stats.vinculos.efetivos;
+                document.getElementById('count-comissionados').innerText = stats.vinculos.comissionados;
+                document.getElementById('count-contratados').innerText = stats.vinculos.contratados;
+
+                const total = stats.vinculos.efetivos + stats.vinculos.comissionados + stats.vinculos.contratados + (stats.vinculos.outros || 0);
+
+                const pEfetivos = total ? (stats.vinculos.efetivos / total) * 100 : 0;
+                const pComissionados = total ? (stats.vinculos.comissionados / total) * 100 : 0;
+                const pContratados = total ? (stats.vinculos.contratados / total) * 100 : 0;
+
+                // Animate Bars
+                // Small timeout to Ensure DOM transition triggers if loaded very fast
+                setTimeout(() => {
+                    document.getElementById('bar-efetivos').style.width = `${pEfetivos}%`;
+                    document.getElementById('bar-comissionados').style.width = `${pComissionados}%`;
+                    document.getElementById('bar-contratados').style.width = `${pContratados}%`;
+
+                    // Animate Donut Segments
+                    // Radius 15.9155 leads to circumference ~100, simplifying percentage calcs
+                    const segEfetivos = document.getElementById('donut-segment-efetivos');
+                    const segComissionados = document.getElementById('donut-segment-comissionados');
+                    const segContratados = document.getElementById('donut-segment-contratados');
+
+                    // Efetivos (Starts at 0)
+                    segEfetivos.style.strokeDasharray = `${pEfetivos} 100`;
+
+                    // Comissionados (Starts after Efetivos)
+                    // Offset value should be negative of previous accumulated percentage to "rotate" start point clockwise
+                    segComissionados.style.strokeDasharray = `${pComissionados} 100`;
+                    segComissionados.style.strokeDashoffset = `-${pEfetivos}`;
+
+                    // Contratados (Starts after Efetivos + Comissionados)
+                    segContratados.style.strokeDasharray = `${pContratados} 100`;
+                    segContratados.style.strokeDashoffset = `-${pEfetivos + pComissionados}`;
+                }, 100);
+
+                document.getElementById('total-vinculos-percent').innerText = total;
+
+                // Recent Activity
+                const activityList = document.getElementById('recent-activity-list');
+                activityList.innerHTML = '';
+                if (stats.recentActivity.length === 0) {
+                    activityList.innerHTML = `<tr><td colspan="5" class="px-6 py-4 text-center text-slate-500">Nenhuma movimentação recente.</td></tr>`;
+                } else {
+                    stats.recentActivity.forEach(activity => {
+                        const date = new Date(activity.updatedAt).toLocaleDateString('pt-BR');
+                        const initials = activity.NOME_SERV.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+                        const row = `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="size-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-xs text-slate-600 dark:text-slate-300">${initials}</div>
+                                <div>
+                                    <div class="font-medium text-slate-900 dark:text-white">${activity.NOME_SERV}</div>
+                                    <div class="text-xs text-slate-400">Mat: ${activity.MATRICULA_SERV}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">Atualização</td>
+                        <td class="px-6 py-4">${date}</td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                Concluído
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button class="text-slate-400 hover:text-primary transition">
+                                <span class="material-symbols-outlined" style="font-size: 20px;">visibility</span>
+                            </button>
+                        </td>
+                    </tr>
+                    `;
+                        activityList.innerHTML += row;
+                    });
+                }
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            } finally {
+                if (window.Loader) window.Loader.hide();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchDashboardStats);
+    </script>
+</body>
+
+</html>

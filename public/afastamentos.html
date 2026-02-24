@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Afastamentos - Sys RH SEPLAN</title>
+    <link rel="icon"
+        href="https://lh3.googleusercontent.com/aida-public/AB6AXuCvgbBqHNskL60xil4qRGRsJdjQllLYrbOI6dhDQ77pVkqVrkoav1uIzisBvov5XuJpM3jC4QQZWJQEXaTw9Skr4wEqi9gvNJY4zbjniXfYh4Q8UD3JVAVt5MWJhtpDMtRo6ylqYQCZepWWdViZ1Rr_OYdg0zjSVzlUd6i5i1uhgysU1Oh4tGB4wiJ59I1ejQ62DY8JwC5kOmp8LUk3xYXwiIlzO2czobp905so7OnEIAGskX7txPLyZ8A8iUTnl6DuuGY1AiSzs7s0"
+        type="image/png">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Material Symbols -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Public+Sans:ital,wght@0,100..900;1,100..900&amp;display=swap"
+        rel="stylesheet" />
+
+    <!-- Theme Configuration -->
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0d7ff2",
+                        "primary-content": "#ffffff",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1e2936",
+                        "border-light": "#e7edf4",
+                        "border-dark": "#2d3b4e",
+                    },
+                    fontFamily: {
+                        "display": ["Public Sans", "Noto Sans", "sans-serif"],
+                        "body": ["Public Sans", "Noto Sans", "sans-serif"]
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 24px;
+        }
+
+        .icon-fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+    <script src="js/loader.js"></script>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white overflow-hidden">
+    <div class="flex h-screen w-full overflow-hidden">
+        <!-- Sidebar -->
+        <aside
+            class="w-72 hidden lg:flex flex-col border-r border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark h-full shrink-0">
+            <div class="p-6 border-b border-border-light dark:border-border-dark">
+                <div class="flex items-center gap-3">
+                    <div class="size-10 bg-center bg-no-repeat bg-cover rounded-lg"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCvgbBqHNskL60xil4qRGRsJdjQllLYrbOI6dhDQ77pVkqVrkoav1uIzisBvov5XuJpM3jC4QQZWJQEXaTw9Skr4wEqi9gvNJY4zbjniXfYh4Q8UD3JVAVt5MWJhtpDMtRo6ylqYQCZepWWdViZ1Rr_OYdg0zjSVzlUd6i5i1uhgysU1Oh4tGB4wiJ59I1ejQ62DY8JwC5kOmp8LUk3xYXwiIlzO2czobp905so7OnEIAGskX7txPLyZ8A8iUTnl6DuuGY1AiSzs7s0");'>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-slate-900 dark:text-white leading-tight text-lg">Sys RH SEPLAN</h1>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Prefeitura de São Luís</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col gap-1 px-4 py-4 flex-1 overflow-y-auto">
+                <a href="dashboard.html"
+                    class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
+                    <span class="material-symbols-outlined group-hover:text-primary transition-colors">dashboard</span>
+                    <p
+                        class="text-sm font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                        Painel Principal</p>
+                </a>
+                <a href="servidores.html"
+                    class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
+                    <span class="material-symbols-outlined group-hover:text-primary transition-colors">groups</span>
+                    <p
+                        class="text-sm font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                        Servidores</p>
+                </a>
+
+                <a href="ferias.html"
+                    class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
+                    <span
+                        class="material-symbols-outlined group-hover:text-primary transition-colors">beach_access</span>
+                    <p
+                        class="text-sm font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                        Férias</p>
+                </a>
+                <a href="afastamentos.html"
+                    class="flex items-center gap-3 px-3 py-3 rounded-lg bg-blue-50 text-primary">
+                    <span class="material-symbols-outlined icon-fill">medical_services</span>
+                    <p class="text-sm font-bold">Afastamentos</p>
+                </a>
+                <a href="relatorios.html"
+                    class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
+                    <span class="material-symbols-outlined group-hover:text-primary transition-colors">bar_chart</span>
+                    <p
+                        class="text-sm font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                        Relatórios</p>
+                </a>
+
+                <div class="mt-8 px-3">
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Sistema</p>
+                    <a href="configuracoes.html"
+                        class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
+                        <span
+                            class="material-symbols-outlined group-hover:text-primary transition-colors">settings</span>
+                        <p
+                            class="text-sm font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                            Configurações</p>
+                    </a>
+                    <a href="#"
+                        class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
+                        <span class="material-symbols-outlined group-hover:text-primary transition-colors">help</span>
+                        <p
+                            class="text-sm font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                            Ajuda</p>
+                    </a>
+                </div>
+            </div>
+            <div class="p-4 border-t border-border-light dark:border-border-dark">
+                <div class="flex items-center gap-3 p-2">
+                    <div class="bg-center bg-no-repeat bg-cover rounded-full size-10 border-2 border-white dark:border-slate-700 shadow-sm"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA8AJMyf6d6JAg01Xkn2kDrT_iy9KYjzD-w0duGZZgF-YRgAeqgEwt82Ptp2vt7IuZ75ytr0ZVRg0gP26OIQYLSgZTZA18Oj9kIGyU7DAVkOx_Oz-W_2fjBgRM3hKlsyGc85LCZNYpxOK_mqDubKIKt9Mrj-k-b_YpPHi2z_HQGmBNrg-SguC6cZJCPWsQdd_eRIB7Fiy3VYrDZpeOCkqQOaYcu1mV_cYB-gBsrdhRvklSSwyiWU8twEQW5eSqn2tupvEyOHJk5D2tQ");'>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-bold text-slate-900 dark:text-white truncate">Maria Silva</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 truncate">Analista de RH</p>
+                    </div>
+                    <button class="text-slate-400 hover:text-red-500 transition-colors" title="Sair">
+                        <span class="material-symbols-outlined text-xl">logout</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col min-w-0 bg-background-light dark:bg-background-dark overflow-hidden">
+            <!-- Mobile Header -->
+            <div
+                class="md:hidden flex items-center justify-between p-4 bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">menu</span>
+                    <h2 class="font-bold text-lg">Sys RH SEPLAN</h2>
+                </div>
+                <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-8"
+                    style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA8AJMyf6d6JAg01Xkn2kDrT_iy9KYjzD-w0duGZZgF-YRgAeqgEwt82Ptp2vt7IuZ75ytr0ZVRg0gP26OIQYLSgZTZA18Oj9kIGyU7DAVkOx_Oz-W_2fjBgRM3hKlsyGc85LCZNYpxOK_mqDubKIKt9Mrj-k-b_YpPHi2z_HQGmBNrg-SguC6cZJCPWsQdd_eRIB7Fiy3VYrDZpeOCkqQOaYcu1mV_cYB-gBsrdhRvklSSwyiWU8twEQW5eSqn2tupvEyOHJk5D2tQ");'>
+                </div>
+            </div>
+
+            <!-- Header -->
+            <header
+                class="hidden md:flex items-center justify-between px-8 py-5 bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark">
+                <!-- Search -->
+                <div class="flex-1 max-w-2xl">
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 material-symbols-outlined"
+                            style="font-size: 20px;">search</span>
+                        <input type="text" id="searchInput" placeholder="Buscar afastamento por nome ou matrícula..."
+                            class="w-full pl-10 pr-4 py-2.5 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-500 focus:ring-2 focus:ring-primary/50">
+                    </div>
+                </div>
+                <!-- Actions -->
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-4">
+                        <button
+                            class="relative text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors">
+                            <span class="material-symbols-outlined">notifications</span>
+                            <span
+                                class="absolute top-0 right-0 size-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+                        </button>
+                        <div class="h-8 w-px bg-border-light dark:bg-border-dark"></div>
+                        <div class="text-right hidden md:block">
+                            <p id="header-date" class="text-sm font-medium text-slate-900 dark:text-white capitalize">
+                            </p>
+                            <p id="header-time" class="text-xs text-slate-500 dark:text-slate-400"></p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="flex-1 overflow-y-auto p-8">
+                <div class="max-w-7xl mx-auto">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Afastamentos</h1>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Gerencie as licenças e
+                                afastamentos dos servidores</p>
+                        </div>
+                        <button onclick="openNewModal()"
+                            class="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-bold transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 hover:-translate-y-0.5">
+                            <span class="material-symbols-outlined">add</span>
+                            Novo Afastamento
+                        </button>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="flex gap-4 mb-6">
+                        <select id="statusSelect"
+                            class="rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
+                            <option value="">Todos os Status</option>
+                            <option value="Pendente">Pendente</option>
+                            <option value="Aprovado">Aprovado</option>
+                            <option value="Rejeitado">Rejeitado</option>
+                        </select>
+                    </div>
+
+                    <!-- Table -->
+                    <div
+                        class="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark overflow-hidden shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr
+                                        class="border-b border-border-light dark:border-border-dark bg-slate-50 dark:bg-slate-800/50">
+                                        <th
+                                            class="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                            Servidor</th>
+                                        <th
+                                            class="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                            Setor</th>
+                                        <th
+                                            class="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                            Tipo</th>
+                                        <th
+                                            class="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                            Início</th>
+                                        <th
+                                            class="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                            Fim</th>
+                                        <th
+                                            class="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                            Status</th>
+                                        <th
+                                            class="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">
+                                            Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-border-light dark:divide-border-dark">
+                                    <!-- Rows populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Pagination -->
+                        <div
+                            class="p-4 border-t border-border-light dark:border-border-dark flex items-center justify-between">
+                            <p class="text-sm text-slate-500 dark:text-slate-400">
+                                Total de <span id="total-results"
+                                    class="font-bold text-slate-900 dark:text-white">0</span> registros
+                            </p>
+                            <div class="flex gap-2">
+                                <button id="prevBtn"
+                                    class="px-3 py-1 text-sm border border-border-light dark:border-border-dark rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+                                    disabled>Anterior</button>
+                                <button id="nextBtn"
+                                    class="px-3 py-1 text-sm border border-border-light dark:border-border-dark rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Próximo</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit/Create Modal -->
+    <div id="edit-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog"
+        aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-slate-500/75 dark:bg-slate-900/80" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div
+                class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white dark:bg-slate-800 rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-200 dark:border-slate-700">
+                <div class="bg-white dark:bg-slate-800 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                    <h3 class="text-lg font-semibold leading-6 text-slate-900 dark:text-white" id="modal-title">
+                        Registrar Novo Afastamento</h3>
+                    <form id="edit-form" class="mt-4 space-y-4" onsubmit="return false;">
+                        <input type="hidden" id="edit-id">
+
+                        <!-- Servidor Selection (Only for New) -->
+                        <div id="servidor-select-container" class="hidden">
+                            <label for="edit-servidor"
+                                class="block text-sm font-medium text-slate-700 dark:text-slate-300">Servidor</label>
+                            <select id="edit-servidor"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                <option value="">Selecione um servidor</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="edit-tipo"
+                                class="block text-sm font-medium text-slate-700 dark:text-slate-300">Tipo de
+                                Afastamento</label>
+                            <select id="edit-tipo"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                <option value="Licença Médica">Licença Médica</option>
+                                <option value="Licença Prêmio">Licença Prêmio</option>
+                                <option value="Licença Maternidade">Licença Maternidade</option>
+                                <option value="Licença Paternidade">Licença Paternidade</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="edit-inicio"
+                                    class="block text-sm font-medium text-slate-700 dark:text-slate-300">Início</label>
+                                <input type="date" id="edit-inicio"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                            </div>
+                            <div>
+                                <label for="edit-fim"
+                                    class="block text-sm font-medium text-slate-700 dark:text-slate-300">Fim</label>
+                                <input type="date" id="edit-fim"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="edit-obs"
+                                class="block text-sm font-medium text-slate-700 dark:text-slate-300">Observação</label>
+                            <textarea id="edit-obs" rows="3"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"></textarea>
+                        </div>
+
+                        <!-- Status (Only for Edit) -->
+                        <div>
+                            <label for="edit-status"
+                                class="block text-sm font-medium text-slate-700 dark:text-slate-300">Status</label>
+                            <select id="edit-status"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                <option value="Pendente">Pendente</option>
+                                <option value="Aprovado">Aprovado</option>
+                                <option value="Rejeitado">Rejeitado</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="bg-slate-50 dark:bg-slate-700/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                    <button type="button" onclick="saveAfastamento()"
+                        class="inline-flex w-full justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 sm:ml-3 sm:w-auto">Salvar</button>
+                    <button type="button" onclick="closeEditModal()"
+                        class="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-white shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 sm:mt-0 sm:w-auto">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Modal -->
+    <div id="view-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog"
+        aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-slate-500/75 dark:bg-slate-900/80" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div
+                class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white dark:bg-slate-800 rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-200 dark:border-slate-700">
+                <div class="bg-white dark:bg-slate-800 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                    <h3 class="text-lg font-semibold leading-6 text-slate-900 dark:text-white mb-4">Detalhes do
+                        Afastamento</h3>
+                    <div class="space-y-4 text-sm">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <span
+                                    class="block text-xs font-medium text-slate-500 dark:text-slate-400">Servidor</span>
+                                <span id="view-servidor"
+                                    class="block font-medium text-slate-900 dark:text-white mt-1"></span>
+                            </div>
+                            <div>
+                                <span class="block text-xs font-medium text-slate-500 dark:text-slate-400">Tipo</span>
+                                <span id="view-tipo"
+                                    class="block font-medium text-slate-900 dark:text-white mt-1"></span>
+                            </div>
+                            <div>
+                                <span class="block text-xs font-medium text-slate-500 dark:text-slate-400">Início</span>
+                                <span id="view-inicio"
+                                    class="block font-medium text-slate-900 dark:text-white mt-1"></span>
+                            </div>
+                            <div>
+                                <span class="block text-xs font-medium text-slate-500 dark:text-slate-400">Fim</span>
+                                <span id="view-fim"
+                                    class="block font-medium text-slate-900 dark:text-white mt-1"></span>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="block text-xs font-medium text-slate-500 dark:text-slate-400">Observação</span>
+                            <p id="view-obs"
+                                class="mt-1 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg">
+                            </p>
+                        </div>
+                        <div>
+                            <span
+                                class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Status</span>
+                            <span id="view-status"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-slate-50 dark:bg-slate-700/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                    <button type="button" onclick="closeViewModal()"
+                        class="inline-flex w-full justify-center rounded-md bg-white dark:bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-white shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 sm:mt-0 sm:w-auto">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src='js/toast.js'></script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'index.html';
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = 'index.html';
+        }
+
+        // Attach logout handler
+        const logoutBtn = document.querySelector('.text-slate-400.hover\\:text-red-500');
+        if (logoutBtn) logoutBtn.addEventListener('click', logout);
+
+        async function fetchUserData() {
+            try {
+                const response = await fetch('/api/auth/user', {
+                    headers: { 'x-auth-token': token }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Token invalid');
+                }
+
+                const user = await response.json();
+
+                // Update Sidebar User Info
+                const userNameEl = document.querySelector('.truncate.font-bold');
+                const userEmailEl = document.querySelector('.truncate.text-xs');
+
+                if (userNameEl) userNameEl.textContent = user.nome;
+                if (userEmailEl) userEmailEl.textContent = user.email;
+
+            } catch (error) {
+                console.error('Auth error:', error);
+                localStorage.removeItem('token');
+                window.location.href = 'index.html';
+            }
+        }
+
+        let currentPage = 1;
+        let totalPages = 1;
+
+        async function fetchAfastamentos(page = 1) {
+            Loader.show();
+            try {
+                const searchInput = document.getElementById('searchInput');
+                const statusSelect = document.getElementById('statusSelect');
+
+                const search = searchInput ? searchInput.value : '';
+                const status = statusSelect ? statusSelect.value : '';
+
+                const queryParams = new URLSearchParams({
+                    page,
+                    limit: 10,
+                    search,
+                    status
+                });
+
+                const response = await fetch(`/api/afastamentos?${queryParams}`, {
+                    headers: { 'x-auth-token': token }
+                });
+                const data = await response.json();
+                currentPage = data.currentPage;
+                updatePagination(data);
+
+                const tbody = document.querySelector('tbody');
+                tbody.innerHTML = '';
+
+                if (data.afastamentos.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="px-6 py-4 text-center text-slate-500 dark:text-slate-400">
+                                Nenhum afastamento encontrado.
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    data.afastamentos.forEach(a => {
+                        const tr = document.createElement('tr');
+                        tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group';
+
+                        const nome = a.servidor ? a.servidor.NOME_SERV : 'Desconhecido';
+                        const setor = a.servidor ? a.servidor.SETOR_LOTACAO_SERV : '-';
+                        const inicio = new Date(a.INICIO_FERIAS_SIT).toLocaleDateString();
+                        const fim = new Date(a.FIM_FERIAS_SIT).toLocaleDateString();
+
+                        let statusHtml = '';
+                        if (a.STATUS_SIT === 'Aprovado') {
+                            statusHtml = `<span class="inline-flex items-center gap-1.5 rounded-full bg-green-50 dark:bg-green-900/20 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:text-green-400 border border-green-200 dark:border-green-900/30"><span class="size-1.5 rounded-full bg-green-500"></span>Aprovado</span>`;
+                        } else if (a.STATUS_SIT === 'Rejeitado') {
+                            statusHtml = `<span class="inline-flex items-center gap-1.5 rounded-full bg-red-50 dark:bg-red-900/20 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900/30"><span class="size-1.5 rounded-full bg-red-500"></span>Rejeitado</span>`;
+                        } else {
+                            statusHtml = `<span class="inline-flex items-center gap-1.5 rounded-full bg-yellow-50 dark:bg-yellow-900/20 px-2.5 py-0.5 text-xs font-medium text-yellow-700 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-900/30"><span class="size-1.5 rounded-full bg-yellow-500"></span>${a.STATUS_SIT}</span>`;
+                        }
+
+                        tr.innerHTML = `
+                        <td class="py-4 px-6">
+                            <div class="flex items-center gap-3">
+                                <div class="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                    ${nome.charAt(0)}
+                                </div>
+                                <div class="font-medium text-slate-900 dark:text-white">${nome}</div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 text-sm text-slate-500 dark:text-slate-400">${setor}</td>
+                        <td class="py-4 px-6 text-sm text-slate-500 dark:text-slate-400">${a.ASSUNTO_SIT}</td>
+                        <td class="py-4 px-6 text-sm text-slate-500 dark:text-slate-400">${inicio}</td>
+                        <td class="py-4 px-6 text-sm text-slate-500 dark:text-slate-400">${fim}</td>
+                        <td class="py-4 px-6">${statusHtml}</td>
+                        <td class="py-4 px-6 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <button onclick="openViewModal('${a._id}')" class="p-2 text-slate-400 hover:text-primary transition-colors" title="Visualizar">
+                                    <span class="material-symbols-outlined text-xl">visibility</span>
+                                </button>
+                                <button onclick="openEditModal('${a._id}')" class="p-2 text-slate-400 hover:text-primary transition-colors" title="Editar">
+                                    <span class="material-symbols-outlined text-xl">edit</span>
+                                </button>
+                            </div>
+                        </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (error) {
+                console.error(error);
+                if (window.Toast) Toast.show('Erro ao carregar afastamentos', 'error');
+            } finally {
+                Loader.hide();
+            }
+        }
+
+        function updatePagination(data) {
+            totalPages = data.totalPages;
+            document.getElementById('total-results').textContent = data.totalAfastamentos;
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = currentPage === totalPages || totalPages === 0;
+        }
+
+        // --- Modal Logic ---
+
+        const editModal = document.getElementById('edit-modal');
+        const viewModal = document.getElementById('view-modal');
+        let currentAfastamentoId = null;
+        let isNew = false;
+        let cachedServidores = null;
+
+        async function loadServidores() {
+            if (cachedServidores) {
+                populateServidorSelect(cachedServidores);
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/servidores?limit=1000&simple=true', {
+                    headers: { 'x-auth-token': token }
+                });
+                const data = await res.json();
+                cachedServidores = data.servidores;
+                populateServidorSelect(cachedServidores);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function populateServidorSelect(servidores) {
+            const select = document.getElementById('edit-servidor');
+            select.innerHTML = '<option value="">Selecione um servidor</option>';
+            servidores.forEach(s => {
+                const option = document.createElement('option');
+                option.value = s.IDPK_SERV;
+                option.textContent = s.NOME_SERV;
+                select.appendChild(option);
+            });
+        }
+
+        async function openNewModal() {
+            isNew = true;
+            currentAfastamentoId = null;
+            document.getElementById('modal-title').textContent = 'Registrar Novo Afastamento';
+            document.getElementById('edit-form').reset();
+            document.getElementById('servidor-select-container').classList.remove('hidden');
+            document.getElementById('edit-status').value = 'Pendente';
+            document.getElementById('edit-status').parentElement.classList.add('hidden'); // Hide status for new
+
+            await loadServidores();
+            editModal.classList.remove('hidden');
+        }
+
+        async function openEditModal(id) {
+            if (!id || id === 'undefined') return;
+
+            isNew = false;
+            currentAfastamentoId = id;
+            document.getElementById('modal-title').textContent = 'Editar Afastamento';
+            document.getElementById('servidor-select-container').classList.add('hidden');
+            document.getElementById('edit-status').parentElement.classList.remove('hidden');
+
+            try {
+                const res = await fetch(`/api/afastamentos/${id}`, {
+                    headers: { 'x-auth-token': token }
+                });
+
+                if (!res.ok) throw new Error('Erro ao carregar detalhes');
+
+                const afastamento = await res.json();
+
+                if (afastamento) {
+                    document.getElementById('edit-tipo').value = afastamento.ASSUNTO_SIT;
+                    document.getElementById('edit-inicio').value = afastamento.INICIO_FERIAS_SIT.split('T')[0];
+                    document.getElementById('edit-fim').value = afastamento.FIM_FERIAS_SIT.split('T')[0];
+                    document.getElementById('edit-obs').value = afastamento.OBS_SIT || '';
+                    document.getElementById('edit-status').value = afastamento.STATUS_SIT;
+                    editModal.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao carregar dados.');
+            }
+        }
+
+        async function saveAfastamento() {
+            const tipo = document.getElementById('edit-tipo').value;
+            const inicio = document.getElementById('edit-inicio').value;
+            const fim = document.getElementById('edit-fim').value;
+            const obs = document.getElementById('edit-obs').value;
+            const status = document.getElementById('edit-status').value;
+
+            if (!inicio || !fim) {
+                alert('Preencha as datas.');
+                return;
+            }
+
+            const body = { tipo, inicio, fim, obs, status };
+
+            try {
+                let url = `/api/afastamentos/${currentAfastamentoId}`;
+                let method = 'PUT';
+
+                if (isNew) {
+                    const servidorId = document.getElementById('edit-servidor').value;
+                    if (!servidorId) {
+                        alert('Selecione um servidor.');
+                        return;
+                    }
+                    url = '/api/afastamentos';
+                    method = 'POST';
+                    body.servidorId = servidorId;
+                    body.documento = ''; // Optional
+                }
+
+                const res = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                if (!res.ok) throw new Error('Erro ao salvar');
+
+                closeEditModal();
+                fetchAfastamentos(currentPage);
+                if (window.Toast) Toast.show('Salvo com sucesso!', 'success');
+
+            } catch (err) {
+                console.error(err);
+                if (window.Toast) Toast.show('Erro ao salvar.', 'error');
+            }
+        }
+
+        function closeEditModal() {
+            editModal.classList.add('hidden');
+        }
+
+        async function openViewModal(id) {
+            try {
+                const res = await fetch(`/api/afastamentos/${id}`, {
+                    headers: { 'x-auth-token': token }
+                });
+
+                if (!res.ok) throw new Error('Erro ao carregar detalhes');
+
+                const a = await res.json();
+
+                if (a) {
+                    document.getElementById('view-servidor').textContent = a.servidor ? a.servidor.NOME_SERV : 'Desconhecido';
+                    document.getElementById('view-tipo').textContent = a.ASSUNTO_SIT;
+                    document.getElementById('view-inicio').textContent = new Date(a.INICIO_FERIAS_SIT).toLocaleDateString();
+                    document.getElementById('view-fim').textContent = new Date(a.FIM_FERIAS_SIT).toLocaleDateString();
+                    document.getElementById('view-obs').textContent = a.OBS_SIT || '-';
+
+                    const statusEl = document.getElementById('view-status');
+                    statusEl.textContent = a.STATUS_SIT;
+                    statusEl.className = 'inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset';
+
+                    if (a.STATUS_SIT === 'Aprovado') statusEl.classList.add('bg-green-50', 'text-green-700', 'ring-green-600/20');
+                    else if (a.STATUS_SIT === 'Rejeitado') statusEl.classList.add('bg-red-50', 'text-red-700', 'ring-red-600/20');
+                    else statusEl.classList.add('bg-yellow-50', 'text-yellow-700', 'ring-yellow-600/20');
+
+                    viewModal.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function closeViewModal() {
+            viewModal.classList.add('hidden');
+        }
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentPage > 1) fetchAfastamentos(currentPage - 1);
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentPage < totalPages) fetchAfastamentos(currentPage + 1);
+        });
+
+        // Search & Filter Listeners
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            // Debounce could be added here
+            if (e.target.value.length === 0 || e.target.value.length > 2) fetchAfastamentos(1);
+        });
+
+        document.getElementById('statusSelect').addEventListener('change', () => {
+            fetchAfastamentos(1);
+        });
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            fetchUserData();
+            await fetchAfastamentos();
+
+            // Check URL params for auto-open modal
+            const urlParams = new URLSearchParams(window.location.search);
+            const openModal = urlParams.get('openModal');
+            const servidorId = urlParams.get('servidorId');
+
+            if (openModal === 'true' && servidorId) {
+                await openNewModal();
+                // We need to wait for the select to populate which openNewModal does (await loadServidores)
+                // Set the value
+                const select = document.getElementById('edit-servidor');
+                if (select) {
+                    select.value = servidorId;
+                    // Trigger change event if any logic depends on it, though here it's simple
+                    // Also set 'Tipo' to 'Férias' automatically if coming from that flow? 
+                    // The prompt just said "levado ao formulário", implied for vacations.
+                    // But the modal allows choosing type. I'll default to 'Férias' if available or just let user choose.
+                    // Actually, 'Licença' is the option. Let's see...
+                    // The options are Licença Médica, Prêmio, Maternidade, Paternidade, Outros.
+                    // No "Férias"? Ah, `afastamentos.html` is for leaves. `ferias.html` has "Registrar Férias" which probably opens a modal there?
+
+                    // Wait, `ferias.html` has a "Registrar Férias" button (line 201).
+                    // Let's check what that button does.
+                    // It doesn't have an onclick handler in the HTML I read (Step 26).
+                    // <button ...> ... <span>Registrar Férias</span> </button>
+
+                    // IF `afastamentos.html` is for generic leaves, maybe I should select "Férias" if it exists, or "Outros".
+                    // However, `ferias.html` lists "ferias".
+                    // The user said "levado ao formulário de solicitação de férias".
+                    // If `afastamentos.html` is used for creating ALL absences including vacations, I should ensure "Férias" is an option.
+                    // Looking at `afastamentos.html` (Step 63), options are Licença Médica/Prêmio/Maternidade/Paternidade/Outros.
+                    // It seems "Férias" is NOT there.
+                    // But `api.js` differentiates ASSUNTO_SIT='Férias' from others.
+
+                    // I should probably ADD "Férias" to the dropdown in `afastamentos.html` OR the user meant a different form.
+                    // But since standard vacations might be handled differently (e.g. automatically calculated), 
+                    // maybe I should add "Férias" to the type select if it's missing, or assume "Outros" + Obs "Férias".
+                    // "Férias" is a specific ASSUNTO_SIT in backend.
+
+                    // I will add "Férias" to the dropdown in `afastamentos.html` to be safe/consistent.
+
+                    const typeSelect = document.getElementById('edit-tipo');
+                    // Check if Férias exists
+                    let feriasOption = Array.from(typeSelect.options).find(o => o.value === 'Férias');
+                    if (!feriasOption) {
+                        feriasOption = document.createElement('option');
+                        feriasOption.value = 'Férias';
+                        feriasOption.text = 'Férias';
+                        typeSelect.insertBefore(feriasOption, typeSelect.firstChild);
+                    }
+                    typeSelect.value = 'Férias';
+                }
+            }
+        });
+    </script>
+    <script src="js/header-date.js"></script>
+</body>
+
+</html>

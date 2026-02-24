@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Configurações - Sys RH SEPLAN</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;700;900&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0d7ff2",
+                        "primary-content": "#ffffff",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1e2936",
+                        "border-light": "#e7edf4",
+                        "border-dark": "#2d3b4e",
+                    },
+                    fontFamily: {
+                        "display": ["Public Sans", "sans-serif"],
+                        "body": ["Public Sans", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: "Public Sans", "Noto Sans", sans-serif;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+
+        .icon-fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display antialiased overflow-hidden">
+    <div class="flex h-screen w-full">
+        <!-- Sidebar -->
+        <aside
+            class="w-72 hidden lg:flex flex-col border-r border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark h-full shrink-0">
+            <div class="p-6 pb-2">
+                <div class="flex items-center gap-3">
+                    <div class="bg-center bg-no-repeat bg-cover rounded-lg size-10 shrink-0 shadow-sm"
+                        data-alt="Brasão da cidade de São Luís"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDY97cXhX1fxf-uXaRGQEwfuf0kV_KoLCWrDlYLNLlGL6Y-2Tk-s7zcZsFGuTBQa-bU8lIWs0bw0Qm2TsK53oZCveXcE13e-T7IPxEtQ0Yc2y79GoJW89Hy-_fzuZcoHRU9Omlss3SwNkJKFpBTD5p-9Z62LYcL3gXG79ShSVWfgfzW552skM0DMeiWiIbfeG__Mj1eoMLSsC9Ls1_mkU_Ws1z9ntdZiL4UhnT7IYrGX7u9hgHGysqQCYdZbw8sCh8rT_UF814bCiwe");'>
+                    </div>
+                    <div class="flex flex-col">
+                        <h1 class="text-slate-900 dark:text-white text-base font-bold leading-tight">Sys RH SEPLAN</h1>
+                        <p class="text-slate-500 dark:text-slate-400 text-xs font-normal leading-normal">Prefeitura de
+                            São Luís</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col gap-1 px-4 py-4 flex-1 overflow-y-auto">
+                <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer group"
+                    onclick="window.location.href='dashboard.html'">
+                    <span
+                        class="material-symbols-outlined group-hover:text-slate-900 dark:group-hover:text-white">dashboard</span>
+                    <p class="text-sm font-medium">Painel Principal</p>
+                </div>
+                <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer group"
+                    onclick="window.location.href='servidores.html'">
+                    <span
+                        class="material-symbols-outlined group-hover:text-slate-900 dark:group-hover:text-white">groups</span>
+                    <p class="text-sm font-medium">Servidores</p>
+                </div>
+
+                <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer group"
+                    onclick="window.location.href='ferias.html'">
+                    <span
+                        class="material-symbols-outlined group-hover:text-slate-900 dark:group-hover:text-white">beach_access</span>
+                    <p class="text-sm font-medium">Férias</p>
+                </div>
+                <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer group"
+                    onclick="window.location.href='relatorios.html'">
+                    <span
+                        class="material-symbols-outlined group-hover:text-slate-900 dark:group-hover:text-white">description</span>
+                    <p class="text-sm font-medium">Relatórios</p>
+                </div>
+                <div class="mt-4 pt-4 border-t border-border-light dark:border-border-dark">
+                    <p class="px-3 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Sistema</p>
+                    <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary">
+                        <span class="material-symbols-outlined icon-fill">settings</span>
+                        <p class="text-sm font-semibold">Configurações</p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-border-light dark:border-border-dark">
+                <div class="flex items-center gap-3">
+                    <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 ring-2 ring-white dark:ring-slate-700"
+                        data-alt="User avatar of Maria Silva"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDDqEYl0BadWJOzmzdD_iKHYLaw2MaZIBbUd1WwUtBcO2QOtZ9P9L50lv3S9dRn-ySNK-OJjvsqbK3TaA6yI4tBI0aISNpD0khe8wjHQ7ovNgXSAsxxzhb2HsaUCE-PdcsaC8IZc9AUvM5zHpO0w0zgE9cMFv_CamiuPYEbpes6gQiru8IEMz4TQEosTK0-NUi3v21u4sSsOpgDDIwUD60KVUd2llrBfQj8Oqwmo6sR50goumeX4Rrn2KPdnTA3IYXaTp96QHiOzndk");'>
+                    </div>
+                    <div class="flex flex-col overflow-hidden">
+                        <p class="text-slate-900 dark:text-white text-sm font-semibold truncate">Maria Silva</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-xs truncate">Analista de RH</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col min-w-0 overflow-hidden bg-background-light dark:bg-background-dark">
+            <!-- Top Nav -->
+            <header
+                class="h-16 flex items-center justify-between px-6 lg:px-8 border-b border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark shrink-0">
+                <div class="flex items-center gap-4 lg:hidden">
+                    <button class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
+                        <span class="material-symbols-outlined">menu</span>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <div class="bg-center bg-no-repeat bg-cover rounded-lg size-8 shrink-0 shadow-sm"
+                            style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDY97cXhX1fxf-uXaRGQEwfuf0kV_KoLCWrDlYLNLlGL6Y-2Tk-s7zcZsFGuTBQa-bU8lIWs0bw0Qm2TsK53oZCveXcE13e-T7IPxEtQ0Yc2y79GoJW89Hy-_fzuZcoHRU9Omlss3SwNkJKFpBTD5p-9Z62LYcL3gXG79ShSVWfgfzW552skM0DMeiWiIbfeG__Mj1eoMLSsC9Ls1_mkU_Ws1z9ntdZiL4UhnT7IYrGX7u9hgHGysqQCYdZbw8sCh8rT_UF814bCiwe");'>
+                        </div>
+                        <span class="font-bold text-slate-900 dark:text-white lg:hidden">Sys RH</span>
+                    </div>
+                </div>
+
+                <div class="flex-1 max-w-lg mx-auto hidden md:block px-4">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="material-symbols-outlined text-slate-400 text-[20px]">search</span>
+                        </span>
+                        <input id="searchInput" type="text"
+                            class="block w-full pl-10 pr-3 py-2 border border-border-light dark:border-border-dark rounded-lg leading-5 bg-background-light dark:bg-background-dark text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm transition duration-150 ease-in-out"
+                            placeholder="Buscar configurações...">
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <button
+                        class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 relative">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span
+                            class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-surface-dark"></span>
+                    </button>
+                    <button class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                        onclick="localStorage.removeItem('token'); window.location.href='index.html'">
+                        <span class="material-symbols-outlined">logout</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="flex-1 overflow-y-auto p-6 lg:p-8">
+                <div class="mx-auto max-w-6xl flex flex-col gap-8">
+                    <!-- Breadcrumbs & Heading -->
+                    <div class="flex flex-col gap-4">
+                        <nav class="flex items-center text-sm text-[#60758a] dark:text-gray-400">
+                            <a class="hover:text-primary transition-colors" href="dashboard.html">Home</a>
+                            <span class="mx-2">/</span>
+                            <span class="text-[#111418] dark:text-white font-medium">Configurações</span>
+                            <span class="mx-2">/</span>
+                            <span class="text-primary font-medium">Usuários &amp; Permissões</span>
+                        </nav>
+                        <div class="flex flex-wrap items-center justify-between gap-4">
+                            <div>
+                                <h1 class="text-3xl font-bold text-[#111418] dark:text-white tracking-tight">
+                                    Gerenciamento de Acessos</h1>
+                                <p class="text-[#60758a] dark:text-gray-400 mt-1 text-base">Controle quem tem acesso ao
+                                    sistema e seus níveis de permissão.</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <button
+                                    class="inline-flex items-center justify-center rounded-lg bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark px-4 py-2 text-sm font-medium text-[#111418] dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm">
+                                    <span class="material-symbols-outlined text-lg mr-2">download</span>
+                                    Exportar Lista
+                                </button>
+                                <button
+                                    class="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary/90 transition-colors shadow-sm"
+                                    onclick="openUserModal()">
+                                    <span class="material-symbols-outlined text-lg mr-2">add</span>
+                                    Novo Usuário
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Main Settings Content -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Left Column: User List (Takes 2/3 width on large screens) -->
+                        <div class="lg:col-span-2 flex flex-col gap-6">
+                            <!-- Filters -->
+                            <div
+                                class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark p-4">
+                                <div class="flex flex-wrap gap-4 items-center justify-between">
+                                    <div class="relative flex-1 min-w-[200px]">
+                                        <span
+                                            class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-400 text-xl">search</span>
+                                        <input id="userSearchInput"
+                                            class="w-full pl-10 pr-4 py-2 rounded-lg border border-border-light dark:border-border-dark bg-transparent text-sm focus:ring-primary focus:border-primary dark:text-white dark:placeholder-gray-500"
+                                            placeholder="Buscar por nome ou matrícula" type="text" />
+                                    </div>
+                                    <div class="flex gap-3">
+                                        <select id="deptFilter"
+                                            class="rounded-lg border border-border-light dark:border-border-dark bg-transparent py-2 pl-3 pr-8 text-sm focus:ring-primary focus:border-primary dark:text-white dark:bg-surface-dark">
+                                            <option value="">Todos os Departamentos</option>
+                                            <option value="RH">RH</option>
+                                            <option value="Financeiro">Financeiro</option>
+                                            <option value="Administrativo">Administrativo</option>
+                                        </select>
+                                        <select id="statusFilter"
+                                            class="rounded-lg border border-border-light dark:border-border-dark bg-transparent py-2 pl-3 pr-8 text-sm focus:ring-primary focus:border-primary dark:text-white dark:bg-surface-dark">
+                                            <option value="">Status: Todos</option>
+                                            <option value="Ativo">Ativo</option>
+                                            <option value="Inativo">Inativo</option>
+                                            <option value="Bloqueado">Bloqueado</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Users Table Card -->
+                            <div
+                                class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
+                                <div
+                                    class="px-6 py-4 border-b border-border-light dark:border-border-dark flex justify-between items-center">
+                                    <h3 class="font-bold text-[#111418] dark:text-white">Usuários Cadastrados</h3>
+                                    <span
+                                        class="bg-[#f0f2f5] dark:bg-[#2d3748] text-[#60758a] dark:text-gray-300 text-xs font-bold px-2 py-1 rounded-full">124
+                                        Total</span>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left text-sm">
+                                        <thead class="bg-[#f8fafc] dark:bg-[#2d3748] text-[#60758a] dark:text-gray-300">
+                                            <tr>
+                                                <th class="px-6 py-3 font-semibold">Usuário</th>
+                                                <th class="px-6 py-3 font-semibold">Cargo</th>
+                                                <th class="px-6 py-3 font-semibold">Perfil</th>
+                                                <th class="px-6 py-3 font-semibold">Status</th>
+                                                <th class="px-6 py-3 font-semibold text-right">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="users-list"
+                                            class="divide-y divide-border-light dark:divide-border-dark">
+                                            <!-- Populated by JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div
+                                    class="px-6 py-4 border-t border-border-light dark:border-border-dark flex justify-between items-center bg-[#f8fafc] dark:bg-surface-dark">
+                                    <span class="text-xs text-[#60758a] dark:text-gray-400">Mostrando 1-3 de 124
+                                        usuários</span>
+                                    <div class="flex gap-2">
+                                        <button
+                                            class="px-3 py-1 rounded border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark text-xs font-medium disabled:opacity-50"
+                                            disabled="">Anterior</button>
+                                        <button
+                                            class="px-3 py-1 rounded border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-700">Próximo</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Right Column: Quick Actions & Policy Config (Takes 1/3 width) -->
+                        <div class="flex flex-col gap-6">
+                            <!-- Security Policy Card -->
+                            <div
+                                class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark p-6">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <span class="material-symbols-outlined text-primary">security</span>
+                                    <h3 class="font-bold text-[#111418] dark:text-white">Políticas de Senha</h3>
+                                </div>
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-medium text-[#111418] dark:text-white">Exigir
+                                                2FA</span>
+                                            <span class="text-xs text-[#60758a] dark:text-gray-400">Autenticação de dois
+                                                fatores</span>
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input checked="" class="sr-only peer" type="checkbox" value="" />
+                                            <div
+                                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary">
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-medium text-[#111418] dark:text-white">Troca
+                                                Periódica</span>
+                                            <span class="text-xs text-[#60758a] dark:text-gray-400">A cada 90
+                                                dias</span>
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input class="sr-only peer" type="checkbox" value="" />
+                                            <div
+                                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary">
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="pt-4 border-t border-border-light dark:border-border-dark">
+                                        <label
+                                            class="block text-sm font-medium text-[#111418] dark:text-white mb-2">Comprimento
+                                            Mínimo</label>
+                                        <input
+                                            class="w-full rounded-lg border border-border-light dark:border-border-dark bg-[#f8fafc] dark:bg-[#2d3748] text-sm p-2.5 focus:ring-primary focus:border-primary"
+                                            type="number" value="8" />
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Integration Status Card -->
+                            <div
+                                class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <span class="material-symbols-outlined text-green-600">sync_alt</span>
+                                        <h3 class="font-bold text-[#111418] dark:text-white">Sincronização</h3>
+                                    </div>
+                                    <span
+                                        class="text-xs font-mono bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-0.5 rounded">Online</span>
+                                </div>
+                                <div class="space-y-4">
+                                    <div
+                                        class="p-3 bg-[#f8fafc] dark:bg-[#2d3748] rounded-lg border border-border-light dark:border-border-dark">
+                                        <div class="flex justify-between items-center mb-1">
+                                            <span class="text-xs font-semibold text-[#111418] dark:text-white">Portal da
+                                                Transparência</span>
+                                            <span class="text-xs text-gray-500">Há 5 min</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
+                                            <div class="bg-green-600 h-1.5 rounded-full" style="width: 100%"></div>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="p-3 bg-[#f8fafc] dark:bg-[#2d3748] rounded-lg border border-border-light dark:border-border-dark">
+                                        <div class="flex justify-between items-center mb-1">
+                                            <span
+                                                class="text-xs font-semibold text-[#111418] dark:text-white">E-Social</span>
+                                            <span class="text-xs text-gray-500">Há 2 horas</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
+                                            <div class="bg-green-600 h-1.5 rounded-full" style="width: 100%"></div>
+                                        </div>
+                                    </div>
+                                    <button
+                                        class="w-full mt-2 text-sm text-primary font-medium hover:underline flex items-center justify-center gap-2">
+                                        <span class="material-symbols-outlined text-sm">settings</span>
+                                        Configurar Integrações
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = 'login.html';
+
+        // Auth Check & Sidebar User Info
+        async function fetchUserData() {
+            try {
+                const response = await fetch('/api/auth/user', {
+                    headers: { 'x-auth-token': token }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Token invalid');
+                }
+
+                const user = await response.json();
+
+                // Update Sidebar User Info
+                const userNameEl = document.querySelector('.truncate.font-bold');
+                const userEmailEl = document.querySelector('.truncate.text-xs');
+
+                if (userNameEl) userNameEl.textContent = user.nome;
+                if (userEmailEl) userEmailEl.textContent = user.email;
+
+            } catch (error) {
+                console.error('Auth error:', error);
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            }
+        }
+
+        let allUsers = [];
+
+        async function fetchUsers() {
+            try {
+                const response = await fetch('/api/auth/users', {
+                    headers: { 'x-auth-token': token }
+                });
+                const users = await response.json();
+                allUsers = users;
+                renderUsers(users);
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        }
+
+        function renderUsers(users) {
+            const tbody = document.getElementById('users-list');
+            tbody.innerHTML = '';
+
+            if (users.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-4 text-center text-slate-500">Nenhum usuário encontrado.</td></tr>`;
+                return;
+            }
+
+            users.forEach(user => {
+                const initials = user.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-[#f8fafc] dark:hover:bg-[#2d3748]/50 transition-colors';
+                tr.innerHTML = `
+            <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                    <div class="size-9 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-xs">${initials}</div>
+                    <div>
+                        <div class="font-medium text-[#111418] dark:text-white">${user.nome}</div>
+                        <div class="text-xs text-[#60758a] dark:text-gray-400">${user.email}</div>
+                    </div>
+                </div>
+            </td>
+            <td class="px-6 py-4 text-[#111418] dark:text-gray-300">${user.cargo || 'Não informado'}</td>
+            <td class="px-6 py-4"><span class="inline-flex items-center rounded-md bg-purple-50 dark:bg-purple-900/30 px-2 py-1 text-xs font-medium text-purple-700 dark:text-purple-300 ring-1 ring-inset ring-purple-700/10 dark:ring-purple-400/20">${user.perfil}</span></td>
+            <td class="px-6 py-4">
+                <div class="flex items-center gap-2">
+                    <div class="size-2 rounded-full bg-green-500"></div>
+                    <span class="text-[#111418] dark:text-gray-300">Ativo</span>
+                </div>
+            </td>
+            <td class="px-6 py-4 text-right">
+                <button class="text-gray-400 hover:text-primary transition-colors" onclick="deleteUser('${user._id}')"><span class="material-symbols-outlined">delete</span></button>
+            </td>
+        `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function deleteUser(id) {
+            if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
+
+            try {
+                const response = await fetch(`/api/auth/users/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'x-auth-token': token }
+                });
+
+                if (response.ok) {
+                    fetchUsers();
+                } else {
+                    alert('Erro ao excluir usuário');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function openUserModal() {
+            // Simple prompt for now to match minimal intrusion
+            const nome = prompt('Nome do Usuário:');
+            if (!nome) return;
+            const email = prompt('Email:');
+            const password = prompt('Senha:');
+            const perfil = prompt('Perfil (admin/editor/viewer):', 'viewer');
+
+            if (nome && email && password) {
+                createUser({ nome, email, password, perfil });
+            }
+        }
+
+        async function createUser(userData) {
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                if (response.ok) {
+                    fetchUsers();
+                } else {
+                    alert('Erro ao criar usuário');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchUserData();
+            fetchUsers();
+
+            const searchInput = document.getElementById('userSearchInput');
+
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const filtered = allUsers.filter(user =>
+                    user.nome.toLowerCase().includes(term) ||
+                    user.email.toLowerCase().includes(term)
+                );
+                renderUsers(filtered);
+            });
+        });
+    </script>
+    <script src="js/header-date.js"></script>
+</body>
+
+</html>

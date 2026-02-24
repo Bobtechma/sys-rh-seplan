@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Perfil do Servidor - Sys RH SEPLAN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        <div class="flex flex-col gap-2">
+    <div class="flex flex-wrap items-center gap-2 text-sm text-[#60758a] dark:text-[#94a3b8]">
+        <a class="hover:text-primary transition-colors" href="dashboard.html">Home</a>
+        <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+        <a class="hover:text-primary transition-colors" href="servidores.html">Gerenciamento</a>
+        <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+        <span class="text-[#111418] dark:text-white font-medium">Perfil do Servidor</span>
+    </div>
+    <h1 class="text-2xl font-bold text-[#111418] dark:text-white">Detalhes do Servidor</h1>
+    </div>
+    <a href="servidores.html"
+        class="flex items-center justify-center gap-2 rounded-lg bg-white dark:bg-[#1e293b] border border-[#e5e7eb] dark:border-[#334155] px-4 py-2.5 text-sm font-medium text-[#111418] dark:text-white shadow-sm hover:bg-gray-50 dark:hover:bg-[#334155]/80 transition-colors w-full sm:w-auto">
+        <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+        Voltar para Lista
+    </a>
+    </div>
+    <!-- Profile Header Card -->
+    <div class="rounded-xl border border-[#e5e7eb] dark:border-[#334155] bg-white dark:bg-[#1e293b] p-6 shadow-sm">
+        <div class="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+            <div class="flex flex-col md:flex-row gap-6 items-center md:items-start w-full">
+                <div class="relative group">
+                    <div class="bg-center bg-no-repeat bg-cover rounded-full size-24 md:size-32 border-4 border-[#f0f2f5] dark:border-[#334155] shadow-md"
+                        data-alt="Portrait of João da Silva"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDUaXu7-pKScQ3Q5EBPgH1tL4fVqT-UwrLsvKn5FBvhZLnxPcoxObtsPFYyBadJ3OJ5_Lue5C0SrgEbOzvHJNlvgn3tqwnvjlGp_BbdHASf6UBs-LMONe9I7KcJCyr4fNjTuL4xYTkdforG8jl_7lheOaOIM_2Y4LpWnZiohoCxuw_NksmfM8hVBMelyWDNY8_7f3qHeGugfykv29WiG0LwW-g3qmdjmfPQMVzjrPU17aH1d-RXSu9LTH3Jp5B_wrOJmYM5m88Y16dJ");'>
+                    </div>
+                    <div class="absolute bottom-1 right-1 bg-green-500 border-2 border-white dark:border-[#1e293b] size-5 rounded-full"
+                        title="Online"></div>
+                </div>
+                <div class="flex flex-col items-center md:items-start text-center md:text-left flex-1">
+                    <div class="flex items-center gap-3 mb-1">
+                        <h2 id="header-nome" class="text-2xl font-bold text-[#111418] dark:text-white">João
+                            da Silva Santos
+                        </h2>
+                        <span id="header-status"
+                            class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:text-green-400 border border-green-200 dark:border-green-800">
+                            Ativo
+                        </span>
+                    </div>
+                    <p id="header-cargo" class="text-[#60758a] dark:text-[#94a3b8] text-base mb-1">Analista
+                        de Planejamento e
+                        Gestão</p>
+                    <div
+                        class="flex flex-wrap justify-center md:justify-start gap-4 mt-2 text-sm text-[#60758a] dark:text-[#94a3b8]">
+                        <div class="flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-[18px]">badge</span>
+                            <span id="header-matricula">Matrícula: 12.345-6</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-[18px]">calendar_month</span>
+                            <span id="header-admissao">Admissão: 10/02/2015</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-[18px]">location_on</span>
+                            <span id="header-lotacao">SEPLAN - D. Urbano</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-3 w-full md:w-auto">
+                <button
+                    class="flex-1 md:flex-none flex items-center justify-center gap-2 rounded-lg bg-[#f0f2f5] dark:bg-[#334155] px-4 py-2.5 text-sm font-medium text-[#111418] dark:text-white hover:bg-[#e5e7eb] dark:hover:bg-[#475569] transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">print</span>
+                    <span class="hidden md:inline">Imprimir Ficha</span>
+                </button>
+                <button
+                    class="flex-1 md:flex-none flex items-center justify-center gap-2 rounded-lg bg-primary text-white px-6 py-2.5 text-sm font-bold shadow-md hover:bg-primary/90 transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">edit</span>
+                    Editar
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- Info Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Dados Pessoais -->
+        <div class="flex flex-col gap-4">
+            <div
+                class="rounded-xl border border-[#e5e7eb] dark:border-[#334155] bg-white dark:bg-[#1e293b] overflow-hidden shadow-sm h-full">
+                <div
+                    class="flex items-center justify-between px-5 py-4 border-b border-[#f0f2f5] dark:border-[#334155]">
+                    <h3 class="text-[#111418] dark:text-white font-bold text-lg flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">person</span>
+                        Dados Pessoais
+                    </h3>
+                </div>
+                <div class="p-5 flex flex-col gap-4">
+                    <div>
+                        <p class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                            CPF</p>
+                        <p id="pessoal-cpf" class="text-[#111418] dark:text-white font-medium">
+                            000.111.222-33</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                            RG</p>
+                        <p id="pessoal-rg" class="text-[#111418] dark:text-white font-medium">123456789 -
+                            SSP/MA</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                            Data de Nascimento</p>
+                        <p id="pessoal-nascimento" class="text-[#111418] dark:text-white font-medium">
+                            15/05/1985 (39 anos)</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                            Estado Civil</p>
+                        <p id="pessoal-estadocivil" class="text-[#111418] dark:text-white font-medium">
+                            Casado(a)</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                            Nome da Mãe</p>
+                        <p id="pessoal-mae" class="text-[#111418] dark:text-white font-medium">Maria da
+                            Silva Santos</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Dados Funcionais -->
+        <div class="flex flex-col gap-4">
+            <div
+                class="rounded-xl border border-[#e5e7eb] dark:border-[#334155] bg-white dark:bg-[#1e293b] overflow-hidden shadow-sm h-full">
+                <div
+                    class="flex items-center justify-between px-5 py-4 border-b border-[#f0f2f5] dark:border-[#334155]">
+                    <h3 class="text-[#111418] dark:text-white font-bold text-lg flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">work</span>
+                        Dados Funcionais
+                    </h3>
+                </div>
+                <div class="p-5 flex flex-col gap-4">
+                    <div>
+                        <p class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                            Cargo</p>
+                        <p id="funcional-cargo" class="text-[#111418] dark:text-white font-medium">Analista
+                            de Planejamento</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                            Lotação Atual</p>
+                        <p id="funcional-lotacao" class="text-[#111418] dark:text-white font-medium">
+                            Secretaria Municipal de
+                            Planejamento (SEPLAN)</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                            Vínculo</p>
+                        <span id="funcional-vinculo"
+                            class="inline-flex items-center rounded bg-blue-50 dark:bg-blue-900/20 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-300">
+                            Estatutário - Concursado
+                        </span>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                            Carga Horária</p>
+                        <p id="funcional-carga" class="text-[#111418] dark:text-white font-medium">40h
+                            Semanais</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                            Data da Posse</p>
+                        <p id="funcional-posse" class="text-[#111418] dark:text-white font-medium">
+                            10/02/2015</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Contato -->
+        <div class="flex flex-col gap-4">
+            <div
+                class="rounded-xl border border-[#e5e7eb] dark:border-[#334155] bg-white dark:bg-[#1e293b] overflow-hidden shadow-sm h-full">
+                <div
+                    class="flex items-center justify-between px-5 py-4 border-b border-[#f0f2f5] dark:border-[#334155]">
+                    <h3 class="text-[#111418] dark:text-white font-bold text-lg flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">contacts</span>
+                        Contato &amp; Endereço
+                    </h3>
+                </div>
+                <div class="p-5 flex flex-col gap-4">
+                    <div class="flex items-start gap-3">
+                        <div class="bg-[#f0f2f5] dark:bg-[#334155] p-2 rounded-lg">
+                            <span
+                                class="material-symbols-outlined text-[#60758a] dark:text-[#94a3b8] text-[20px]">mail</span>
+                        </div>
+                        <div>
+                            <p
+                                class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                                E-mail Institucional</p>
+                            <p id="contato-email" class="text-[#111418] dark:text-white font-medium break-all">
+                                joao.santos@saoluis.ma.gov.br</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="bg-[#f0f2f5] dark:bg-[#334155] p-2 rounded-lg">
+                            <span
+                                class="material-symbols-outlined text-[#60758a] dark:text-[#94a3b8] text-[20px]">call</span>
+                        </div>
+                        <div>
+                            <p
+                                class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                                Celular / WhatsApp</p>
+                            <p id="contato-celular" class="text-[#111418] dark:text-white font-medium">(98)
+                                98888-7777</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="bg-[#f0f2f5] dark:bg-[#334155] p-2 rounded-lg">
+                            <span
+                                class="material-symbols-outlined text-[#60758a] dark:text-[#94a3b8] text-[20px]">home</span>
+                        </div>
+                        <div>
+                            <p
+                                class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                            <div class="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+                                <div class="flex flex-col md:flex-row gap-6 items-center md:items-start w-full">
+                                    <div class="relative group">
+                                        <div class="bg-center bg-no-repeat bg-cover rounded-full size-24 md:size-32 border-4 border-[#f0f2f5] dark:border-[#334155] shadow-md"
+                                            data-alt="Portrait of João da Silva"
+                                            style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDUaXu7-pKScQ3Q5EBPgH1tL4fVqT-UwrLsvKn5FBvhZLnxPcoxObtsPFYyBadJ3OJ5_Lue5C0SrgEbOzvHJNlvgn3tqwnvjlGp_BbdHASf6UBs-LMONe9I7KcJCyr4fNjTuL4xYTkdforG8jl_7lheOaOIM_2Y4LpWnZiohoCxuw_NksmfM8hVBMelyWDNY8_7f3qHeGugfykv29WiG0LwW-g3qmdjmfPQMVzjrPU17aH1d-RXSu9LTH3Jp5B_wrOJYmYM5m88Y16dJ");'>
+                                        </div>
+                                        <div class="absolute bottom-1 right-1 bg-green-500 border-2 border-white dark:border-[#1e293b] size-5 rounded-full"
+                                            title="Online"></div>
+                                    </div>
+                                    <div
+                                        class="flex flex-col items-center md:items-start text-center md:text-left flex-1">
+                                        <div class="flex items-center gap-3 mb-1">
+                                            <h2 id="header-nome"
+                                                class="text-2xl font-bold text-[#111418] dark:text-white">João
+                                                da Silva Santos
+                                            </h2>
+                                            <span id="header-status"
+                                                class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:text-green-400 border border-green-200 dark:border-green-800">
+                                                Ativo
+                                            </span>
+                                        </div>
+                                        <p id="header-cargo" class="text-[#60758a] dark:text-[#94a3b8] text-base mb-1">
+                                            Analista
+                                            de Planejamento e
+                                            Gestão</p>
+                                        <div </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Info Grid -->
+                                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    <!-- Dados Pessoais -->
+                                    <div class="flex flex-col gap-4">
+                                        <div
+                                            class="rounded-xl border border-[#e5e7eb] dark:border-[#334155] bg-white dark:bg-[#1e293b] overflow-hidden shadow-sm h-full">
+                                            <div
+                                                class="flex items-center justify-between px-5 py-4 border-b border-[#f0f2f5] dark:border-[#334155]">
+                                                <h3
+                                                    class="text-[#111418] dark:text-white font-bold text-lg flex items-center gap-2">
+                                                    <span class="material-symbols-outlined text-primary">person</span>
+                                                    Dados Pessoais
+                                                </h3>
+                                            </div>
+                                            <div class="p-5 flex flex-col gap-4">
+                                                <div>
+                                                    <p
+                                                        class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                                                        CPF</p>
+                                                    <p id="pessoal-cpf"
+                                                        class="text-[#111418] dark:text-white font-medium">
+                                                        000.111.222-33</p>
+                                                </div>
+                                                <div>
+                                                    <p
+                                                        class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                                                        RG</p>
+                                                    <p id="pessoal-rg"
+                                                        class="text-[#111418] dark:text-white font-medium">
+                                                        123456789 -
+                                                        SSP/MA</p>
+                                                </div>
+                                                <div>
+                                                    <p
+                                                        class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                                                        Data de Nascimento</p>
+                                                    <p id="pessoal-nascimento"
+                                                        class="text-[#111418] dark:text-white font-medium">
+                                                        15/05/1985 (39 anos)</p>
+                                                </div>
+                                                <div>
+                                                    <p
+                                                        class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                                                        Estado Civil</p>
+                                                    <p id="pessoal-estadocivil"
+                                                        class="text-[#111418] dark:text-white font-medium">
+                                                        Casado(a)</p>
+                                                </div>
+                                                <div>
+                                                    <p
+                                                        class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                                                        Nome da Mãe</p>
+                                                    <p id="pessoal-mae"
+                                                        class="text-[#111418] dark:text-white font-medium">Maria
+                                                        da
+                                                        Silva Santos</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Dados Funcionais -->
+                                    <div class="flex flex-col gap-4">
+                                        <div
+                                            class="rounded-xl border border-[#e5e7eb] dark:border-[#334155] bg-white dark:bg-[#1e293b] overflow-hidden shadow-sm h-full">
+                                            <div
+                                                class="flex items-center justify-between px-5 py-4 border-b border-[#f0f2f5] dark:border-[#334155]">
+                                                <h3
+                                                    class="text-[#111418] dark:text-white font-bold text-lg flex items-center gap-2">
+                                                    <span class="material-symbols-outlined text-primary">work</span>
+                                                    Dados Funcionais
+                                                </h3>
+                                            </div>
+                                            <div class="p-5 flex flex-col gap-4">
+                                                <div>
+                                                    <p
+                                                        class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                                                        Cargo</p>
+                                                    <p id="funcional-cargo"
+                                                        class="text-[#111418] dark:text-white font-medium">
+                                                        Analista
+                                                        de Planejamento</p>
+                                                </div>
+                                                <div>
+                                                    <p
+                                                        class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                                                        Lotação Atual</p>
+                                                    <p id="funcional-lotacao"
+                                                        class="text-[#111418] dark:text-white font-medium">
+                                                        Secretaria Municipal de
+                                                        Planejamento (SEPLAN)</p>
+                                                </div>
+                                                <div>
+                                                    <p
+                                                        class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                                                        Vínculo</p>
+                                                    <span id="funcional-vinculo"
+                                                        class="inline-flex items-center rounded bg-blue-50 dark:bg-blue-900/20 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-300">
+                                                        Estatutário - Concursado
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <p
+                                                        class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                                                        Carga Horária</p>
+                                                    <p id="funcional-carga"
+                                                        class="text-[#111418] dark:text-white font-medium">
+                                                        40h
+                                                        Semanais</p>
+                                                </div>
+                                                <div>
+                                                    <p
+                                                        class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                                                        Data da Posse</p>
+                                                    <p id="funcional-posse"
+                                                        class="text-[#111418] dark:text-white font-medium">
+                                                        10/02/2015</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Contato -->
+                                    <div class="flex flex-col gap-4">
+                                        <div
+                                            class="rounded-xl border border-[#e5e7eb] dark:border-[#334155] bg-white dark:bg-[#1e293b] overflow-hidden shadow-sm h-full">
+                                            <div
+                                                class="flex items-center justify-between px-5 py-4 border-b border-[#f0f2f5] dark:border-[#334155]">
+                                                <h3
+                                                    class="text-[#111418] dark:text-white font-bold text-lg flex items-center gap-2">
+                                                    <span class="material-symbols-outlined text-primary">contacts</span>
+                                                    Contato &amp; Endereço
+                                                </h3>
+                                            </div>
+                                            <div class="p-5 flex flex-col gap-4">
+                                                <div class="flex items-start gap-3">
+                                                    <div class="bg-[#f0f2f5] dark:bg-[#334155] p-2 rounded-lg">
+                                                        <span
+                                                            class="material-symbols-outlined text-[#60758a] dark:text-[#94a3b8] text-[20px]">mail</span>
+                                                    </div>
+                                                    <div>
+                                                        <p
+                                                            class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                                                            E-mail Institucional</p>
+                                                        <p id="contato-email"
+                                                            class="text-[#111418] dark:text-white font-medium break-all">
+                                                            joao.santos@saoluis.ma.gov.br</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-start gap-3">
+                                                    <div class="bg-[#f0f2f5] dark:bg-[#334155] p-2 rounded-lg">
+                                                        <span
+                                                            class="material-symbols-outlined text-[#60758a] dark:text-[#94a3b8] text-[20px]">call</span>
+                                                    </div>
+                                                    <div>
+                                                        <p
+                                                            class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                                                            Celular / WhatsApp</p>
+                                                        <p id="contato-celular"
+                                                            class="text-[#111418] dark:text-white font-medium">(98)
+                                                            98888-7777</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-start gap-3">
+                                                    <div class="bg-[#f0f2f5] dark:bg-[#334155] p-2 rounded-lg">
+                                                        <span
+                                                            class="material-symbols-outlined text-[#60758a] dark:text-[#94a3b8] text-[20px]">home</span>
+                                                    </div>
+                                                    <div>
+                                                        <p
+                                                            class="text-xs font-medium text-[#60758a] dark:text-[#94a3b8] uppercase tracking-wider mb-1">
+                                                            // Redirect back to list if no ID provided
+                                                            // window.location.href = 'servidores.html';
+                                                            return;
+                                                            }
+
+                                                            // Tab Switching Logic
+                                                            const tabs = document.querySelectorAll('.tab-btn');
+                                                            const contents = document.querySelectorAll('.tab-content');
+
+                                                            tabs.forEach(tab => {
+                                                            tab.addEventListener('click', () => {
+                                                            // Remove active class from all tabs
+                                                            tabs.forEach(t => {
+                                                            t.classList.remove('border-primary', 'text-primary',
+                                                            'font-bold');
+                                                            t.classList.add('border-transparent', 'text-[#60758a]',
+                                                            'dark:text-[#94a3b8]', 'font-medium');
+                                                            });
+
+                                                            // Add active class to clicked tab
+                                                            tab.classList.remove('border-transparent', 'text-[#60758a]',
+                                                            'dark:text-[#94a3b8]', 'font-medium');
+                                                            tab.classList.add('border-primary', 'text-primary',
+                                                            'font-bold');
+
+                                                            // Hide all contents
+                                                            contents.forEach(c => c.classList.add('hidden'));
+
+                                                            // Show target content
+                                                            const targetId = `tab-${tab.dataset.tab}`;
+                                                            document.getElementById(targetId).classList.remove('hidden');
+                                                            });
+                                                            });
+
+                                                            // Fetch and Display Data
+                                                            try {
+                                                            const response = await fetch(`/api/servidores/${id}`);
+                                                            const data = await response.json();
+
+                                                            if (response.status === 404) {
+                                                            alert('Servidor não encontrado');
+                                                            window.location.href = 'servidores.html';
+                                                            return;
+                                                            }
+
+                                                            const s = data.servidor;
+                                                            const dependentes = data.dependentes;
+                                                            const historico = data.historico; // Vacation/Leave history
+
+                                                            // Helper to safely set text content
+                                                            const setText = (id, value, fallback = 'N/A') => {
+                                                            const el = document.getElementById(id);
+                                                            if (el) el.textContent = value || fallback;
+                                                            };
+
+                                                            // Update Header
+                                                            setText('header-nome', s.NOME_SERV);
+                                                            setText('header-cargo', s.CARGO_EFETIVO_SERV);
+                                                            setText('header-matricula', `Matrícula: ${s.MATRICULA_SERV
+                                                            || 'N/A'}`);
+                                                            setText('header-admissao', `Admissão: ${s.DATA_ADMISSAO_SERV
+                                                            ? new Date(s.DATA_ADMISSAO_SERV).toLocaleDateString('pt-BR')
+                                                            : 'N/A'}`);
+                                                            setText('header-lotacao', s.LOTACAO_SERV);
+
+                                                            // Update Personal Data
+                                                            setText('pessoal-cpf', s.CPF_SERV);
+                                                            setText('pessoal-rg', s.RG_SERV);
+                                                            setText('pessoal-nascimento', s.DATA_NASCIMENTO_SERV ? new
+                                                            Date(s.DATA_NASCIMENTO_SERV).toLocaleDateString('pt-BR') :
+                                                            'N/A');
+                                                            setText('pessoal-estadocivil', s.ESTADO_CIVIL_SERV);
+                                                            setText('pessoal-mae', s.NOME_MAE_SERV);
+
+                                                            // Update Functional Data
+                                                            setText('funcional-cargo', s.CARGO_EFETIVO_SERV);
+                                                            setText('funcional-lotacao', s.LOTACAO_SERV);
+                                                            setText('funcional-vinculo', s.VINCULO_SERV);
+                                                            setText('funcional-carga', s.CARGA_HORARIA_SERV);
+                                                            setText('funcional-posse', s.DATA_ADMISSAO_SERV ? new
+                                                            Date(s.DATA_ADMISSAO_SERV).toLocaleDateString('pt-BR') :
+                                                            'N/A');
+
+                                                            // Update Contact Data
+                                                            setText('contato-email', s.EMAIL_SERV);
+                                                            setText('contato-celular', s.TELEFONE_SERV);
+                                                            setText('contato-endereco', s.ENDERECO_SERV);
+
+                                                            // Update Breadcrumb
+                                                            const breadcrumbName =
+                                                            document.querySelector('.text-\\[\\#111418\\] >
+                                                            .font-medium');
+                                                            if (breadcrumbName) breadcrumbName.textContent =
+                                                            s.NOME_SERV;
+
+                                                            // Render Vacation History
+                                                            const feriasList = document.getElementById('ferias-list');
+                                                            const ferias = historico.filter(h => h.ASSUNTO_SIT ===
+                                                            'Férias');
+
+                                                            if (ferias.length > 0) {
+                                                            feriasList.innerHTML = ferias.map(f => `
+                                                            <tr
+                                                                class="hover:bg-gray-50 dark:hover:bg-[#334155]/50 transition-colors">
+                                                                <td class="p-3 text-sm text-[#111418] dark:text-white">
+                                                                    N/A</td>
+                                                                <td class="p-3 text-sm text-[#111418] dark:text-white">
+                                                                    ${new
+                                                                    Date(f.INICIO_FERIAS_SIT).toLocaleDateString('pt-BR')}
+                                                                </td>
+                                                                <td class="p-3 text-sm text-[#111418] dark:text-white">
+                                                                    ${new
+                                                                    Date(f.FIM_FERIAS_SIT).toLocaleDateString('pt-BR')}
+                                                                </td>
+                                                                <td class="p-3 text-sm text-[#111418] dark:text-white">
+                                                                    ${Math.ceil((new Date(f.FIM_FERIAS_SIT) - new
+                                                                    Date(f.INICIO_FERIAS_SIT)) / (1000 * 60 * 60 * 24))}
+                                                                </td>
+                                                                <td class="p-3 text-sm">
+                                                                    <span
+                                                                        class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-2 py-1 text-xs font-medium text-green-800 dark:text-green-400">
+                                                                        ${f.STATUS_SIT || 'Concluído'}
+                                                                    </span>
+                                                                </td>
+                                                                <td class="p-3 text-sm text-right">
+                                                                    <button
+                                                                        class="text-[#60758a] dark:text-[#94a3b8] hover:text-primary transition-colors">
+                                                                        <span
+                                                                            class="material-symbols-outlined text-[18px]">visibility</span>
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                            `).join('');
+                                                            } else {
+                                                            feriasList.innerHTML = '<tr>
+                                                                <td colspan="6" class="p-4 text-center text-gray-500">
+                                                                    Nenhum registro de férias encontrado.</td>
+                                                            </tr>';
+                                                            }
+
+                                                            // Render Observations
+                                                            renderObservacoes(s.OBSERVACOES || []);
+
+                                                            } catch (error) {
+                                                            console.error('Error fetching server details:', error);
+                                                            }
+
+                                                            // Handle New Observation Submission
+                                                            document.getElementById('form-observacao').addEventListener('submit',
+                                                            async (e) => {
+                                                            e.preventDefault();
+                                                            const btn = e.target.querySelector('button[type="submit"]');
+                                                            const originalText = btn.innerHTML;
+
+                                                            try {
+                                                            btn.disabled = true;
+                                                            btn.innerHTML = 'Salvando...';
+
+                                                            const formData = new FormData(e.target);
+                                                            const payload = {
+                                                            categoria: formData.get('categoria'),
+                                                            conteudo: formData.get('conteudo'),
+                                                            autor: 'Admin' // In a real app, get from auth context
+                                                            };
+
+                                                            const res = await fetch(`/api/servidores/${id}/observacoes`,
+                                                            {
+                                                            method: 'POST',
+                                                            headers: {
+                                                            'Content-Type': 'application/json'
+                                                            },
+                                                            body: JSON.stringify(payload)
+                                                            });
+
+                                                            if (!res.ok) throw new Error('Erro ao salvar observação');
+
+                                                            const updatedObservacoes = await res.json();
+                                                            renderObservacoes(updatedObservacoes);
+
+                                                            e.target.reset();
+                                                            // Optional: Show toast success
+
+                                                            } catch (error) {
+                                                            console.error(error);
+                                                            alert('Erro ao salvar observação');
+                                                            } finally {
+                                                            btn.disabled = false;
+                                                            btn.innerHTML = originalText;
+                                                            }
+                                                            });
+
+                                                            function renderObservacoes(obs) {
+                                                            const list = document.getElementById('observacoes-list');
+                                                            if (!obs || obs.length === 0) {
+                                                            list.innerHTML = '
+                                                        <p class="text-center text-gray-500 py-4">Nenhuma observação
+                                                            registrada.</p>';
+                                                        return;
+                                                        }
+
+                                                        list.innerHTML = obs.map(o => `
+                                                        <div
+                                                            class="bg-white dark:bg-[#1e293b] p-4 rounded-lg border border-gray-200 dark:border-[#334155] shadow-sm flex flex-col gap-2">
+                                                            <div class="flex justify-between items-start">
+                                                                <div class="flex items-center gap-2">
+                                                                    <span
+                                                                        class="px-2 py-0.5 rounded text-xs font-bold ${getCategoryColor(o.categoria)}">
+                                                                        ${o.categoria}
+                                                                    </span>
+                                                                    <span
+                                                                        class="text-xs text-gray-500 dark:text-gray-400">
+                                                                        ${new Date(o.data).toLocaleDateString('pt-BR')}
+                                                                        às ${new
+                                                                        Date(o.data).toLocaleTimeString('pt-BR', { hour:
+                                                                        '2-digit', minute: '2-digit' })}
+                                                                    </span>
+                                                                </div>
+                                                                <span class="text-xs text-gray-400">Por: ${o.autor ||
+                                                                    'Sistema'}</span>
+                                                            </div>
+                                                            <p
+                                                                class="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+                                                                ${o.conteudo}</p>
+                                                        </div>
+                                                        `).join('');
+                                                        }
+
+                                                        function getCategoryColor(cat) {
+                                                        switch (cat) {
+                                                        case 'Elogio': return 'bg-green-100 text-green-800
+                                                        dark:bg-green-900/30 dark:text-green-400';
+                                                        case 'Punição': return 'bg-red-100 text-red-800
+                                                        dark:bg-red-900/30 dark:text-red-400';
+                                                        case 'Memorando': return 'bg-blue-100 text-blue-800
+                                                        dark:bg-blue-900/30 dark:text-blue-400';
+                                                        case 'Aviso': return 'bg-yellow-100 text-yellow-800
+                                                        dark:bg-yellow-900/30 dark:text-yellow-400';
+                                                        default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700
+                                                        dark:text-gray-300';
+                                                        }
+                                                        }
+                                                        });
+                                                        </script>
+                                                        </body>
+
+</html>

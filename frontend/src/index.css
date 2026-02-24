@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-primary: #0d7ff2;
+  --color-primary-content: #ffffff;
+  --color-background-light: #ffffff;
+  --color-background-dark: #101922;
+  --color-surface-light: #ffffff;
+  --color-surface-dark: #1e2936;
+  --color-border-light: #e7edf4;
+  --color-border-dark: #2d3b4e;
+  --font-display: "Public Sans", "Noto Sans", sans-serif;
+  --font-body: "Public Sans", "Noto Sans", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-body;
+  }
+}
+
+@layer components {
+
+  .form-input,
+  .form-textarea,
+  .form-select {
+    @apply w-full rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm font-medium transition-all duration-200 placeholder:text-slate-400 focus:border-primary focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-primary/10 outline-none;
+  }
+}
