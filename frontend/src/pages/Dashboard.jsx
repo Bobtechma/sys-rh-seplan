@@ -3,7 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Doughnut } from 'react-chartjs-2';
 import { Skeleton } from '../components/Skeleton';
+import LottieLoader from '../components/LottieLoader';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { formatDateUTC } from '../utils/formatDate';
+import { useStaggerReveal, useCountUp } from '../hooks/useAnimations';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -23,7 +26,7 @@ const Dashboard = () => {
         const fetchDashboardStats = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const response = await axios.get('/api/dashboard', {
+                const response = await axios.get(`/api/dashboard?_t=${Date.now()}`, {
                     headers: { 'x-auth-token': token }
                 });
                 setStats(response.data);
@@ -49,7 +52,7 @@ const Dashboard = () => {
         setHistoryLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get(`/api/dashboard/history?page=${page}&limit=10`, {
+            const res = await axios.get(`/api/dashboard/history?page=${page}&limit=10&_t=${Date.now()}`, {
                 headers: { 'x-auth-token': token }
             });
             setHistoryData(res.data.history);
@@ -76,6 +79,17 @@ const Dashboard = () => {
 
     const totalVinculos = stats.vinculos.efetivos + stats.vinculos.comissionados + stats.vinculos.contratados + (stats.vinculos.servicosPrestados || 0) + (stats.vinculos.outros || 0);
 
+    // Anime.js stagger reveals
+    const statsRef = useStaggerReveal('.stat-card', [loading], { staggerDelay: 80 });
+    const actionsRef = useStaggerReveal('.action-card', [loading], { staggerDelay: 60, startDelay: 300 });
+    const tableRef = useStaggerReveal('.activity-row', [loading, stats.recentActivity], { staggerDelay: 50, startDelay: 200 });
+
+    // Animated counters
+    const countActive = useCountUp(stats.activeServidores, loading);
+    const countBirthday = useCountUp(stats.aniversariantesCount, loading);
+    const countPendencias = useCountUp(stats.pendencias, loading);
+    const countFerias = useCountUp(stats.ferias, loading);
+
     return (
         <div className="max-w-7xl mx-auto flex flex-col gap-8">
             {/* Page Heading */}
@@ -90,8 +104,8 @@ const Dashboard = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <div ref={statsRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="stat-card bg-surface-light dark:bg-surface-dark p-4 sm:p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                     <div className="flex justify-between items-start mb-4">
                         <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                             <span className="material-symbols-outlined text-primary">groups</span>
@@ -102,7 +116,7 @@ const Dashboard = () => {
                     </div>
                     <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Servidores Ativos</p>
                     <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                        {loading ? <Skeleton className="h-8 w-16" /> : stats.activeServidores}
+                        {loading ? <Skeleton className="h-8 w-16" /> : <span ref={countActive}>0</span>}
                     </h3>
                 </div>
                 <div
@@ -110,7 +124,7 @@ const Dashboard = () => {
                         const currentMonth = new Date().getMonth() + 1;
                         navigate(`/servidores?birthMonth=${currentMonth}`);
                     }}
-                    className="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer group"
+                    className="stat-card bg-surface-light dark:bg-surface-dark p-4 sm:p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer group"
                 >
                     <div className="flex justify-between items-start mb-4">
                         <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg group-hover:bg-purple-100 dark:group-hover:bg-purple-900/40 transition-colors">
@@ -119,10 +133,10 @@ const Dashboard = () => {
                     </div>
                     <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Aniversariantes (Mês)</p>
                     <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                        {loading ? <Skeleton className="h-8 w-12" /> : stats.aniversariantesCount}
+                        {loading ? <Skeleton className="h-8 w-12" /> : <span ref={countBirthday}>0</span>}
                     </h3>
                 </div>
-                <div className="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                <div className="stat-card bg-surface-light dark:bg-surface-dark p-4 sm:p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                     <div className="flex justify-between items-start mb-4">
                         <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
                             <span className="material-symbols-outlined text-orange-600 dark:text-orange-400">assignment_late</span>
@@ -133,10 +147,10 @@ const Dashboard = () => {
                     </div>
                     <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Pendências de RH</p>
                     <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                        {loading ? <Skeleton className="h-8 w-12" /> : stats.pendencias}
+                        {loading ? <Skeleton className="h-8 w-12" /> : <span ref={countPendencias}>0</span>}
                     </h3>
                 </div>
-                <div className="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                <div className="stat-card bg-surface-light dark:bg-surface-dark p-4 sm:p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                     <div className="flex justify-between items-start mb-4">
                         <div className="p-2 bg-teal-50 dark:bg-teal-900/20 rounded-lg">
                             <span className="material-symbols-outlined text-teal-600 dark:text-teal-400">beach_access</span>
@@ -147,7 +161,7 @@ const Dashboard = () => {
                     </div>
                     <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Servidores em Férias</p>
                     <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                        {loading ? <Skeleton className="h-8 w-12" /> : stats.ferias}
+                        {loading ? <Skeleton className="h-8 w-12" /> : <span ref={countFerias}>0</span>}
                     </h3>
                 </div>
             </div>
@@ -155,8 +169,8 @@ const Dashboard = () => {
             {/* Quick Actions */}
             <div className="flex flex-col gap-4">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white">Acesso Rápido</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                    <Link to="/adicionar-servidor" className="flex flex-col items-center justify-center gap-3 p-4 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/10 dark:hover:border-primary transition-all duration-300 group h-32 hover:-translate-y-1 shadow-sm hover:shadow-md active:scale-95">
+                <div ref={actionsRef} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <Link to="/adicionar-servidor" className="action-card flex flex-col items-center justify-center gap-3 p-4 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/10 dark:hover:border-primary transition-all duration-300 group h-32 hover:-translate-y-1 shadow-sm hover:shadow-md active:scale-95">
                         <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full group-hover:bg-white dark:group-hover:bg-blue-900 transition-colors">
                             <span className="material-symbols-outlined text-primary">person_add</span>
                         </div>
@@ -182,7 +196,7 @@ const Dashboard = () => {
                     <div className="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark overflow-hidden shadow-sm">
 
                         {/* Desktop Table View */}
-                        <div className="block overflow-x-auto">
+                        <div className="hidden md:block overflow-x-auto">
                             <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
                                 <thead className="bg-slate-50 dark:bg-slate-800 text-xs uppercase font-semibold text-slate-500 dark:text-slate-400">
                                     <tr>
@@ -208,12 +222,12 @@ const Dashboard = () => {
                                         <tr><td colSpan="5" className="px-6 py-4 text-center text-slate-500">Nenhuma movimentação recente.</td></tr>
                                     ) : (
                                         stats.recentActivity.map((activity, index) => {
-                                            const date = new Date(activity.updatedAt).toLocaleDateString('pt-BR');
+                                            const date = formatDateUTC(activity.updatedAt);
                                             return (
                                                 <tr
                                                     key={index}
                                                     onClick={() => navigate(`/adicionar-servidor/${activity.IDPK_SERV || activity._id}`)}
-                                                    className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition cursor-pointer"
+                                                    className="activity-row hover:bg-slate-50 dark:hover:bg-slate-800/50 transition cursor-pointer"
                                                 >
                                                     <td className="px-6 py-4">
                                                         <div className="flex flex-col">
@@ -234,12 +248,70 @@ const Dashboard = () => {
                                 </tbody>
                             </table>
                         </div>
+
+                        {/* Mobile Card View */}
+                        <div className="md:hidden flex flex-col gap-3 p-4 bg-background-light dark:bg-background-dark">
+                            {loading ? (
+                                Array.from({ length: 3 }).map((_, i) => (
+                                    <div key={i} className="p-4 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark flex gap-3">
+                                        <Skeleton className="size-10 rounded-full shrink-0" />
+                                        <div className="flex-1 space-y-2">
+                                            <Skeleton className="h-4 w-3/4" />
+                                            <Skeleton className="h-3 w-1/2" />
+                                        </div>
+                                    </div>
+                                ))
+                            ) : stats.recentActivity.length === 0 ? (
+                                <div className="p-8 text-center text-slate-500 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light">Nenhuma movimentação recente.</div>
+                            ) : (
+                                stats.recentActivity.map((activity, index) => {
+                                    const date = formatDateUTC(activity.updatedAt);
+                                    const initials = activity.NOME_SERV ? activity.NOME_SERV.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '??';
+
+                                    return (
+                                        <div
+                                            key={index}
+                                            onClick={() => navigate(`/adicionar-servidor/${activity.IDPK_SERV || activity._id}`)}
+                                            className="p-4 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm active:scale-[0.98] transition-all duration-200 cursor-pointer"
+                                        >
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="bg-primary/10 text-primary flex items-center justify-center rounded-full size-10 text-sm font-bold border border-primary/20">
+                                                        {initials}
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="text-slate-900 dark:text-white font-semibold leading-tight">{activity.NOME_SERV}</h3>
+                                                        <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Mat: {activity.MATRICULA_SERV}</p>
+                                                    </div>
+                                                </div>
+                                                <span className="material-symbols-outlined text-slate-400 text-sm">visibility</span>
+                                            </div>
+
+                                            <div className="space-y-1">
+                                                <div className="flex items-center justify-between text-xs">
+                                                    <span className="text-slate-500 dark:text-slate-400">Ação:</span>
+                                                    <span className="text-slate-700 dark:text-slate-200 font-medium text-right">{activity.action || 'Atualização'}</span>
+                                                </div>
+                                                <div className="flex items-center justify-between text-xs">
+                                                    <span className="text-slate-500 dark:text-slate-400">Autor:</span>
+                                                    <span className="text-slate-700 dark:text-slate-200 font-medium text-right">{activity.autor || 'Sistema'}</span>
+                                                </div>
+                                                <div className="flex items-center justify-between text-xs">
+                                                    <span className="text-slate-500 dark:text-slate-400">Data:</span>
+                                                    <span className="text-slate-700 dark:text-slate-200 font-medium text-right">{date}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
                     </div>
                 </div>
 
                 {/* Right Column: Distribution */}
                 <div className="flex flex-col gap-6">
-                    <div className="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm h-full flex flex-col">
+                    <div className="bg-surface-light dark:bg-surface-dark p-4 sm:p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm h-full flex flex-col">
                         <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Vínculos Empregatícios</h3>
                         {/* ... Chart code remains the same ... */}
                         {loading ? (

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Skeleton } from '../components/Skeleton';
+import LottieLoader from '../components/LottieLoader';
+import { formatDateUTC } from '../utils/formatDate';
+import { useStaggerReveal } from '../hooks/useAnimations';
 
 
 const Servidores = () => {
@@ -12,6 +15,9 @@ const Servidores = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
+
+    // Animation hook for table rows
+    const tableRef = useStaggerReveal('.animate-row', [loading, servidores]);
     const [filters, setFilters] = useState({
         search: '',
         setor: '',
@@ -66,7 +72,8 @@ const Servidores = () => {
                 cargo: filters.cargo,
                 vinculo: filters.vinculo,
                 status: filters.status,
-                birthMonth: filters.birthMonth
+                birthMonth: filters.birthMonth,
+                _t: Date.now() // Cache-busting para garantir que a lista atualize imediatamente
             };
 
             // Remove empty params
@@ -248,27 +255,20 @@ const Servidores = () => {
                                 <th className="relative px-6 py-3"><span className="sr-only">Ações</span></th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-border-light dark:divide-border-dark bg-surface-light dark:bg-surface-dark">
+                        <tbody ref={tableRef} className="divide-y divide-border-light dark:divide-border-dark bg-surface-light dark:bg-surface-dark">
                             {loading ? (
-                                Array.from({ length: 5 }).map((_, i) => (
-                                    <tr key={i}>
-                                        <td className="px-6 py-4"><div className="flex items-center gap-3"><Skeleton className="size-10 rounded-full" /><div className="space-y-2"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-20" /></div></div></td>
-                                        <td className="px-6 py-4"><Skeleton className="h-4 w-20" /></td>
-                                        <td className="px-6 py-4"><Skeleton className="h-4 w-24" /></td>
-                                        <td className="px-6 py-4"><Skeleton className="h-4 w-24" /></td>
-                                        <td className="px-6 py-4"><Skeleton className="h-4 w-24" /></td>
-                                        <td className="px-6 py-4"><Skeleton className="h-4 w-24" /></td>
-                                        <td className="px-6 py-4"><Skeleton className="h-5 w-16 rounded-full" /></td>
-                                        <td className="px-6 py-4"><Skeleton className="h-8 w-8 ml-auto rounded-lg" /></td>
-                                    </tr>
-                                ))
+                                <tr>
+                                    <td colSpan="8" className="px-6 py-8 text-center">
+                                        <LottieLoader />
+                                    </td>
+                                </tr>
                             ) : servidores.length === 0 ? (
                                 <tr><td colSpan="8" className="px-6 py-8 text-center text-slate-500">Nenhum servidor encontrado.</td></tr>
                             ) : (
                                 servidores.map((servidor) => {
                                     const initials = servidor.NOME_SERV ? servidor.NOME_SERV.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '??';
                                     return (
-                                        <tr key={servidor._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+                                        <tr key={servidor._id} className="animate-row hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center gap-3">
                                                     <div className="bg-primary/10 text-primary flex items-center justify-center rounded-full size-10 text-sm font-bold border border-primary/20 group-hover:scale-110 transition-transform duration-200">
@@ -288,7 +288,7 @@ const Servidores = () => {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300 font-medium">{servidor.MATRICULA_SERV}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300 capitalize">{servidor.VINCULO_SERV ? servidor.VINCULO_SERV.toLowerCase() : '-'}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300">
-                                                {servidor.ADMISSAO_SERV ? new Date(servidor.ADMISSAO_SERV).toLocaleDateString('pt-BR') : '-'}
+                                                {formatDateUTC(servidor.ADMISSAO_SERV)}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300">{servidor.CARGO_SERV || servidor.CARGO_EFETIVO_SERV}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300">{servidor.SETOR_LOTACAO_SERV}</td>
@@ -329,15 +329,9 @@ const Servidores = () => {
                 {/* Mobile Card View */}
                 <div className="md:hidden flex flex-col gap-3 p-4 bg-background-light dark:bg-background-dark">
                     {loading ? (
-                        Array.from({ length: 3 }).map((_, i) => (
-                            <div key={i} className="p-4 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark flex gap-3">
-                                <Skeleton className="size-12 rounded-full shrink-0" />
-                                <div className="flex-1 space-y-2">
-                                    <Skeleton className="h-4 w-3/4" />
-                                    <Skeleton className="h-3 w-1/2" />
-                                </div>
-                            </div>
-                        ))
+                        <div className="py-8 flex justify-center w-full">
+                            <LottieLoader />
+                        </div>
                     ) : servidores.length === 0 ? (
                         <div className="p-8 text-center text-slate-500 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light">Nenhum servidor encontrado.</div>
                     ) : (
@@ -346,7 +340,7 @@ const Servidores = () => {
                             return (
                                 <div
                                     key={servidor._id}
-                                    className="p-4 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm active:scale-[0.98] transition-all duration-200"
+                                    className="p-3 sm:p-4 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm active:scale-[0.98] transition-all duration-200"
                                     onClick={() => navigate(`/adicionar-servidor/${servidor._id}`)}
                                 >
                                     <div className="flex items-start justify-between mb-3">
@@ -378,9 +372,9 @@ const Servidores = () => {
                                             <span className="text-slate-500 dark:text-slate-400">Vínculo:</span>
                                             <span className="text-slate-700 dark:text-slate-200 font-medium text-right lowercase first-letter:uppercase">{servidor.VINCULO_SERV}</span>
                                         </div>
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="text-slate-500 dark:text-slate-400">Admissão:</span>
-                                            <span className="text-slate-700 dark:text-slate-200 font-medium text-right">{servidor.ADMISSAO_SERV ? new Date(servidor.ADMISSAO_SERV).toLocaleDateString('pt-BR') : '-'}</span>
+                                        <div className="flex justify-between items-center py-2 border-b border-border-light dark:border-border-dark last:border-0 last:pb-0">
+                                            <span className="text-slate-500 dark:text-slate-400 text-sm">Admissão</span>
+                                            <span className="text-slate-700 dark:text-slate-200 font-medium text-right">{formatDateUTC(servidor.ADMISSAO_SERV)}</span>
                                         </div>
                                     </div>
                                 </div>

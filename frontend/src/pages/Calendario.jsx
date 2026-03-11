@@ -23,13 +23,13 @@ const CalendarioManagers = () => {
     const fetchEvents = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get('/api/calendario', {
+            const res = await axios.get(`/api/calendario?_t=${Date.now()}`, {
                 headers: { 'x-auth-token': token }
             });
             setEvents(res.data);
 
             // Also fetch active servers for the Recesso multi-select
-            const servRes = await axios.get('/api/servidores?limit=5000&status=ativo', {
+            const servRes = await axios.get(`/api/servidores?limit=5000&status=ativo&_t=${Date.now()}`, {
                 headers: { 'x-auth-token': token }
             });
             // We sort by name alphabetically

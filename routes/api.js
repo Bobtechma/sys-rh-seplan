@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const Servidor = require('../models/Servidor');
 const SituacaoServidor = require('../models/SituacaoServidor');
+const TipoAfastamento = require('../models/TipoAfastamento');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -16,7 +17,7 @@ const upload = multer({
 });
 
 // Helper to add observation to server
-async function logObservation(servidorId, conteudo, categoria = 'Sistema') {
+async function logObservation(servidorId, conteudo, categoria = 'Sistema', autor = 'Sistema') {
     try {
         let serv;
         if (typeof servidorId === 'object' && servidorId.save) {
@@ -36,7 +37,7 @@ async function logObservation(servidorId, conteudo, categoria = 'Sistema') {
                 conteudo: conteudo,
                 categoria: categoria,
                 data: new Date(),
-                autor: 'Sistema'
+                autor: autor
             });
             await serv.save();
         }
@@ -44,6 +45,186 @@ async function logObservation(servidorId, conteudo, categoria = 'Sistema') {
         console.error('Error logging observation:', e);
     }
 }
+
+/**
+ * Calculates vacation status for a server based on a 3-year window.
+ * This prevents the "19 periods" error by assuming historical data prior to the window is settled.
+ */
+function calculateVacationStatus(servidor, vacations) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const admissao = new Date(servidor.ADMISSAO_SERV);
+    if (isNaN(admissao)) return null;
+
+    // Generate theoretical acquisition periods for the last 3 opportunities
+    // We start from the most recent one and work backwards.
+    const periods = [];
+
+    // Find the latest potential acquisition period end based on admission date
+    let latestAqEnd = new Date(admissao);
+    while (latestAqEnd <= today) {
+        latestAqEnd.setFullYear(latestAqEnd.getFullYear() + 1);
+    }
+
+    // The previous anniversary was the end of the last complete acquisition period
+    let currentAqEnd = new Date(latestAqEnd);
+    currentAqEnd.setFullYear(currentAqEnd.getFullYear() - 1);
+
+    // Look back at the last 3 periods (Windowed Logic)
+    for (let i = 0; i < 3; i++) {
+        let aqStart = new Date(currentAqEnd);
+        aqStart.setFullYear(aqStart.getFullYear() - 1);
+
+        // If this period started before admission, it's invalid
+        if (aqStart < admissao) {
+            // If i=0, they haven't completed even one period.
+            if (i === 0 && currentAqEnd <= today) {
+                // Keep moving backwards? No, if aqStart < admissao, we stop.
+            }
+            if (aqStart < admissao && i > 0) break;
+            if (aqStart < admissao) {
+                // Adjust start to admission if it's the first partial year? 
+                // Usually periods are full years. Let's just break if we hit admission.
+                if (periods.length > 0) break;
+                // If it's the only period and it spans from admission to now
+                aqStart = new Date(admissao);
+            }
+        }
+
+        const concessionEnd = new Date(currentAqEnd);
+        concessionEnd.setFullYear(concessionEnd.getFullYear() + 1);
+
+        periods.push({
+            start: new Date(aqStart),
+            end: new Date(currentAqEnd),
+            concessionEnd: new Date(concessionEnd),
+            isVencido: today > concessionEnd,
+            hasVacation: false
+        });
+
+        currentAqEnd = new Date(aqStart);
+        if (currentAqEnd <= admissao) break;
+    }
+
+    // Match vacations to these periods
+    // Priorities: 
+    // 1. Exact match via PA_ANO1_SIT
+    // 2. Year matching (vacation start year matches PA end year)
+    // 3. Sequential matching (oldest records fulfill oldest periods)
+
+    const unmatchedVacations = [...vacations];
+
+    // Try matching specific PA years first
+    for (const p of periods) {
+        const paYear = p.end.getFullYear();
+        const foundIndex = unmatchedVacations.findIndex(v =>
+            v.PA_ANO1_SIT == paYear ||
+            (v.INICIO_FERIAS_SIT && new Date(v.INICIO_FERIAS_SIT).getFullYear() === paYear)
+        );
+
+        if (foundIndex !== -1) {
+            p.hasVacation = true;
+            unmatchedVacations.splice(foundIndex, 1);
+        }
+    }
+
+    // Fill remaining with unmatched
+    for (const p of periods) {
+        if (!p.hasVacation && unmatchedVacations.length > 0) {
+            p.hasVacation = true;
+            unmatchedVacations.shift();
+        }
+    }
+
+    const unfulfilledVencidos = periods.filter(p => p.isVencido && !p.hasVacation);
+    const unfulfilledAcquired = periods.filter(p => !p.isVencido && !p.hasVacation);
+
+    return {
+        vencidas: unfulfilledVencidos.length,
+        atrasadasCount: unfulfilledVencidos.length + unfulfilledAcquired.length, // Total debt in the window
+        oldestVencida: unfulfilledVencidos.length > 0 ? unfulfilledVencidos[unfulfilledVencidos.length - 1] : null,
+        isAtrasado: (unfulfilledVencidos.length + unfulfilledAcquired.length) >= 2,
+        periods: periods
+    };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INITIALIZE DEFAULT TIPOS AFASTAMENTO
+// ─────────────────────────────────────────────────────────────────────────────
+const initializeTiposAfastamento = async () => {
+    try {
+        const count = await TipoAfastamento.countDocuments();
+        if (count === 0) {
+            const defaultTipos = [
+                'Férias', 'Afastado por Atestado Médico', 'Licença Médica', 'Substituição',
+                'Nomeação', 'Afastado para Tratamento de Saúde', 'Licença Maternidade',
+                'Exoneração', 'disposição', 'Concessões', 'Gratificação de Desempenho',
+                'Recesso', 'Recesso Natalino', 'Redistribuição para a SEPLAN',
+                'Licença Prêmio', 'Adicional de Informática', 'Licença Amamentação',
+                'Vacância', 'Desligamento', 'Licença por Motivo de Doença em Pessoa da Família',
+                'Licença para Concorrer a Cargo Eletivo', 'Outros', 'Fiscalização de Contrato',
+                'Disposição', 'Licença Prêmio por Assiduidade', 'Redistribuição',
+                'Aposentadoria', 'Licença para Capacitação Profissional', 'Cancelamento de Falta',
+                'Devolução do Servidor', 'Cessão', 'Permuta', 'Relotação',
+                'Licença para Tratar de Interesse Particular', 'Mudança de Atividade (função)',
+                'Licença para Execer Mandato Eletivo', 'Cancelamento'
+            ];
+
+            // Clean up and standardize
+            const uniqueTipos = [...new Set(defaultTipos.map(t => t.trim().charAt(0).toUpperCase() + t.trim().slice(1).toLowerCase()))];
+
+            const docs = uniqueTipos.map(nome => ({ nome }));
+            await TipoAfastamento.insertMany(docs);
+            console.log("Initialized default TipoAfastamento list.");
+        }
+    } catch (err) {
+        console.error("Error initializing TipoAfastamento:", err);
+    }
+};
+initializeTiposAfastamento();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// @route   GET api/tipos-afastamento
+// @desc    Get all active afastamento types
+// @access  Public
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/tipos-afastamento', async (req, res) => {
+    try {
+        const tipos = await TipoAfastamento.find({ ativo: true }).sort({ nome: 1 });
+        res.json(tipos);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// @route   POST api/tipos-afastamento
+// @desc    Create a new afastamento type
+// @access  Private
+// ─────────────────────────────────────────────────────────────────────────────
+router.post('/tipos-afastamento', auth, async (req, res) => {
+    try {
+        const { nome } = req.body;
+        if (!nome) return res.status(400).json({ msg: 'Nome é obrigatório.' });
+
+        // Standardize name
+        const nomeFormatado = nome.trim().charAt(0).toUpperCase() + nome.trim().slice(1).toLowerCase();
+
+        let tipo = await TipoAfastamento.findOne({ nome: nomeFormatado });
+        if (tipo) {
+            return res.status(400).json({ msg: 'Tipo de afastamento já existe.' });
+        }
+
+        tipo = new TipoAfastamento({ nome: nomeFormatado });
+        await tipo.save();
+        res.json(tipo);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // @route   POST api/documentos/next-number
@@ -167,6 +348,36 @@ router.delete('/servidores/:id/observacoes/:obsId', async (req, res) => {
     }
 });
 
+// @route   PUT api/servidores/:id/observacoes/:obsId
+// @desc    Update an observation from a servidor profile
+// @access  Public
+router.put('/servidores/:id/observacoes/:obsId', async (req, res) => {
+    try {
+        const servidor = await Servidor.findById(req.params.id);
+        if (!servidor) return res.status(404).json({ msg: 'Servidor não encontrado' });
+
+        const { conteudo, autor } = req.body;
+        if (!conteudo || !conteudo.trim()) {
+            return res.status(400).json({ msg: 'O conteúdo da observação não pode estar vazio' });
+        }
+
+        const obs = servidor.OBSERVACOES.id(req.params.obsId);
+        if (!obs) {
+            return res.status(404).json({ msg: 'Observação não encontrada' });
+        }
+
+        obs.conteudo = conteudo.trim();
+        if (autor) obs.autor = autor;
+
+        await servidor.save();
+
+        res.json(servidor.OBSERVACOES);
+    } catch (err) {
+        console.error('Update Observation Error:', err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 // @route   GET api/servidores/setores
 // @desc    Get all distinct sectors
 // @access  Public
@@ -198,7 +409,9 @@ router.get('/servidores/concessivo', async (req, res) => {
         const servidores = await Servidor.aggregate([
             {
                 $match: {
-                    ATIVO_SERV: { $in: ['SIM', 'ATIVO', 'Sim', 'Ativo'] },
+                    ATIVO_SERV: { $regex: /^\s*(sim|ativo|ativa)\s*$/i },
+                    CEDIDO_SERV: { $nin: ['true', 'SIM', 'Sim', true] },
+                    VINCULO_SERV: { $not: /demitido|exonerado|inativo/i },
                     ADMISSAO_SERV: { $exists: true, $ne: null }
                 }
             },
@@ -250,7 +463,113 @@ router.get('/servidores/concessivo', async (req, res) => {
     }
 });
 
-// @route   GET api/servidores/cargos
+// @route   GET api/servidores/ferias-vencidas
+// @desc    Get servidores with delayed/expired vacations based on CLT rules (>2 years from admission/previous vacation)
+// @access  Public
+router.get('/servidores/ferias-vencidas', async (req, res) => {
+    try {
+        const SituacaoServidor = require('../models/SituacaoServidor');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // 1. Get all active servers with an admission date
+        const servidores = await Servidor.find({
+            ATIVO_SERV: { $regex: /^\s*(sim|ativo|ativa)\s*$/i },
+            CEDIDO_SERV: { $nin: ['true', 'SIM', 'Sim', true] },
+            VINCULO_SERV: { $not: /demitido|exonerado|inativo/i },
+            ADMISSAO_SERV: { $exists: true, $ne: null }
+        }).select('IDPK_SERV NOME_SERV ADMISSAO_SERV MATRICULA_SERV SETOR_LOTACAO_SERV').lean();
+
+        const vencidasList = [];
+
+        // 2. Collect all Server IDs for a bulk query
+        const serverIdsStr = servidores.map(s => String(s.IDPK_SERV));
+        const serverIdsNum = servidores.map(s => !isNaN(Number(s.IDPK_SERV)) ? Number(s.IDPK_SERV) : s.IDPK_SERV);
+        const allServerIds = [...new Set([...serverIdsStr, ...serverIdsNum])];
+
+        // 3. Perform a single bulk query for all vacations of active servers
+        const allVacations = await SituacaoServidor.find({
+            IDFK_SERV: { $in: allServerIds },
+            $or: [
+                { ASSUNTO_SIT: 'Férias' },
+                { ASSUNTO_SIT: /f[eé]rias/i }
+            ],
+            // We consider it "taken" if it's approved or completed
+            $or: [
+                { STATUS_SIT: { $in: [/aprovado/i, /deferido/i, /em f[eé]rias/i, /^f[eé]rias$/i, /^concluído$/i] } },
+                { STATUS_SIT: null },
+                { STATUS_SIT: "" },
+                { STATUS_SIT: { $exists: false } }
+            ]
+        }).sort({ INICIO_FERIAS_SIT: 1 }).lean();
+
+        // 4. Group vacations by server ID for fast lookup
+        const vacationsByServer = {};
+        for (const vac of allVacations) {
+            const sid = String(vac.IDFK_SERV);
+            if (!vacationsByServer[sid]) {
+                vacationsByServer[sid] = [];
+            }
+            vacationsByServer[sid].push(vac);
+        }
+
+        // 5. Process each server
+        for (const s of servidores) {
+            const admissao = new Date(s.ADMISSAO_SERV);
+            if (isNaN(admissao)) continue;
+
+            // Generate theoretical acquisition periods up to today
+            const periods = [];
+            let currentAqStart = new Date(admissao);
+
+            while (true) {
+                let currentAqEnd = new Date(currentAqStart);
+                currentAqEnd.setFullYear(currentAqEnd.getFullYear() + 1);
+
+                // Concession period ends 1 year after acquisition ends
+                let concessionEnd = new Date(currentAqEnd);
+                concessionEnd.setFullYear(concessionEnd.getFullYear() + 1);
+
+                // If acquisition hasn't finished yet, stop
+                if (currentAqEnd > today) break;
+
+                periods.push({
+                    start: new Date(currentAqStart),
+                    end: new Date(currentAqEnd),
+                    concessionEnd: new Date(concessionEnd),
+                    isVencido: today > concessionEnd,
+                    hasVacation: false
+                });
+
+                currentAqStart = new Date(currentAqEnd);
+            }
+
+            // If they don't have any complete acquisition period yet, skip
+            if (periods.length === 0) continue;
+
+            // Retrieve vacations from in-memory grouping mapping
+            const fIdStr = String(s.IDPK_SERV);
+            const vacations = vacationsByServer[fIdStr] || [];
+
+            const status = calculateVacationStatus(s, vacations);
+            if (status && status.vencidas > 0) {
+                vencidasList.push({
+                    ...s,
+                    PERIODOS_VENCIDOS: status.vencidas,
+                    AQUISITIVO_PENDENTE_INICIO: status.oldestVencida.start,
+                    AQUISITIVO_PENDENTE_FIM: status.oldestVencida.end
+                });
+            }
+        }
+
+        res.json(vencidasList);
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 // @desc    Get all distinct cargos (merged from effective, commissioned, function)
 // @access  Public
 router.get('/servidores/cargos', async (req, res) => {
@@ -267,6 +586,75 @@ router.get('/servidores/cargos', async (req, res) => {
         ]);
 
         res.json(Array.from(allCargos).sort());
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   GET api/servidores/ferias-atrasadas
+// @desc    Get servidores with delayed vacations (acquired - taken >= 2)
+// @access  Public
+router.get('/servidores/ferias-atrasadas', async (req, res) => {
+    try {
+        const SituacaoServidor = require('../models/SituacaoServidor');
+        const today = new Date();
+
+        // 1. Get all active servers with an admission date
+        const servidores = await Servidor.find({
+            ATIVO_SERV: { $regex: /^\s*(sim|ativo|ativa)\s*$/i },
+            CEDIDO_SERV: { $nin: ['true', 'SIM', 'Sim', true] },
+            VINCULO_SERV: { $not: /demitido|exonerado|inativo/i },
+            ADMISSAO_SERV: { $exists: true, $ne: null }
+        }).select('IDPK_SERV NOME_SERV ADMISSAO_SERV MATRICULA_SERV SETOR_LOTACAO_SERV').lean();
+
+        const atrasadasList = [];
+
+        // 2. Collect all Server IDs for a bulk query
+        const serverIdsStr = servidores.map(s => String(s.IDPK_SERV));
+        const serverIdsNum = servidores.map(s => !isNaN(Number(s.IDPK_SERV)) ? Number(s.IDPK_SERV) : s.IDPK_SERV);
+        const allServerIds = [...new Set([...serverIdsStr, ...serverIdsNum])];
+
+        const allVacations = await SituacaoServidor.find({
+            IDFK_SERV: { $in: allServerIds },
+            $or: [
+                { ASSUNTO_SIT: 'Férias' },
+                { ASSUNTO_SIT: /f[eé]rias/i }
+            ],
+            $or: [
+                { STATUS_SIT: { $in: [/aprovado/i, /deferido/i, /em f[eé]rias/i, /^f[eé]rias$/i, /^concluído$/i] } },
+                { STATUS_SIT: null },
+                { STATUS_SIT: "" },
+                { STATUS_SIT: { $exists: false } }
+            ]
+        }).lean();
+
+        // 4. Group vacations by server ID
+        const vacationsByServer = {};
+        for (const vac of allVacations) {
+            const sid = String(vac.IDFK_SERV);
+            if (!vacationsByServer[sid]) vacationsByServer[sid] = [];
+            vacationsByServer[sid].push(vac);
+        }
+
+        // 5. Calculate status for each server
+        for (const s of servidores) {
+            const vacations = vacationsByServer[String(s.IDPK_SERV)] || [];
+            const result = calculateVacationStatus(s, vacations);
+
+            if (result && result.isAtrasado) {
+                atrasadasList.push({
+                    ...s,
+                    feriasAtrasadas: result.atrasadasCount,
+                    vencidas: result.vencidas
+                });
+            }
+        }
+
+        // Sort by biggest delay
+        atrasadasList.sort((a, b) => b.feriasAtrasadas - a.feriasAtrasadas);
+
+        res.json(atrasadasList);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
@@ -298,15 +686,39 @@ router.get('/servidores', async (req, res) => {
         if (req.query.status) {
             // Map frontend status values to database values
             if (req.query.status === 'ativo') {
-                query.ATIVO_SERV = { $in: ['SIM', 'ATIVO'] };
+                query.ATIVO_SERV = { $regex: /^\s*(sim|ativo|ativa)\s*$/i };
+                query.CEDIDO_SERV = { $nin: ['true', 'SIM', 'Sim', true] };
+                query.VINCULO_SERV = { $not: /demitido|exonerado|inativo/i };
             } else if (req.query.status === 'inativo') {
-                query.ATIVO_SERV = { $in: ['NÃO', 'INATIVO'] };
+                if (!query.$and) query.$and = [];
+                query.$and.push({
+                    $or: [
+                        { ATIVO_SERV: { $not: /^\s*(sim|ativo|ativa)\s*$/i } },
+                        { CEDIDO_SERV: { $in: ['true', 'SIM', 'Sim', true] } },
+                        { VINCULO_SERV: { $regex: /demitido|exonerado|inativo/i } }
+                    ]
+                });
             } else if (req.query.status === 'ferias') {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0); // Start of day for comparison
 
                 const feriasRecords = await SituacaoServidor.find({
-                    ASSUNTO_SIT: 'FÃ©rias',
+                    $and: [
+                        {
+                            $or: [
+                                { ASSUNTO_SIT: 'Férias' },
+                                { ASSUNTO_SIT: /f[eé]rias/i }
+                            ]
+                        },
+                        {
+                            $or: [
+                                { STATUS_SIT: { $in: [/aprovado/i, /deferido/i, /em f[eé]rias/i, /^f[eé]rias$/i] } },
+                                { STATUS_SIT: null },
+                                { STATUS_SIT: "" },
+                                { STATUS_SIT: { $exists: false } }
+                            ]
+                        }
+                    ],
                     INICIO_FERIAS_SIT: { $lte: new Date() }, // Started before or now
                     FIM_FERIAS_SIT: { $gte: today } // Ends today or later
                 }).select('IDFK_SERV');
@@ -321,7 +733,13 @@ router.get('/servidores', async (req, res) => {
                 today.setHours(0, 0, 0, 0);
 
                 const afastadoRecords = await SituacaoServidor.find({
-                    ASSUNTO_SIT: { $ne: 'FÃ©rias' },
+                    ASSUNTO_SIT: { $ne: 'Férias', $not: /f[eé]rias/i },
+                    $or: [
+                        { STATUS_SIT: { $in: [/aprovado/i, /deferido/i, /afastado/i] } },
+                        { STATUS_SIT: null },
+                        { STATUS_SIT: "" },
+                        { STATUS_SIT: { $exists: false } }
+                    ],
                     INICIO_FERIAS_SIT: { $lte: new Date() },
                     FIM_FERIAS_SIT: { $gte: today }
                 }).select('IDFK_SERV');
@@ -427,6 +845,12 @@ router.get('/servidores', async (req, res) => {
 
                 const activeSituation = await SituacaoServidor.findOne({
                     IDFK_SERV: s.IDPK_SERV,
+                    $or: [
+                        { STATUS_SIT: { $in: [/aprovado/i, /deferido/i, /em f[eé]rias/i, /^f[eé]rias$/i, /afastado/i] } },
+                        { STATUS_SIT: null },
+                        { STATUS_SIT: "" },
+                        { STATUS_SIT: { $exists: false } }
+                    ],
                     INICIO_FERIAS_SIT: { $lte: new Date() },
                     FIM_FERIAS_SIT: { $gte: today }
                 });
@@ -539,12 +963,95 @@ router.put('/servidores/:id', auth, async (req, res) => {
             return res.status(404).json({ msg: 'Servidor not found' });
         }
 
-        const excludeFields = ['_id', 'IDPK_SERV', 'OBSERVACOES', 'ANEXOS', 'OBS_SERV'];
+        const excludeFields = ['_id', 'IDPK_SERV', 'OBSERVACOES', 'ANEXOS', 'OBS_SERV', '__v'];
         const dateFields = ['NASCIMENTO_SERV', 'ADMISSAO_SERV', 'VALIDADE_CNH_SERV', 'DATACAD_SERV'];
+
+        // Field labels for human-readable observation messages
+        const fieldLabels = {
+            NOME_SERV: 'Nome',
+            CPF_SERV: 'CPF',
+            NASCIMENTO_SERV: 'Data de Nascimento',
+            SEXO_SERV: 'Sexo',
+            ESTADO_CIVIL_SERV: 'Estado Civil',
+            NOME_PAI_SERV: 'Nome do Pai',
+            NOME_MAE_SERV: 'Nome da Mãe',
+            TIPO_SANGUINEO_SERV: 'Tipo Sanguíneo',
+            FATOR_SERV: 'Fator RH',
+            RG_SERV: 'RG',
+            OE_RG_SERV: 'Órgão Emissor RG',
+            PISPASEP_SERV: 'PIS/PASEP',
+            TITULO_ELEITORAL_SERV: 'Título Eleitoral',
+            ZONA_SERV: 'Zona Eleitoral',
+            SECAO_SERV: 'Seção Eleitoral',
+            CNH_SERV: 'CNH',
+            VALIDADE_CNH_SERV: 'Validade CNH',
+            CTPS_SERV: 'CTPS',
+            CERT_RESERV_SERV: 'Cert. Reservista',
+            ENDERECO_SERV: 'Endereço',
+            BAIRRO_SERV: 'Bairro',
+            CIDADE_SERV: 'Cidade',
+            ESTADO_SERV: 'Estado (UF)',
+            CEP_SERV: 'CEP',
+            EMAIL_SERV: 'E-mail',
+            FONES_SERV: 'Telefone Pessoal',
+            FONES_TRAB_SERV: 'Telefone Trabalho',
+            BANCO_SERV: 'Banco',
+            AGENCIA_SERV: 'Agência',
+            CONTACORRENTE_SERV: 'Conta Corrente',
+            MATRICULA_SERV: 'Matrícula',
+            ADMISSAO_SERV: 'Data de Admissão',
+            SETOR_LOTACAO_SERV: 'Setor/Lotação',
+            ATIVO_SERV: 'Status (Ativo/Inativo)',
+            VINCULO_SERV: 'Vínculo',
+            CARGO_EFETIVO_SERV: 'Cargo Efetivo',
+            CARGO_COMISSIONADO_SERV: 'Cargo Comissionado',
+            FUNCAO_SP_SERV: 'Função',
+            TURNO_SERV: 'Turno',
+            SIMBOLO_SERV: 'Símbolo',
+            ORG_ORIGEM_SERV: 'Órgão de Origem',
+            CEDIDO_SERV: 'Servidor Cedido',
+            CHEFE_SERV: 'É Chefe de Setor',
+            TRABALHA_SEXTA_TARDE: 'Trabalha Sexta à Tarde',
+            DATACAD_SERV: 'Data de Cadastro',
+            ESCOLARIDADE_SERV: 'Escolaridade',
+            CURSO_SERV: 'Curso/Formação',
+            OBS_DADOS_PESSOAIS_SERV: 'Obs. Dados Pessoais',
+            OBSATV_SERV: 'Obs. Atividades'
+        };
+
+        // Helper to format dates for display
+        const fmtVal = (val, isDate) => {
+            if (val === null || val === undefined || val === '') return '(vazio)';
+            if (isDate) {
+                const d = new Date(val);
+                return isNaN(d.getTime()) ? String(val) : d.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+            }
+            if (val === true || val === 'true') return 'Sim';
+            if (val === false || val === 'false') return 'Não';
+            return String(val);
+        };
+
+        // Track changes by comparing old vs new values
+        const changes = [];
 
         Object.keys(req.body).forEach(key => {
             if (excludeFields.includes(key)) return;
-            if (dateFields.includes(key)) {
+
+            const isDate = dateFields.includes(key);
+            const oldVal = servidor[key];
+            const newVal = isDate && req.body[key] === '' ? null : req.body[key];
+
+            // Normalize for comparison
+            const oldNorm = fmtVal(oldVal, isDate);
+            const newNorm = fmtVal(newVal, isDate);
+
+            if (oldNorm !== newNorm) {
+                const label = fieldLabels[key] || key;
+                changes.push(`${label}: ${oldNorm} → ${newNorm}`);
+            }
+
+            // Apply the value
+            if (isDate) {
                 servidor[key] = req.body[key] === '' ? null : req.body[key];
             } else {
                 servidor[key] = req.body[key];
@@ -561,13 +1068,15 @@ router.put('/servidores/:id', auth, async (req, res) => {
             servidor.OBS_SERV = ''; // Clear the input field in the database
         }
 
-        // Log Profile Update
-        servidor.OBSERVACOES.push({
-            conteudo: 'Perfil do servidor atualizado.',
-            categoria: 'Atualização Cadastral',
-            data: new Date(),
-            autor: req.user ? `Sistema (${req.user.nome})` : 'Sistema'
-        });
+        // Log Profile Update with detailed changes
+        if (changes.length > 0) {
+            servidor.OBSERVACOES.push({
+                conteudo: `Campos alterados:\n${changes.join('\n')}`,
+                categoria: 'Atualização Cadastral',
+                data: new Date(),
+                autor: req.user ? `Sistema (${req.user.nome})` : 'Sistema'
+            });
+        }
 
         await servidor.save();
         res.json(servidor);
@@ -738,27 +1247,120 @@ router.delete('/servidores/:id/observacoes/:obsId', auth, async (req, res) => {
     }
 });
 
+// @route   GET api/ferias/stats
+// @desc    Get vacation completeness stats for active servers
+// @access  Public
+router.get('/ferias/stats', async (req, res) => {
+    try {
+        const Servidor = require('../models/Servidor');
+        const SituacaoServidor = require('../models/SituacaoServidor');
+
+        const activeServersCount = await Servidor.countDocuments({
+            ATIVO_SERV: { $in: ['SIM', 'ATIVO', 'Sim', 'Ativo'] }
+        });
+
+        const activeServers = await Servidor.find({
+            ATIVO_SERV: { $in: ['SIM', 'ATIVO', 'Sim', 'Ativo'] },
+            ADMISSAO_SERV: { $exists: true, $ne: null }
+        }, { IDPK_SERV: 1 });
+
+        let serversWith2024 = 0;
+        let serversWith2025 = 0;
+
+        if (activeServers.length > 0) {
+            const serverIds = activeServers.map(s => s.IDPK_SERV);
+
+            // Fetch ALL vacation data for 2024 & 2025 in a single query
+            const allVacations = await SituacaoServidor.find({
+                IDFK_SERV: { $in: serverIds },
+                ASSUNTO_SIT: /f[eé]rias/i,
+                INICIO_FERIAS_SIT: {
+                    $gte: new Date('2024-01-01'),
+                    $lt: new Date('2026-01-01')
+                }
+            }).select('IDFK_SERV INICIO_FERIAS_SIT').lean();
+
+            // Track unique servers who took vacations in those years
+            const servers2024Set = new Set();
+            const servers2025Set = new Set();
+
+            for (const vac of allVacations) {
+                const year = new Date(vac.INICIO_FERIAS_SIT).getFullYear();
+                if (year === 2024) servers2024Set.add(String(vac.IDFK_SERV));
+                else if (year === 2025) servers2025Set.add(String(vac.IDFK_SERV));
+            }
+
+            serversWith2024 = servers2024Set.size;
+            serversWith2025 = servers2025Set.size;
+        }
+
+        res.json({
+            activeServers: activeServersCount,
+            with2024: serversWith2024,
+            with2025: serversWith2025,
+            percent2024: activeServersCount > 0 ? Math.round((serversWith2024 / activeServersCount) * 100) : 0,
+            percent2025: activeServersCount > 0 ? Math.round((serversWith2025 / activeServersCount) * 100) : 0
+        });
+
+    } catch (err) {
+        console.error('Error fetching ferias stats:', err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 // @route   GET api/ferias-data
 // @desc    Get vacation records for report (filtered by year and setor)
 // @access  Public
 router.get('/ferias-data', async (req, res) => {
     try {
         const SituacaoServidor = require('../models/SituacaoServidor');
+        const Servidor = require('../models/Servidor');
 
-        // Default to current year if no year provided
+        // year is optional; if omitted (''), query across all years
         const currentYear = new Date().getFullYear();
-        const year = parseInt(req.query.year) || currentYear;
+        const rawYear = req.query.year;
+        const year = rawYear === '' ? null : (parseInt(rawYear) || currentYear);
         const setorFilter = req.query.setor || '';
         const statusFilter = req.query.status || '';
+        const nomeFilter = req.query.nome || '';
 
-        // Build query with year filter on INICIO_FERIAS_SIT
-        const yearStart = new Date(`${year}-01-01T00:00:00.000Z`);
-        const yearEnd = new Date(`${year}-12-31T23:59:59.999Z`);
+        console.log(`[DEBUG FERIAS] query.year: '${req.query.year}', parsed year: ${year}`);
+        console.log(`[DEBUG FERIAS] nomeFilter: '${nomeFilter}'`);
+        console.log(`[DEBUG FERIAS] setorFilter: '${setorFilter}'`);
 
         const query = {
-            ASSUNTO_SIT: { $regex: /f[eé]rias/i },
-            INICIO_FERIAS_SIT: { $gte: yearStart, $lte: yearEnd }
+            ASSUNTO_SIT: { $regex: /f[eé]rias/i }
         };
+
+        // If filtering by name or sector, we MUST fetch matching server IDs first
+        // so that the .limit(500) on SituacaoServidor doesn't truncate the desired records.
+        if (nomeFilter || setorFilter) {
+            const servQuery = {};
+            if (nomeFilter) servQuery.NOME_SERV = { $regex: nomeFilter, $options: 'i' };
+            if (setorFilter) servQuery.SETOR_LOTACAO_SERV = { $regex: setorFilter, $options: 'i' };
+
+            const matchingServers = await Servidor.find(servQuery).select('IDPK_SERV').lean();
+
+            if (matchingServers.length === 0) {
+                // No matching servers, therefore no vacations
+                return res.json({ data: [], year, total: 0 });
+            }
+
+            const matchingIds = matchingServers.map(s => s.IDPK_SERV);
+            const matchingIdsMixed = [
+                ...matchingIds.map(String),
+                ...matchingIds.map(id => !isNaN(Number(id)) ? Number(id) : id)
+            ];
+
+            query.IDFK_SERV = { $in: matchingIdsMixed };
+        }
+
+        // Only build year filter if a specific year is requested
+        if (year) {
+            const yearStart = new Date(`${year}-01-01T00:00:00.000Z`);
+            const yearEnd = new Date(`${year}-12-31T23:59:59.999Z`);
+            query.INICIO_FERIAS_SIT = { $gte: yearStart, $lte: yearEnd };
+        }
 
         if (statusFilter && statusFilter !== 'TODOS') {
             const approvedVals = ['APROVADO', 'DEFERIDO', 'FERIAS'];
@@ -785,7 +1387,6 @@ router.get('/ferias-data', async (req, res) => {
         ];
 
         // Fetch server details
-        const Servidor = require('../models/Servidor');
         let serverQuery = { IDPK_SERV: { $in: serverIdsMixed } };
         const servidores = await Servidor.find(serverQuery)
             .select('IDPK_SERV NOME_SERV MATRICULA_SERV CARGO_EFETIVO_SERV SETOR_LOTACAO_SERV ATIVO_SERV')
@@ -802,9 +1403,15 @@ router.get('/ferias-data', async (req, res) => {
             const server = serverMap[f.IDFK_SERV];
             if (!server) return acc;
 
-            // Optional setor filter (applied here since it's a server field)
-            const serverSetor = (server.SETOR_LOTACAO_SERV || '').toUpperCase();
-            if (setorFilter && !serverSetor.includes(setorFilter.toUpperCase())) return acc;
+            // Helper to normalize strings for comparison
+            const normalizeStr = (str) => (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+
+            // Optional filters (applied here since they belong to the server record)
+            const serverSetor = normalizeStr(server.SETOR_LOTACAO_SERV);
+            if (setorFilter && !serverSetor.includes(normalizeStr(setorFilter))) return acc;
+
+            const serverNome = normalizeStr(server.NOME_SERV);
+            if (nomeFilter && !serverNome.includes(normalizeStr(nomeFilter.trim()))) return acc;
 
             acc.push({
                 ...f,
@@ -831,6 +1438,79 @@ router.get('/ferias-data', async (req, res) => {
     }
 });
 
+
+// Helper function to build Servidor filter query for Ferias & Afastamentos
+async function applyServidorFilters(reqQuery, baseQuery) {
+    const { search, setor, cargo, vinculo, birthMonth } = reqQuery;
+    if (!search && !setor && !cargo && !vinculo && !birthMonth && !reqQuery.status_servidor) {
+        return baseQuery;
+    }
+
+    let servQuery = {};
+    if (search) {
+        servQuery.$or = [
+            { NOME_SERV: { $regex: search, $options: 'i' } },
+            { MATRICULA_SERV: { $regex: search, $options: 'i' } }
+        ];
+    }
+    if (setor) servQuery.SETOR_LOTACAO_SERV = { $regex: setor, $options: 'i' };
+    if (cargo) {
+        servQuery.$or = [
+            { CARGO_EFETIVO_SERV: cargo },
+            { CARGO_COMISSIONADO_SERV: cargo },
+            { FUNCAO_SP_SERV: cargo }
+        ];
+    }
+    if (vinculo) {
+        const v = vinculo.toUpperCase();
+        if (v === 'EFETIVO') {
+            servQuery.$and = [{ CARGO_EFETIVO_SERV: { $ne: null } }, { CARGO_EFETIVO_SERV: { $ne: '' } }];
+        } else if (v === 'COMISSIONADO') {
+            servQuery.$and = [{ CARGO_COMISSIONADO_SERV: { $ne: null } }, { CARGO_COMISSIONADO_SERV: { $ne: '' } }];
+        } else if (v === 'SERVIÇOS PRESTADOS' || v === 'SERVICOS PRESTADOS') {
+            servQuery.$or = [{ VINCULO_SERV: 'SERVIÇOS PRESTADOS' }, { SERVICO_PRESTADO_SERV: { $regex: /^sim$/i } }];
+        } else if (v === 'CONTRATADO') {
+            servQuery.$and = [{ CARGO_EFETIVO_SERV: { $in: [null, ''] } }, { CARGO_COMISSIONADO_SERV: { $in: [null, ''] } }, { SERVICO_PRESTADO_SERV: { $not: { $regex: /^sim$/i } } }];
+        } else {
+            servQuery.VINCULO_SERV = { $regex: vinculo, $options: 'i' };
+        }
+    }
+
+    // The main issue with the 'inativo' filter here is that it tries to find `SituacaoServidor` records
+    // that MATCH an inactive server. But inactive servers rarely have NEW vacation requests.
+    // If we filter baseQuery by IDFK_SERV based on this, we'll only see old historical requests for them.
+    // That behavior might actually be correct if the user wants to see past vacations of inactive servers.
+    if (reqQuery.status_servidor) {
+        if (reqQuery.status_servidor === 'ativo') {
+            servQuery.ATIVO_SERV = { $regex: /^\s*(sim|ativo|ativa)\s*$/i };
+            servQuery.CEDIDO_SERV = { $nin: ['true', 'SIM', 'Sim', true] };
+            servQuery.VINCULO_SERV = { $not: /demitido|exonerado|inativo/i };
+        } else if (reqQuery.status_servidor === 'inativo') {
+            if (!servQuery.$and) servQuery.$and = [];
+            servQuery.$and.push({
+                $or: [
+                    { ATIVO_SERV: { $not: /^\s*(sim|ativo|ativa)\s*$/i } },
+                    { CEDIDO_SERV: { $in: ['true', 'SIM', 'Sim', true] } },
+                    { VINCULO_SERV: { $regex: /demitido|exonerado|inativo/i } }
+                ]
+            });
+        }
+    }
+
+    const matchedServidores = await Servidor.find(servQuery).select('IDPK_SERV').lean();
+    const matchedIds = matchedServidores.map(s => s.IDPK_SERV);
+    const matchedIdsNum = matchedIds.map(id => !isNaN(Number(id)) ? Number(id) : id);
+
+    if (matchedIds.length === 0) {
+        baseQuery.IDFK_SERV = { $in: ['_NOT_FOUND_'] }; // forces empty result
+    } else {
+        // Find SituacaoServidor records that belong to these servers
+        // If it's a huge list, the $in operator might be slow, but there are only ~150 servers, so it's fine.
+        baseQuery.IDFK_SERV = { $in: [...matchedIds, ...matchedIdsNum] };
+    }
+
+    return baseQuery;
+}
 
 // @route   GET api/ferias
 // @desc    Get ferias data
@@ -864,19 +1544,33 @@ router.get('/ferias', async (req, res) => {
             }
         }
 
+        query = await applyServidorFilters(req.query, query);
+
         const ferias = await SituacaoServidor.find(query)
             .sort({ INICIO_FERIAS_SIT: -1 })
             .skip(skip)
             .limit(limit)
             .lean();
 
-        // Enrich with Servidor name
-        const enrichedFerias = await Promise.all(ferias.map(async (f) => {
-            const fIdStr = String(f.IDFK_SERV);
-            const fIdNum = !isNaN(Number(f.IDFK_SERV)) ? Number(f.IDFK_SERV) : f.IDFK_SERV;
-            const servidor = await Servidor.findOne({ IDPK_SERV: { $in: [fIdStr, fIdNum] } }).select('-ANEXOS');
-            return { ...f, servidor };
-        }));
+        // Bulk enrich with Servidor name
+        let enrichedFerias = ferias;
+        if (ferias.length > 0) {
+            const serverIdsStr = ferias.map(f => String(f.IDFK_SERV));
+            const serverIdsNum = ferias.map(f => !isNaN(Number(f.IDFK_SERV)) ? Number(f.IDFK_SERV) : f.IDFK_SERV);
+            const allServerIdsForBatch = [...new Set([...serverIdsStr, ...serverIdsNum])];
+
+            const servidoresBatch = await Servidor.find({ IDPK_SERV: { $in: allServerIdsForBatch } }).select('-ANEXOS').lean();
+
+            const servidorMap = {};
+            for (const s of servidoresBatch) {
+                servidorMap[String(s.IDPK_SERV)] = s;
+            }
+
+            enrichedFerias = ferias.map(f => ({
+                ...f,
+                servidor: servidorMap[String(f.IDFK_SERV)] || null
+            }));
+        }
 
         const total = await SituacaoServidor.countDocuments(query);
 
@@ -917,17 +1611,33 @@ router.get('/afastamentos', async (req, res) => {
             query.ASSUNTO_SIT = { $regex: new RegExp(type, 'i') };
         }
 
+        query = await applyServidorFilters(req.query, query);
+
         const afastamentos = await SituacaoServidor.find(query)
             .sort({ INICIO_FERIAS_SIT: -1 })
             .skip(skip)
             .limit(limit)
             .lean();
 
-        // Enrich with Servidor name
-        const enrichedAfastamentos = await Promise.all(afastamentos.map(async (a) => {
-            const servidor = await Servidor.findOne({ IDPK_SERV: a.IDFK_SERV }).select('NOME_SERV MATRICULA_SERV SETOR_LOTACAO_SERV');
-            return { ...a, servidor };
-        }));
+        // Bulk enrich with Servidor name
+        let enrichedAfastamentos = afastamentos;
+        if (afastamentos.length > 0) {
+            const serverIdsStr = afastamentos.map(a => String(a.IDFK_SERV));
+            const serverIdsNum = afastamentos.map(a => !isNaN(Number(a.IDFK_SERV)) ? Number(a.IDFK_SERV) : a.IDFK_SERV);
+            const allServerIdsForBatch = [...new Set([...serverIdsStr, ...serverIdsNum])];
+
+            const servidoresBatch = await Servidor.find({ IDPK_SERV: { $in: allServerIdsForBatch } }).select('NOME_SERV MATRICULA_SERV SETOR_LOTACAO_SERV IDPK_SERV').lean();
+
+            const servidorMap = {};
+            for (const s of servidoresBatch) {
+                servidorMap[String(s.IDPK_SERV)] = s;
+            }
+
+            enrichedAfastamentos = afastamentos.map(a => ({
+                ...a,
+                servidor: servidorMap[String(a.IDFK_SERV)] || null
+            }));
+        }
 
         const total = await SituacaoServidor.countDocuments(query);
 
@@ -945,10 +1655,11 @@ router.get('/afastamentos', async (req, res) => {
 
 // @route   POST api/afastamentos
 // @desc    Create new vacation or leave request (Supports single or multiple periods)
-// @access  Public
-router.post('/afastamentos', async (req, res) => {
+// @access  Private
+router.post('/afastamentos', auth, async (req, res) => {
     try {
-        const { servidorId, tipo, inicio, fim, periodos, observacao } = req.body;
+        const { servidorId, tipo, inicio, fim, periodos, observacao, pa_ano1, pa_ano2, inicio_concessivo, fim_concessivo } = req.body;
+        const autorNome = req.user ? req.user.nome : 'Sistema';
 
         // Validation
         if (!servidorId || !tipo) {
@@ -995,8 +1706,12 @@ router.post('/afastamentos', async (req, res) => {
                 INICIO_FERIAS_SIT: new Date(p.inicio),
                 FIM_FERIAS_SIT: new Date(p.fim),
                 STATUS_SIT: 'Aguardando Aprovação', // Default
-                OBSERVACOES_SIT: observacao,
-                DATA_APRESENTACAO_SIT: new Date()
+                OBS_SIT: observacao,
+                DATA_APRESENTACAO_SIT: new Date(),
+                PA_ANO1_SIT: pa_ano1,
+                PA_ANO2_SIT: pa_ano2,
+                INICIO_CONCESSIVO_SIT: inicio_concessivo ? new Date(inicio_concessivo) : null,
+                FIM_CONCESSIVO_SIT: fim_concessivo ? new Date(fim_concessivo) : null
             });
 
             await newAfastamento.save();
@@ -1010,7 +1725,7 @@ router.post('/afastamentos', async (req, res) => {
                 conteudo: obsContent,
                 categoria: 'Sistema',
                 data: new Date(),
-                autor: 'Sistema'
+                autor: autorNome
             });
             await serv.save();
         }
@@ -1063,19 +1778,24 @@ router.get('/afastamentos/:id', async (req, res) => {
 
 // @route   PUT api/afastamentos/:id
 // @desc    Update leave request (Approve/Reject/Edit)
-// @access  Public
-router.put('/afastamentos/:id', async (req, res) => {
+// @access  Private
+router.put('/afastamentos/:id', auth, async (req, res) => {
     try {
-        const { inicio, fim, obs, status, tipo } = req.body;
+        const { inicio, fim, obs, status, tipo, pa_ano1, pa_ano2, inicio_concessivo, fim_concessivo } = req.body;
         const afastamentoId = req.params.id;
+        const autorNome = req.user ? req.user.nome : 'Sistema';
 
         // Build update object
         const updateFields = {};
         if (inicio) updateFields.INICIO_FERIAS_SIT = new Date(inicio);
         if (fim) updateFields.FIM_FERIAS_SIT = new Date(fim);
-        if (obs) updateFields.OBS_SIT = obs;
+        if (obs !== undefined) updateFields.OBS_SIT = obs;
         if (status) updateFields.STATUS_SIT = status;
         if (tipo) updateFields.ASSUNTO_SIT = tipo;
+        if (pa_ano1 !== undefined) updateFields.PA_ANO1_SIT = pa_ano1;
+        if (pa_ano2 !== undefined) updateFields.PA_ANO2_SIT = pa_ano2;
+        if (inicio_concessivo) updateFields.INICIO_CONCESSIVO_SIT = new Date(inicio_concessivo);
+        if (fim_concessivo) updateFields.FIM_CONCESSIVO_SIT = new Date(fim_concessivo);
 
         // Find and update
         let afastamento = await SituacaoServidor.findOneAndUpdate(
@@ -1114,7 +1834,27 @@ router.put('/afastamentos/:id', async (req, res) => {
         }
 
         // Log to Server Profile
-        await logObservation(afastamento.IDFK_SERV, `SolicitaÃ§Ã£o de ${afastamento.ASSUNTO_SIT} atualizada para: ${status || 'Editado'}`, 'Afastamento');
+        let logMessage = `SolicitaÃ§Ã£o de ${afastamento.ASSUNTO_SIT} atualizada para: ${status || 'Editado'}`;
+
+        if (status === 'Aprovado' && (afastamento.ASSUNTO_SIT === 'Férias' || afastamento.ASSUNTO_SIT === 'FÃ©rias')) {
+            const formatShortDate = (date) => {
+                if (!date) return '';
+                const d = new Date(date);
+                return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+            };
+
+            const gozoInicio = formatShortDate(afastamento.INICIO_FERIAS_SIT);
+            const gozoFim = formatShortDate(afastamento.FIM_FERIAS_SIT);
+            const concInicio = formatShortDate(afastamento.INICIO_CONCESSIVO_SIT);
+            const concFim = formatShortDate(afastamento.FIM_CONCESSIVO_SIT);
+
+            logMessage += `. Período de Gozo: ${gozoInicio} a ${gozoFim}`;
+            if (concInicio && concFim) {
+                logMessage += `. Período Aquisitivo: ${concInicio} a ${concFim}`;
+            }
+        }
+
+        await logObservation(afastamento.IDFK_SERV, logMessage, 'Afastamento', autorNome);
 
         res.json(afastamento);
     } catch (err) {
@@ -1345,16 +2085,20 @@ router.get('/afastamentos/:id', async (req, res) => {
 // @access  Public
 router.put('/afastamentos/:id', async (req, res) => {
     try {
-        const { inicio, fim, obs, status, tipo } = req.body;
+        const { inicio, fim, obs, status, tipo, pa_ano1, pa_ano2, inicio_concessivo, fim_concessivo } = req.body;
         const afastamentoId = req.params.id;
 
         // Build update object
         const updateFields = {};
         if (inicio) updateFields.INICIO_FERIAS_SIT = new Date(inicio);
         if (fim) updateFields.FIM_FERIAS_SIT = new Date(fim);
-        if (obs) updateFields.OBS_SIT = obs;
+        if (obs !== undefined) updateFields.OBS_SIT = obs;
         if (status) updateFields.STATUS_SIT = status;
         if (tipo) updateFields.ASSUNTO_SIT = tipo;
+        if (pa_ano1 !== undefined) updateFields.PA_ANO1_SIT = pa_ano1;
+        if (pa_ano2 !== undefined) updateFields.PA_ANO2_SIT = pa_ano2;
+        if (inicio_concessivo) updateFields.INICIO_CONCESSIVO_SIT = new Date(inicio_concessivo);
+        if (fim_concessivo) updateFields.FIM_CONCESSIVO_SIT = new Date(fim_concessivo);
 
         // Find and update
         let afastamento = await SituacaoServidor.findOneAndUpdate(
@@ -1430,7 +2174,22 @@ router.get('/dashboard', async (req, res) => {
                 STATUS_SIT: { $in: ['Pendente', 'Em Análise', 'Aguardando', 'Aguardando Aprovação', 'PENDENTE', 'Aguardando aprovação'] }
             }),
             SituacaoServidor.countDocuments({
-                ASSUNTO_SIT: { $regex: /férias/i },
+                $and: [
+                    {
+                        $or: [
+                            { ASSUNTO_SIT: 'Férias' },
+                            { ASSUNTO_SIT: /f[eé]rias/i }
+                        ]
+                    },
+                    {
+                        $or: [
+                            { STATUS_SIT: { $in: [/aprovado/i, /deferido/i, /em f[eé]rias/i, /^f[eé]rias$/i] } },
+                            { STATUS_SIT: null },
+                            { STATUS_SIT: "" },
+                            { STATUS_SIT: { $exists: false } }
+                        ]
+                    }
+                ],
                 INICIO_FERIAS_SIT: { $lte: today },
                 FIM_FERIAS_SIT: { $gte: today }
             })
@@ -1634,6 +2393,116 @@ router.delete('/servidores/:id', auth, async (req, res) => {
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
+    }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// @route   POST api/sync-situacoes
+// @desc    Sync SITUACAO_SERVIDOR records from data_converted.json into MongoDB
+// @access  Private (admin only)
+// ─────────────────────────────────────────────────────────────────────────────
+router.post('/sync-situacoes', auth, async (req, res) => {
+    try {
+        const dataPath = path.join(__dirname, '..', 'data_converted.json');
+        if (!fs.existsSync(dataPath)) {
+            return res.status(404).json({ msg: 'data_converted.json não encontrado.' });
+        }
+
+        console.log('[SYNC] Loading data_converted.json...');
+        const rawData = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+
+        const table = rawData.tables.find(t => t.name === 'SITUACAO_SERVIDOR');
+        if (!table) {
+            return res.status(404).json({ msg: 'Tabela SITUACAO_SERVIDOR não encontrada no arquivo.' });
+        }
+
+        const DATE_FIELDS = ['DATACAD_SIT', 'DATADOC_SIT', 'FIM_FERIAS_SIT', 'INICIO_FERIAS_SIT', 'INICIO_CONCESSIVO_SIT', 'FIM_CONCESSIVO_SIT'];
+
+        function parseRow(row) {
+            const doc = {};
+            for (const [key, val] of Object.entries(row)) {
+                if (key === 'HORACAD_SIT') continue;
+                if (DATE_FIELDS.includes(key)) {
+                    if (val && val !== '' && val !== null) {
+                        const d = new Date(val);
+                        doc[key] = isNaN(d.getTime()) ? null : d;
+                    } else {
+                        doc[key] = null;
+                    }
+                } else if (['IDFK_SERV', 'IDPK_SIT', 'PA_ANO1_SIT', 'PA_ANO2_SIT', 'ANODOC_SIT'].includes(key)) {
+                    doc[key] = val !== null && val !== undefined ? String(val) : null;
+                } else {
+                    doc[key] = val;
+                }
+            }
+            return doc;
+        }
+
+        // Get existing IDPK_SIT for fast lookup
+        const existingDocs = await SituacaoServidor.find({}, { IDPK_SIT: 1, _id: 0 }).lean();
+        const existingIds = new Set(existingDocs.map(d => String(d.IDPK_SIT)));
+
+        const newRecords = [];
+        let skipped = 0;
+
+        for (const row of table.rows) {
+            const parsed = parseRow(row);
+            if (!parsed.IDPK_SIT) continue;
+            if (existingIds.has(String(parsed.IDPK_SIT))) {
+                skipped++;
+                continue;
+            }
+            newRecords.push(parsed);
+        }
+
+        if (newRecords.length === 0) {
+            return res.json({
+                msg: 'Banco de dados já está atualizado. Nenhum registro novo encontrado.',
+                totalInFile: table.rows.length,
+                alreadyExisted: skipped,
+                inserted: 0,
+                totalInDB: existingDocs.length
+            });
+        }
+
+        // Insert in batches
+        const BATCH_SIZE = 200;
+        let inserted = 0;
+        let errors = 0;
+
+        for (let i = 0; i < newRecords.length; i += BATCH_SIZE) {
+            const batch = newRecords.slice(i, i + BATCH_SIZE);
+            try {
+                const result = await SituacaoServidor.insertMany(batch, { ordered: false });
+                inserted += result.length;
+            } catch (err) {
+                if (err.code === 11000 || (err.writeErrors && err.writeErrors.length > 0)) {
+                    const dupes = err.writeErrors ? err.writeErrors.length : 0;
+                    inserted += (batch.length - dupes);
+                    errors += dupes;
+                } else {
+                    console.error('[SYNC] Batch error:', err.message);
+                    errors += batch.length;
+                }
+            }
+        }
+
+        const finalCount = await SituacaoServidor.countDocuments();
+
+        console.log(`[SYNC] Complete! Inserted: ${inserted}, Skipped: ${skipped}, Errors: ${errors}, Total: ${finalCount}`);
+
+        res.json({
+            msg: `Sincronização concluída! ${inserted} registros importados.`,
+            totalInFile: table.rows.length,
+            alreadyExisted: skipped,
+            inserted,
+            errors,
+            totalInDB: finalCount
+        });
+
+    } catch (err) {
+        console.error('[SYNC] Error:', err.message);
+        res.status(500).json({ msg: 'Erro na sincronização: ' + err.message });
     }
 });
 

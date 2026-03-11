@@ -1,4 +1,5 @@
 import React from 'react';
+import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -11,14 +12,30 @@ import Configuracoes from './pages/Configuracoes';
 import Afastamentos from './pages/Afastamentos';
 import Help from './pages/Help';
 import ChangePassword from './pages/ChangePassword';
+import ResetPassword from './pages/ResetPassword';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+
+// Global Axios Interceptor to prevent browser/edge caching on all GET requests
+axios.interceptors.request.use(config => {
+  if (config.method && config.method.toLowerCase() === 'get') {
+    // Append a timestamp to the query parameters
+    config.params = {
+      ...config.params,
+      _t: Date.now()
+    };
+  }
+  return config;
+}, error => {
+  return Promise.reject(error);
+});
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>

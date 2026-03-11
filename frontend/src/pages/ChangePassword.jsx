@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -9,6 +9,36 @@ const ChangePassword = () => {
     const [success, setSuccess] = useState(false);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const verifyUser = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await axios.get('/api/auth/user', {
+                    headers: { 'x-auth-token': token }
+                });
+
+                // If user's token is old but backend says they don't need to change password
+                if (response.data && response.data.mustChangePassword === false) {
+                    try {
+                        // Request a fresh token from backend to override the stale one
+                        const refreshResponse = await axios.get('/api/auth/refresh-token', {
+                            headers: { 'x-auth-token': token }
+                        });
+                        if (refreshResponse.data && refreshResponse.data.token) {
+                            localStorage.setItem('token', refreshResponse.data.token);
+                        }
+                    } catch (e) {
+                        console.error('Could not refresh token automatically', e);
+                    }
+                    navigate('/dashboard');
+                }
+            } catch (err) {
+                console.error('Falha ao verificar status do usuário', err);
+            }
+        };
+        verifyUser();
+    }, [navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -27,10 +57,14 @@ const ChangePassword = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            await axios.post('/api/auth/change-password',
+            const response = await axios.post('/api/auth/change-password',
                 { newPassword: novaSenha },
                 { headers: { 'x-auth-token': token } }
             );
+
+            if (response.data.token) {
+                localStorage.setItem('token', response.data.token);
+            }
 
             setSuccess(true);
             setTimeout(() => {

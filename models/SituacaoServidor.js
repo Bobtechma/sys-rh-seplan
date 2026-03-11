@@ -15,6 +15,8 @@ const SituacaoServidorSchema = new mongoose.Schema({
     FIM_FERIAS_SIT: Date,
     PA_ANO1_SIT: String,
     PA_ANO2_SIT: String,
+    INICIO_CONCESSIVO_SIT: Date,
+    FIM_CONCESSIVO_SIT: Date,
     OBS_SIT: String,
     ASSUNTO_SIT: String,
     IMPRIMIR_DOSSIE_SIT: String

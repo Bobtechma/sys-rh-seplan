@@ -140,6 +140,11 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Global Middleware: Check DB Connection for API routes
 app.use('/api', async (req, res, next) => {
+    // Prevent ALL API routes from being cached by browser or Vercel Edge
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     // Skip check for health/debug check
     if (req.path === '/health' || req.path === '/debug-status' || req.path === '/diagnose') return next();
 
@@ -157,6 +162,12 @@ try {
     app.use('/api/auth', require('./routes/auth'));
 } catch (error) {
     console.error('CRITICAL ERROR: Failed to load Auth routes:', error);
+}
+
+try {
+    app.use('/api/settings', require('./routes/settings'));
+} catch (error) {
+    console.error('CRITICAL ERROR: Failed to load Settings routes:', error);
 }
 
 try {

@@ -2,6 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 
+const FormField = ({ label, children }) => (
+    <div>
+        <label className="block text-sm font-medium text-slate-900 dark:text-white mb-2">{label}</label>
+        {children}
+    </div>
+);
+
 const AddServer = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -176,6 +183,23 @@ const AddServer = () => {
         }
     };
 
+    const handleEditObservation = async (obs) => {
+        const newText = window.prompt('Editar observação:', obs.conteudo);
+        if (newText === null || newText.trim() === '') return;
+        try {
+            const token = localStorage.getItem('token');
+            const autor = localStorage.getItem('userName') || 'Usuário';
+            const res = await axios.put(`/api/servidores/${id}/observacoes/${obs._id}`,
+                { conteudo: newText, autor },
+                { headers: { 'x-auth-token': token } }
+            );
+            setObservacoes(res.data);
+        } catch (error) {
+            console.error('Error editing observation:', error);
+            alert('Erro ao editar observação');
+        }
+    };
+
     const handleDeleteObservation = async (obsId) => {
         if (!window.confirm('Tem certeza que deseja excluir esta observação?')) return;
         try {
@@ -271,13 +295,6 @@ const AddServer = () => {
     const vinculoOptions = ['EFETIVO', 'COMISSIONADO', 'SERVIÇOS PRESTADOS', 'CEDIDO', 'ESTAGIÁRIO', 'TEMPORÁRIO'];
     const turnoOptions = ['MATUTINO', 'VESPERTINO', 'INTEGRAL', 'NOTURNO'];
     const escolaridadeOptions = ['FUNDAMENTAL INCOMPLETO', 'FUNDAMENTAL COMPLETO', 'MÉDIO INCOMPLETO', 'MÉDIO COMPLETO', 'SUPERIOR INCOMPLETO', 'SUPERIOR COMPLETO', 'PÓS-GRADUAÇÃO', 'MESTRADO', 'DOUTORADO'];
-
-    const FormField = ({ label, children }) => (
-        <div>
-            <label className="block text-sm font-medium text-slate-900 dark:text-white mb-2">{label}</label>
-            {children}
-        </div>
-    );
 
     return (
         <div className="space-y-6">
@@ -597,14 +614,24 @@ const AddServer = () => {
                                     <span>{obs.data ? new Date(obs.data).toLocaleDateString('pt-BR') : ''}</span>
                                 </div>
                                 {obs._id && isEditMode && (
-                                    <button
-                                        type="button"
-                                        onClick={() => handleDeleteObservation(obs._id)}
-                                        className="absolute top-2 right-2 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        title="Excluir observação"
-                                    >
-                                        <span className="material-symbols-outlined text-sm">delete</span>
-                                    </button>
+                                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleEditObservation(obs)}
+                                            className="text-slate-400 hover:text-blue-500 p-1 bg-white dark:bg-slate-800 rounded shadow-sm"
+                                            title="Editar observação"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">edit</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDeleteObservation(obs._id)}
+                                            className="text-slate-400 hover:text-red-500 p-1 bg-white dark:bg-slate-800 rounded shadow-sm"
+                                            title="Excluir observação"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">delete</span>
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         ))}

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { CITY_HALL_LOGO } from '../utils/assets';
+import { formatDateUTC } from '../utils/formatDate';
+import { useStaggerReveal, useCountUp } from '../hooks/useAnimations';
 
 const Ferias = () => {
     const [ferias, setFerias] = useState([]);
@@ -8,13 +10,38 @@ const Ferias = () => {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('pending'); // active, pending, all
     const [stats, setStats] = useState({ active: 0, pending: 0, total: 0 });
+    const [completionStats, setCompletionStats] = useState({
+        activeServers: 0,
+        with2024: 0,
+        with2025: 0,
+        percent2024: 0,
+        percent2025: 0
+    });
+
+    // Global Filters
+    const [searchFilters, setSearchFilters] = useState({
+        search: '',
+        setor: '',
+        cargo: '',
+        vinculo: '',
+        status_servidor: '',
+        birthMonth: ''
+    });
+    const [setoresOpt, setSetoresOpt] = useState([]);
+    const [cargosOpt, setCargosOpt] = useState([]);
 
     // Concessivo State
     const [concessivoList, setConcessivoList] = useState([]);
+    const [vencidasList, setVencidasList] = useState([]);
+    const [atrasadasList, setAtrasadasList] = useState([]);
     const [showConcessivoModal, setShowConcessivoModal] = useState(false);
+    const [showVencidasModal, setShowVencidasModal] = useState(false);
+    const [showAtrasadasModal, setShowAtrasadasModal] = useState(false);
 
     // Modal State
     const [showModal, setShowModal] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [selectedItemId, setSelectedItemId] = useState(null);
     const [formData, setFormData] = useState({
         servidorId: '',
         tipo: 'Férias',
@@ -23,11 +50,62 @@ const Ferias = () => {
     });
     const [openMenuId, setOpenMenuId] = useState(null);
 
+    // Animations
+    const tableRef = useStaggerReveal('.animate-row', [loading, ferias, filter], { staggerDelay: 40 });
+    const modalConcessivoRef = useStaggerReveal('.animate-modal-row', [concessivoList, showConcessivoModal], { staggerDelay: 30 });
+    const modalVencidasRef = useStaggerReveal('.animate-modal-row', [vencidasList, showVencidasModal], { staggerDelay: 30 });
+    const modalAtrasadasRef = useStaggerReveal('.animate-modal-row', [atrasadasList, showAtrasadasModal], { staggerDelay: 30 });
+    const mobileCardsRef = useStaggerReveal('.animate-card', [loading, ferias, filter], { staggerDelay: 50 });
+
+    const activeCountAnim = useCountUp(stats.active, loading, 800);
+    const pendingCountAnim = useCountUp(stats.pending, loading, 800);
+    const totalCountAnim = useCountUp(stats.total, loading, 800);
+
     useEffect(() => {
+        fetchFilters();
         fetchFerias();
         fetchServidores();
         fetchConcessivo();
+        fetchVencidas();
+        fetchAtrasadas();
+        fetchCompletionStats();
     }, []);
+
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            fetchFerias();
+        }, 500);
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchFilters]);
+
+    const fetchFilters = async () => {
+        try {
+            const [setoresRes, cargosRes] = await Promise.all([
+                axios.get('/api/servidores/setores'),
+                axios.get('/api/servidores/cargos')
+            ]);
+            setSetoresOpt(setoresRes.data);
+            setCargosOpt(cargosRes.data);
+        } catch (error) {
+            console.error('Error loading filters:', error);
+        }
+    };
+
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        setSearchFilters(prev => ({ ...prev, [name]: value }));
+    };
+
+    const clearFilters = () => {
+        setSearchFilters({
+            search: '',
+            setor: '',
+            cargo: '',
+            vinculo: '',
+            status_servidor: '',
+            birthMonth: ''
+        });
+    };
 
     const fetchConcessivo = async () => {
         try {
@@ -38,9 +116,39 @@ const Ferias = () => {
         }
     };
 
+    const fetchVencidas = async () => {
+        try {
+            const response = await axios.get('/api/servidores/ferias-vencidas');
+            setVencidasList(response.data || []);
+        } catch (error) {
+            console.error('Error fetching vencidas:', error);
+        }
+    };
+
+    const fetchAtrasadas = async () => {
+        try {
+            const response = await axios.get('/api/servidores/ferias-atrasadas');
+            setAtrasadasList(response.data || []);
+        } catch (error) {
+            console.error('Error fetching atrasadas:', error);
+        }
+    };
+
+    const fetchCompletionStats = async () => {
+        try {
+            const response = await axios.get('/api/ferias/stats');
+            setCompletionStats(response.data);
+        } catch (error) {
+            console.error('Error fetching completion stats:', error);
+        }
+    };
+
     const fetchFerias = async () => {
         try {
-            const response = await axios.get('/api/ferias');
+            const params = { ...searchFilters, limit: 5000 };
+            Object.keys(params).forEach(key => params[key] === '' && delete params[key]);
+
+            const response = await axios.get('/api/ferias', { params });
             const data = response.data.ferias || [];
             setFerias(data);
 
@@ -81,14 +189,55 @@ const Ferias = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('/api/afastamentos', formData);
-            alert('Solicitação criada com sucesso!');
+            const token = localStorage.getItem('token');
+            if (isEditing && selectedItemId) {
+                // Update existing (Assuming single period update for now as backend PUT handles one)
+                // If it was created with multiple, they are separate records anyway
+                const p = formData.periodos[0];
+                await axios.put(`/api/afastamentos/${selectedItemId}`, {
+                    inicio: p.inicio,
+                    fim: p.fim,
+                    obs: formData.observacao,
+                    tipo: formData.tipo
+                }, {
+                    headers: { 'x-auth-token': token }
+                });
+                alert('Solicitação atualizada com sucesso!');
+            } else {
+                // Create new
+                await axios.post('/api/afastamentos', formData, {
+                    headers: { 'x-auth-token': token }
+                });
+                alert('Solicitação criada com sucesso!');
+            }
+
+            setShowModal(false);
             setFormData({ servidorId: '', tipo: 'Férias', periodos: [{ inicio: '', fim: '' }], observacao: '' });
+            setIsEditing(false);
+            setSelectedItemId(null);
             fetchFerias(); // Refresh list
         } catch (error) {
-            console.error('Error creating request:', error);
-            alert('Erro ao criar solicitação');
+            console.error('Error saving request:', error);
+            alert('Erro ao salvar solicitação');
         }
+    };
+
+    const handleEdit = (item) => {
+        const inicio = item.INICIO_FERIAS_SIT || item.inicio;
+        const fim = item.FIM_FERIAS_SIT || item.fim;
+
+        // Format dates for input type="date" (YYYY-MM-DD)
+        const fmt = (d) => d ? new Date(d).toISOString().split('T')[0] : '';
+
+        setFormData({
+            servidorId: item.IDFK_SERV || item.servidor?.IDPK_SERV,
+            tipo: item.ASSUNTO_SIT || item.tipo || 'Férias',
+            periodos: [{ inicio: fmt(inicio), fim: fmt(fim) }],
+            observacao: item.OBS_SIT || item.observacao || ''
+        });
+        setSelectedItemId(item._id || item.IDPK_SIT);
+        setIsEditing(true);
+        setShowModal(true);
     };
 
     const addPeriodo = () => {
@@ -117,7 +266,10 @@ const Ferias = () => {
     const updateStatus = async (id, newStatus) => {
         if (!window.confirm(`Tem certeza que deseja alterar o status para ${newStatus}?`)) return;
         try {
-            await axios.put(`/api/afastamentos/${id}`, { status: newStatus });
+            const token = localStorage.getItem('token');
+            await axios.put(`/api/afastamentos/${id}`, { status: newStatus }, {
+                headers: { 'x-auth-token': token }
+            });
             fetchFerias();
         } catch (error) {
             console.error('Error updating status:', error);
@@ -127,15 +279,15 @@ const Ferias = () => {
 
     const generateVacationDocument = async (request, type) => {
         const s = request.servidor;
-        const inicio = new Date(request.INICIO_FERIAS_SIT || request.inicio).toLocaleDateString('pt-BR');
-        const fim = new Date(request.FIM_FERIAS_SIT || request.fim).toLocaleDateString('pt-BR');
+        const inicio = formatDateUTC(request.INICIO_FERIAS_SIT || request.inicio);
+        const fim = formatDateUTC(request.FIM_FERIAS_SIT || request.fim);
         const today = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
 
         const logoSrc = CITY_HALL_LOGO;
 
         const typeTitle = type === 'AVISO' ? 'AVISO DE FÉRIAS' : 'RECESSO DE FÉRIAS';
         const docTitle = type === 'AVISO' ? 'Aviso de Férias' : 'Recesso de Férias';
-        const tipoDoc  = type === 'AVISO' ? 'AVF' : 'RCF';
+        const tipoDoc = type === 'AVISO' ? 'AVF' : 'RCF';
 
         // Fetch unique sequential document number from backend
         let docNumero = 'S/N';
@@ -222,7 +374,7 @@ const Ferias = () => {
                             </div>
                             <div style="flex: 1; padding: 2px 5px;">
                                 <strong>Data Nomeação:</strong><br>
-                                ${s.ADMISSAO_SERV ? new Date(s.ADMISSAO_SERV).toLocaleDateString('pt-BR') : ''}
+                                ${formatDateUTC(s.ADMISSAO_SERV)}
                             </div>
                         </div>
 
@@ -275,7 +427,7 @@ const Ferias = () => {
                 startPeriod.setFullYear(startPeriod.getFullYear() - 1);
 
                 // Override if user manually edited or passed it (not supported yet), so calculating dynamic
-                return startPeriod.toLocaleDateString('pt-BR');
+                return formatDateUTC(startPeriod);
             })()}
                             </div>
                             <div style="flex: 1; padding: 5px;">
@@ -293,7 +445,7 @@ const Ferias = () => {
                 const endPeriod = new Date(lastAnniversary);
                 endPeriod.setDate(endPeriod.getDate() - 1);
 
-                return endPeriod.toLocaleDateString('pt-BR');
+                return formatDateUTC(endPeriod);
             })()}
                             </div>
                         </div>
@@ -312,8 +464,9 @@ const Ferias = () => {
                         </div>
 
                         <!-- Observations -->
-                        <div style="height: 100px; padding: 5px; border-bottom: 1px solid black;">
-                            <strong>Observações</strong>
+                        <div style="min-height: 100px; padding: 5px; border-bottom: 1px solid black;">
+                            <strong>Observações:</strong>
+                            <p style="margin-top: 5px; font-size: 11px;">${request.OBS_SIT || ''}</p>
                         </div>
 
                         <!-- Signatures Row 1 -->
@@ -410,6 +563,30 @@ const Ferias = () => {
                         <p className="text-slate-500 dark:text-slate-400 mt-1">Gerencie solicitações e histórico de férias.</p>
                     </div>
                     <div className="flex gap-3">
+                        {vencidasList.length > 0 && (
+                            <button
+                                onClick={() => setShowVencidasModal(true)}
+                                className="relative flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-4 py-2 rounded-lg font-semibold transition shadow-sm dark:bg-red-900/20 dark:text-red-300 dark:border-red-800"
+                            >
+                                <span className="material-symbols-outlined">warning</span>
+                                Férias Vencidas
+                                <span className="absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white shadow-sm ring-2 ring-white dark:ring-surface-dark">
+                                    {vencidasList.length}
+                                </span>
+                            </button>
+                        )}
+                        {atrasadasList.length > 0 && (
+                            <button
+                                onClick={() => setShowAtrasadasModal(true)}
+                                className="relative flex items-center gap-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 px-4 py-2 rounded-lg font-semibold transition shadow-sm dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800"
+                            >
+                                <span className="material-symbols-outlined">history_toggle_off</span>
+                                Férias Atrasadas
+                                <span className="absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white shadow-sm ring-2 ring-white dark:ring-surface-dark">
+                                    {atrasadasList.length}
+                                </span>
+                            </button>
+                        )}
                         {concessivoList.length > 0 && (
                             <button
                                 onClick={() => setShowConcessivoModal(true)}
@@ -436,7 +613,7 @@ const Ferias = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div
                         onClick={() => setFilter('active')}
-                        className={`cursor-pointer bg-surface-light dark:bg-surface-dark rounded-xl p-5 border shadow-sm transition-all ${filter === 'active' ? 'ring-2 ring-primary border-primary' : 'border-border-light dark:border-border-dark'}`}>
+                        className={`cursor-pointer bg-surface-light dark:bg-surface-dark rounded-xl p-4 sm:p-5 border shadow-sm transition-all ${filter === 'active' ? 'ring-2 ring-primary border-primary' : 'border-border-light dark:border-border-dark'}`}>
                         <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-primary">
                                 <span className="material-symbols-outlined">beach_access</span>
@@ -448,7 +625,7 @@ const Ferias = () => {
 
                     <div
                         onClick={() => setFilter('pending')}
-                        className={`cursor-pointer bg-surface-light dark:bg-surface-dark rounded-xl p-5 border shadow-sm transition-all ${filter === 'pending' ? 'ring-2 ring-yellow-500 border-yellow-500' : 'border-border-light dark:border-border-dark'}`}>
+                        className={`cursor-pointer bg-surface-light dark:bg-surface-dark rounded-xl p-4 sm:p-5 border shadow-sm transition-all ${filter === 'pending' ? 'ring-2 ring-yellow-500 border-yellow-500' : 'border-border-light dark:border-border-dark'}`}>
                         <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg text-yellow-600">
                                 <span className="material-symbols-outlined">pending_actions</span>
@@ -460,19 +637,139 @@ const Ferias = () => {
 
                     <div
                         onClick={() => setFilter('all')}
-                        className={`cursor-pointer bg-surface-light dark:bg-surface-dark rounded-xl p-5 border shadow-sm transition-all ${filter === 'all' ? 'ring-2 ring-slate-500 border-slate-500' : 'border-border-light dark:border-border-dark'}`}>
+                        className={`cursor-pointer bg-surface-light dark:bg-surface-dark rounded-xl p-4 sm:p-5 border shadow-sm transition-all ${filter === 'all' ? 'ring-2 ring-slate-500 border-slate-500' : 'border-border-light dark:border-border-dark'}`}>
                         <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-400">
                                 <span className="material-symbols-outlined">list</span>
                             </div>
                             <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Total de Registros</span>
                         </div>
-                        <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats.total}</p>
+                        <h3 className="text-3xl font-bold text-slate-900 dark:text-white">
+                            {loading ? '...' : <span ref={totalCountAnim}>0</span>}
+                        </h3>
                     </div>
                 </div>
 
+                {/* Completion Progress Bars */}
+                <div className="bg-surface-light dark:bg-surface-dark p-4 sm:p-5 rounded-xl border border-border-light dark:border-border-dark shadow-sm">
+                    <div className="flex items-center gap-2 mb-4">
+                        <span className="material-symbols-outlined text-primary">donut_large</span>
+                        <h3 className="font-semibold text-slate-800 dark:text-slate-200">Progresso de Lançamentos de Férias</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* 2024 Progress */}
+                        <div>
+                            <div className="flex justify-between text-sm mb-1">
+                                <span className="font-medium text-slate-700 dark:text-slate-300">Ano 2024</span>
+                                <span className="text-slate-500">{completionStats.with2024} / {completionStats.activeServers} servidores ({completionStats.percent2024}%)</span>
+                            </div>
+                            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
+                                <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${completionStats.percent2024}%` }}></div>
+                            </div>
+                        </div>
+                        {/* 2025 Progress */}
+                        <div>
+                            <div className="flex justify-between text-sm mb-1">
+                                <span className="font-medium text-slate-700 dark:text-slate-300">Ano 2025</span>
+                                <span className="text-slate-500">{completionStats.with2025} / {completionStats.activeServers} servidores ({completionStats.percent2025}%)</span>
+                            </div>
+                            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
+                                <div className="bg-emerald-500 h-2.5 rounded-full" style={{ width: `${completionStats.percent2025}%` }}></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Filters */}
+                <div className="bg-surface-light dark:bg-surface-dark p-3 sm:p-4 rounded-xl border border-border-light dark:border-border-dark flex flex-wrap gap-4 items-center">
+                    <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                        <span className="material-symbols-outlined text-slate-400">filter_list</span>
+                        Filtros Globais:
+                    </div>
+
+                    <input
+                        type="text"
+                        name="search"
+                        value={searchFilters.search}
+                        onChange={handleFilterChange}
+                        placeholder="Buscar por nome..."
+                        className="form-input text-sm border-border-light dark:border-border-dark rounded-lg bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 focus:ring-primary focus:border-primary"
+                    />
+
+                    <select
+                        name="cargo"
+                        value={searchFilters.cargo}
+                        onChange={handleFilterChange}
+                        className="px-3 py-2 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 text-sm outline-none focus:ring-primary focus:border-primary min-w-[140px]"
+                    >
+                        <option value="">Todos os Cargos</option>
+                        {cargosOpt.map((c, i) => <option key={i} value={c}>{c}</option>)}
+                    </select>
+
+                    <select
+                        name="setor"
+                        value={searchFilters.setor}
+                        onChange={handleFilterChange}
+                        className="px-3 py-2 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 text-sm outline-none focus:ring-primary focus:border-primary min-w-[140px]"
+                    >
+                        <option value="">Todos os Setores</option>
+                        {setoresOpt.map((s, idx) => <option key={idx} value={s}>{s}</option>)}
+                    </select>
+
+                    <select
+                        name="vinculo"
+                        value={searchFilters.vinculo}
+                        onChange={handleFilterChange}
+                        className="px-3 py-2 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 text-sm outline-none focus:ring-primary focus:border-primary min-w-[140px]"
+                    >
+                        <option value="">Todos os Vínculos</option>
+                        <option value="EFETIVO">Efetivo</option>
+                        <option value="COMISSIONADO">Comissionado</option>
+                        <option value="CONTRATADO">Contratado</option>
+                        <option value="SERVIÇOS PRESTADOS">Serviços Prestados</option>
+                    </select>
+
+                    <select
+                        name="birthMonth"
+                        value={searchFilters.birthMonth}
+                        onChange={handleFilterChange}
+                        className="px-3 py-2 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 text-sm outline-none focus:ring-primary focus:border-primary min-w-[140px]"
+                    >
+                        <option value="">Mês Aniversário</option>
+                        <option value="1">Janeiro</option>
+                        <option value="2">Fevereiro</option>
+                        <option value="3">Março</option>
+                        <option value="4">Abril</option>
+                        <option value="5">Maio</option>
+                        <option value="6">Junho</option>
+                        <option value="7">Julho</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
+                    </select>
+
+                    <select
+                        name="status_servidor"
+                        value={searchFilters.status_servidor}
+                        onChange={handleFilterChange}
+                        className="px-3 py-2 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 text-sm outline-none focus:ring-primary focus:border-primary min-w-[140px]"
+                    >
+                        <option value="">Todos os Status (Servidor)</option>
+                        <option value="ativo">Ativo (+ Em Férias, Afastado)</option>
+                        <option value="inativo">Inativo</option>
+                    </select>
+
+                    <button
+                        onClick={clearFilters}
+                        className="ml-auto text-sm text-primary hover:text-blue-600 font-medium">
+                        Limpar Filtros
+                    </button>
+                </div>
+
                 {/* Content: Cards (Mobile) & Table (Desktop) */}
-                <div className="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm overflow-hidden">
+                <div className="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm">
 
                     {/* Mobile Card View */}
                     <div className="md:hidden">
@@ -481,14 +778,15 @@ const Ferias = () => {
                         ) : filteredFerias.length === 0 ? (
                             <div className="p-4 text-center text-slate-500">Nenhum registro encontrado.</div>
                         ) : (
-                            <div className="divide-y divide-border-light dark:divide-border-dark">
-                                {filteredFerias.map(item => {
-                                    const inicio = new Date(item.INICIO_FERIAS_SIT || item.inicio).toLocaleDateString('pt-BR');
-                                    const fim = new Date(item.FIM_FERIAS_SIT || item.fim).toLocaleDateString('pt-BR');
-                                    const initials = (item.servidor?.NOME_SERV || '??').substring(0, 2).toUpperCase();
+                            <div ref={mobileCardsRef} className="divide-y divide-border-light dark:divide-border-dark">
+                                {filteredFerias.map((item, index) => {
+                                    const inicio = formatDateUTC(item.INICIO_FERIAS_SIT || item.inicio);
+                                    const fim = formatDateUTC(item.FIM_FERIAS_SIT || item.fim);
+                                    const serv = item.servidor;
+                                    const initials = (serv?.NOME_SERV || '??').substring(0, 2).toUpperCase();
                                     const status = item.STATUS_SIT || item.status || null;
-                        const isHistorical = !status;
-                        const statusLabel = isHistorical ? 'Histórico' : status;
+                                    const isHistorical = !status;
+                                    const statusLabel = isHistorical ? 'Histórico' : status;
 
                                     const sUpper = (isHistorical ? 'FERIAS' : String(status)).toUpperCase();
                                     const isApproved = sUpper === 'APROVADO' || sUpper === 'DEFERIDO' || sUpper === 'EM FÉRIAS' || sUpper === 'EM_FERIAS' || sUpper === 'FÉRIAS' || sUpper === 'FERIAS' || isHistorical;
@@ -500,8 +798,13 @@ const Ferias = () => {
                                     if (isPending) statusClass = 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300';
                                     if (isCancelled) statusClass = 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300';
 
+                                    const isMenuOpen = openMenuId === item._id;
                                     return (
-                                        <div key={item._id} className="p-4 space-y-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                        <div
+                                            key={index}
+                                            onClick={() => handleEdit(item)}
+                                            className={`animate-row p-3 sm:p-4 space-y-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer ${isMenuOpen ? 'relative z-50 ring-2 ring-primary/20' : ''}`}
+                                        >
                                             <div className="flex items-start justify-between">
                                                 <div className="flex items-center gap-3">
                                                     <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-xs shrink-0">
@@ -509,9 +812,9 @@ const Ferias = () => {
                                                     </div>
                                                     <div>
                                                         <p className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-1">
-                                                            {item.servidor?.NOME_SERV || 'Desconhecido'}
+                                                            {serv?.NOME_SERV || 'Desconhecido'}
                                                         </p>
-                                                        <p className="text-xs text-slate-500">Mat: {item.servidor?.MATRICULA_SERV}</p>
+                                                        <p className="text-xs text-slate-500">Mat: {serv?.MATRICULA_SERV}</p>
                                                     </div>
                                                 </div>
                                                 <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}`}>
@@ -523,7 +826,7 @@ const Ferias = () => {
                                                 <div className="bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
                                                     <span className="block text-xs text-slate-500 dark:text-slate-400">Setor</span>
                                                     <span className="font-medium text-slate-700 dark:text-slate-300 truncate block">
-                                                        {item.servidor?.SETOR_LOTACAO_SERV || '-'}
+                                                        {serv?.SETOR_LOTACAO_SERV || '-'}
                                                     </span>
                                                 </div>
                                                 <div className="bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
@@ -545,13 +848,13 @@ const Ferias = () => {
                                                                 }}
                                                                 className={`p-2 rounded-lg flex items-center gap-2 text-sm font-medium ${openMenuId === item._id ? 'bg-primary text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'}`}
                                                             >
-                                                                <span className="material-symbols-outlined text-[18px]">print</span>
+                                                                <span className="material-symbols-outlined">print</span>
                                                                 Imprimir
                                                             </button>
                                                             {openMenuId === item._id && (
                                                                 <>
                                                                     <div className="fixed inset-0 z-40" onClick={() => setOpenMenuId(null)}></div>
-                                                                    <div className="absolute right-0 bottom-full mb-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 z-50 overflow-hidden">
+                                                                    <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 z-50 overflow-hidden">
                                                                         <button
                                                                             onClick={(e) => {
                                                                                 e.stopPropagation();
@@ -623,19 +926,20 @@ const Ferias = () => {
                                     <th className="py-4 px-6 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Ações</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-border-light dark:divide-border-dark">
+                            <tbody ref={tableRef} className="divide-y divide-border-light dark:divide-border-dark">
                                 {loading ? (
                                     <tr><td colSpan="5" className="px-6 py-8 text-center text-slate-500">Carregando...</td></tr>
                                 ) : filteredFerias.length === 0 ? (
                                     <tr><td colSpan="5" className="px-6 py-8 text-center text-slate-500">Nenhum registro encontrado.</td></tr>
                                 ) : (
-                                    filteredFerias.map(item => {
+                                    filteredFerias.map((item, index) => {
                                         const inicio = new Date(item.INICIO_FERIAS_SIT || item.inicio).toLocaleDateString('pt-BR');
                                         const fim = new Date(item.FIM_FERIAS_SIT || item.fim).toLocaleDateString('pt-BR');
-                                        const initials = (item.servidor?.NOME_SERV || '??').substring(0, 2).toUpperCase();
+                                        const serv = item.servidor;
+                                        const initials = (serv?.NOME_SERV || '??').substring(0, 2).toUpperCase();
                                         const status = item.STATUS_SIT || item.status || null;
-                        const isHistorical = !status;
-                        const statusLabel = isHistorical ? 'Histórico' : status;
+                                        const isHistorical = !status;
+                                        const statusLabel = isHistorical ? 'Histórico' : status;
 
                                         const sUpper = (isHistorical ? 'FERIAS' : String(status)).toUpperCase();
                                         const isApproved = sUpper === 'APROVADO' || sUpper === 'DEFERIDO' || sUpper === 'EM FÉRIAS' || sUpper === 'EM_FERIAS' || sUpper === 'FÉRIAS' || sUpper === 'FERIAS' || isHistorical;
@@ -647,18 +951,23 @@ const Ferias = () => {
                                         if (isPending) statusClass = 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300';
                                         if (isCancelled) statusClass = 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300';
 
+                                        const isMenuOpen = openMenuId === item._id;
                                         return (
-                                            <tr key={item._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                            <tr
+                                                key={index}
+                                                onClick={() => handleEdit(item)}
+                                                className={`animate-row hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer ${isMenuOpen ? 'relative z-50' : ''}`}
+                                            >
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-xs">{initials}</div>
                                                         <div className="flex flex-col">
-                                                            <span className="text-sm font-semibold text-slate-900 dark:text-white">{item.servidor?.NOME_SERV || 'Desconhecido'}</span>
-                                                            <span className="text-xs text-slate-500">Mat: {item.servidor?.MATRICULA_SERV}</span>
+                                                            <span className="text-sm font-semibold text-slate-900 dark:text-white">{serv?.NOME_SERV || 'Desconhecido'}</span>
+                                                            <span className="text-xs text-slate-500">Mat: {serv?.MATRICULA_SERV}</span>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">{item.servidor?.SETOR_LOTACAO_SERV}</td>
+                                                <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">{serv?.SETOR_LOTACAO_SERV}</td>
                                                 <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">{inicio} - {fim}</td>
                                                 <td className="px-6 py-4 text-center">
                                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}`}>{statusLabel || status}</span>
@@ -702,13 +1011,13 @@ const Ferias = () => {
                                                                             </button>
                                                                         </div>
                                                                     )}
-                                                                    {/* Overlay to close menu when clicking outside */
-                                                                        openMenuId === item._id && (
-                                                                            <div
-                                                                                className="fixed inset-0 z-40"
-                                                                                onClick={() => setOpenMenuId(null)}
-                                                                            ></div>
-                                                                        )}
+                                                                    {/* Overlay to close menu when clicking outside */}
+                                                                    {openMenuId === item._id && (
+                                                                        <div
+                                                                            className="fixed inset-0 z-40"
+                                                                            onClick={() => setOpenMenuId(null)}
+                                                                        ></div>
+                                                                    )}
                                                                 </div>
                                                                 <button onClick={() => updateStatus(item._id, 'CANCELADO')} className="p-1 text-orange-600 hover:bg-orange-50 rounded" title="Cancelar Férias">
                                                                     <span className="material-symbols-outlined text-[20px]">cancel</span>
@@ -736,6 +1045,80 @@ const Ferias = () => {
             {/* Hidden Container for PDF Generation */}
             <div id="vacation-doc-container" style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}></div>
 
+            {/* Vencidas Modal */}
+            {showVencidasModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-4xl overflow-hidden max-h-[80vh] flex flex-col">
+                        <div className="p-6 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center">
+                            <div>
+                                <h3 className="text-lg font-bold text-red-600 dark:text-red-400 flex items-center gap-2">
+                                    <span className="material-symbols-outlined">warning</span> Servidores com Férias Vencidas
+                                </h3>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Servidores que completaram o período concessivo sem registro de férias (prazo legal prescrito).</p>
+                            </div>
+                            <button onClick={() => setShowVencidasModal(false)} className="text-slate-400 hover:text-slate-600"><span className="material-symbols-outlined">close</span></button>
+                        </div>
+                        <div className="p-0 overflow-y-auto flex-1">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 dark:bg-slate-700/50 sticky top-0">
+                                    <tr>
+                                        <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Servidor</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Admissão</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Qtd. Vencidas</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Aquisitivo Mais Antigo</th>
+                                        <th className="px-6 py-3 text-right">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody ref={modalVencidasRef} className="divide-y divide-slate-100 dark:divide-slate-700">
+                                    {vencidasList.map((s, idx) => {
+                                        const admissao = new Date(s.ADMISSAO_SERV).toLocaleDateString('pt-BR');
+                                        const aqStart = new Date(s.AQUISITIVO_PENDENTE_INICIO).toLocaleDateString('pt-BR');
+                                        const aqEnd = new Date(s.AQUISITIVO_PENDENTE_FIM).toLocaleDateString('pt-BR');
+
+                                        return (
+                                            <tr key={s._id || idx} className="animate-modal-row hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="size-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center font-bold text-red-600 dark:text-red-300 text-xs">
+                                                            {(s.NOME_SERV || '??').substring(0, 2).toUpperCase()}
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-sm font-medium text-slate-900 dark:text-white">{s.NOME_SERV}</div>
+                                                            <div className="text-xs text-slate-500">Mat: {s.MATRICULA_SERV} | {s.SETOR_LOTACAO_SERV}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">{admissao}</td>
+                                                <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                                                        {s.PERIODOS_VENCIDOS} período(s)
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-sm font-medium text-red-600 dark:text-red-400">
+                                                    {aqStart} a {aqEnd}
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <button
+                                                        onClick={() => {
+                                                            setShowVencidasModal(false);
+                                                            setFormData({ ...formData, servidorId: s._id, tipo: 'Férias' });
+                                                            setShowModal(true);
+                                                        }}
+                                                        className="text-sm font-medium text-primary hover:text-blue-700 dark:hover:text-blue-400"
+                                                    >
+                                                        Registrar Férias
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Concessivo Modal */}
             {showConcessivoModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -757,8 +1140,8 @@ const Ferias = () => {
                                         <th className="px-6 py-3 text-right"></th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                                    {concessivoList.map(s => {
+                                <tbody ref={modalConcessivoRef} className="divide-y divide-slate-100 dark:divide-slate-700">
+                                    {concessivoList.map((s, idx) => {
                                         const admissao = new Date(s.ADMISSAO_SERV).toLocaleDateString('pt-BR');
                                         const nextDate = new Date();
                                         let targetDate = new Date(s.ADMISSAO_SERV);
@@ -769,7 +1152,7 @@ const Ferias = () => {
                                         const completaEm = targetDate.toLocaleDateString('pt-BR');
 
                                         return (
-                                            <tr key={s._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                            <tr key={s._id || idx} className="animate-modal-row hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className="size-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center font-bold text-purple-600 dark:text-purple-300 text-xs">
@@ -801,13 +1184,85 @@ const Ferias = () => {
                 </div>
             )}
 
+            {/* Atrasadas Modal */}
+            {showAtrasadasModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-4xl overflow-hidden max-h-[80vh] flex flex-col">
+                        <div className="p-6 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center">
+                            <div>
+                                <h3 className="text-lg font-bold text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                                    <span className="material-symbols-outlined">history_toggle_off</span> Servidores com Férias Atrasadas
+                                </h3>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Servidores que possuem 2 ou mais períodos de férias atrasadas não tiradas.</p>
+                            </div>
+                            <button onClick={() => setShowAtrasadasModal(false)} className="text-slate-400 hover:text-slate-600"><span className="material-symbols-outlined">close</span></button>
+                        </div>
+                        <div className="p-0 overflow-y-auto flex-1">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 dark:bg-slate-700/50 sticky top-0">
+                                    <tr>
+                                        <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Servidor</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Admissão</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Anos Trab.</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Férias Tiradas</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Atrasadas</th>
+                                        <th className="px-6 py-3 text-right">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody ref={modalAtrasadasRef} className="divide-y divide-slate-100 dark:divide-slate-700">
+                                    {atrasadasList.map((s, idx) => {
+                                        const admissao = new Date(s.ADMISSAO_SERV).toLocaleDateString('pt-BR');
+
+                                        return (
+                                            <tr key={s._id || idx} className="animate-modal-row hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="size-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center font-bold text-amber-600 dark:text-amber-300 text-xs">
+                                                            {(s.NOME_SERV || '??').substring(0, 2).toUpperCase()}
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-sm font-medium text-slate-900 dark:text-white">{s.NOME_SERV}</div>
+                                                            <div className="text-xs text-slate-500">Mat: {s.MATRICULA_SERV} | {s.SETOR_LOTACAO_SERV}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">{admissao}</td>
+                                                <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">{s.anosTrabalhados} anos</td>
+                                                <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">{s.feriasTiradas} períodos</td>
+                                                <td className="px-6 py-4 text-sm font-bold text-amber-600 dark:text-amber-400">
+                                                    {s.feriasAtrasadas} períodos atrasados
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <button
+                                                        onClick={() => {
+                                                            setShowAtrasadasModal(false);
+                                                            setFormData({ ...formData, servidorId: s._id, tipo: 'Férias' });
+                                                            setShowModal(true);
+                                                        }}
+                                                        className="text-sm font-medium text-primary hover:text-blue-700 dark:hover:text-blue-400"
+                                                    >
+                                                        Registrar Férias
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Modal */}
             {showModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
                     <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
                         <div className="p-6 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center">
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Nova Solicitação</h3>
-                            <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600"><span className="material-symbols-outlined">close</span></button>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                                {isEditing ? 'Detalhes da Solicitação' : 'Nova Solicitação'}
+                            </h3>
+                            <button onClick={() => { setShowModal(false); setIsEditing(false); setSelectedItemId(null); }} className="text-slate-400 hover:text-slate-600"><span className="material-symbols-outlined">close</span></button>
                         </div>
                         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
                             <div>
@@ -820,7 +1275,7 @@ const Ferias = () => {
                                 >
                                     <option value="">Selecione um servidor...</option>
                                     {servidores.map(s => (
-                                        <option key={s._id} value={s._id}>{s.NOME_SERV}</option>
+                                        <option key={s._id} value={s._id || s.IDPK_SERV}>{s.NOME_SERV}</option>
                                     ))}
                                 </select>
                             </div>
@@ -885,8 +1340,10 @@ const Ferias = () => {
                                 ></textarea>
                             </div>
                             <div className="flex justify-end gap-3 mt-4">
-                                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 rounded-lg">Cancelar</button>
-                                <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 font-medium">Salvar Solicitação</button>
+                                <button type="button" onClick={() => { setShowModal(false); setIsEditing(false); setSelectedItemId(null); }} className="px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 rounded-lg">Cancelar</button>
+                                <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 font-medium">
+                                    {isEditing ? 'Salvar Alterações' : 'Salvar Solicitação'}
+                                </button>
                             </div>
                         </form>
                     </div>

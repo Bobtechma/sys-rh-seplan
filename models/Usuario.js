@@ -34,7 +34,11 @@ const UsuarioSchema = new mongoose.Schema({
     mustChangePassword: {
         type: Boolean,
         default: false
-    }
+    },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
+    twoFactorCode: String,
+    twoFactorExpire: Date
 });
 
 module.exports = mongoose.model('Usuario', UsuarioSchema);

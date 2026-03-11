@@ -1,12 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Skeleton } from '../components/Skeleton';
+import LottieLoader from '../components/LottieLoader';
+import { formatDateUTC } from '../utils/formatDate';
+import { useStaggerReveal, useModalReveal } from '../hooks/useAnimations';
 
 const Afastamentos = () => {
     const [afastamentos, setAfastamentos] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState('');
-    const [statusFilter, setStatusFilter] = useState('');
+    const [filters, setFilters] = useState({
+        search: '',
+        setor: '',
+        cargo: '',
+        vinculo: '',
+        status: '', // Afastamento status
+        status_servidor: '',
+        birthMonth: ''
+    });
+    const [setoresOpt, setSetoresOpt] = useState([]);
+    const [cargosOpt, setCargosOpt] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalResults, setTotalResults] = useState(0);
@@ -21,17 +33,27 @@ const Afastamentos = () => {
     const [formData, setFormData] = useState({
         servidorId: '',
         tipo: 'Licença Médica',
-        inicio: '',
-        fim: '',
+        periodos: [{ inicio: '', fim: '' }],
         obs: '',
         status: 'Pendente'
     });
 
     const [viewData, setViewData] = useState(null);
     const [servidores, setServidores] = useState([]); // For select dropdown
+    const [tiposAfastamento, setTiposAfastamento] = useState([]);
+    const [isAddingTipo, setIsAddingTipo] = useState(false);
+    const [newTipo, setNewTipo] = useState('');
+
+    // Animation Hooks
+    const tableRef = useStaggerReveal('.animate-row', [loading, afastamentos, currentPage], { staggerDelay: 40 });
+    const mobileCardsRef = useStaggerReveal('.animate-card', [loading, afastamentos, currentPage], { staggerDelay: 50 });
+    const editModalRef = useModalReveal(isEditModalOpen);
+    const viewModalRef = useModalReveal(isViewModalOpen);
 
     useEffect(() => {
+        fetchFilters();
         fetchAfastamentos(1);
+        fetchTiposAfastamento();
     }, []);
 
     useEffect(() => {
@@ -39,7 +61,39 @@ const Afastamentos = () => {
             fetchAfastamentos(1);
         }, 500);
         return () => clearTimeout(delayDebounceFn);
-    }, [search, statusFilter]);
+    }, [filters]);
+
+    const fetchFilters = async () => {
+        try {
+            const [setoresRes, cargosRes] = await Promise.all([
+                axios.get('/api/servidores/setores'),
+                axios.get('/api/servidores/cargos')
+            ]);
+            setSetoresOpt(setoresRes.data);
+            setCargosOpt(cargosRes.data);
+        } catch (error) {
+            console.error('Error loading filters:', error);
+        }
+    };
+
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        setFilters(prev => ({ ...prev, [name]: value }));
+        setCurrentPage(1);
+    };
+
+    const clearFilters = () => {
+        setFilters({
+            search: '',
+            setor: '',
+            cargo: '',
+            vinculo: '',
+            status: '',
+            status_servidor: '',
+            birthMonth: ''
+        });
+        setCurrentPage(1);
+    };
 
     const fetchAfastamentos = async (page = 1) => {
         setLoading(true);
@@ -48,9 +102,10 @@ const Afastamentos = () => {
             const params = {
                 page,
                 limit: 10,
-                search,
-                status: statusFilter
+                ...filters
             };
+            Object.keys(params).forEach(key => params[key] === '' && delete params[key]);
+
             const response = await axios.get('/api/afastamentos', {
                 params,
                 headers: { 'x-auth-token': token }
@@ -70,7 +125,7 @@ const Afastamentos = () => {
     const fetchServidores = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('/api/servidores?limit=1000&simple=true', {
+            const response = await axios.get(`/api/servidores?limit=1000&simple=true&_t=${Date.now()}`, {
                 headers: { 'x-auth-token': token }
             });
             setServidores(response.data.servidores);
@@ -79,14 +134,56 @@ const Afastamentos = () => {
         }
     };
 
+    const fetchTiposAfastamento = async () => {
+        try {
+            const response = await axios.get('/api/tipos-afastamento');
+            setTiposAfastamento(response.data || []);
+        } catch (error) {
+            console.error('Error fetching tipos afastamento:', error);
+        }
+    };
+
+    const handleAddTipo = async () => {
+        if (!newTipo.trim()) return;
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.post('/api/tipos-afastamento', { nome: newTipo.trim() }, {
+                headers: { 'x-auth-token': token }
+            });
+            setTiposAfastamento([...tiposAfastamento, response.data].sort((a, b) => a.nome.localeCompare(b.nome)));
+            setFormData({ ...formData, tipo: response.data.nome });
+            setNewTipo('');
+            setIsAddingTipo(false);
+        } catch (error) {
+            console.error('Error adding new tipo:', error);
+            alert('Erro ao adicionar tipo. Talvez já exista.');
+        }
+    };
+
+    const addPeriodo = () => {
+        if (formData.periodos.length < 3) {
+            setFormData({ ...formData, periodos: [...formData.periodos, { inicio: '', fim: '' }] });
+        }
+    };
+
+    const removePeriodo = (index) => {
+        const newPeriodos = formData.periodos.filter((_, i) => i !== index);
+        setFormData({ ...formData, periodos: newPeriodos });
+    };
+
+    const updatePeriodo = (index, field, value) => {
+        const newPeriodos = [...formData.periodos];
+        newPeriodos[index][field] = value;
+        setFormData({ ...formData, periodos: newPeriodos });
+    };
+
     const handleOpenNew = async () => {
         setIsNew(true);
         setCurrentId(null);
         setFormData({
             servidorId: '',
-            tipo: 'Licença Médica',
-            inicio: '',
-            fim: '',
+            tipo: tiposAfastamento.length > 0 ? tiposAfastamento[0].nome : 'Licença Médica',
+            periodos: [{ inicio: '', fim: '' }],
             obs: '',
             status: 'Pendente'
         });
@@ -106,8 +203,10 @@ const Afastamentos = () => {
             setFormData({
                 servidorId: data.servidor ? data.servidor._id : '', // Usually read-only in edit
                 tipo: data.ASSUNTO_SIT,
-                inicio: data.INICIO_FERIAS_SIT.split('T')[0],
-                fim: data.FIM_FERIAS_SIT.split('T')[0],
+                periodos: [{
+                    inicio: data.INICIO_FERIAS_SIT ? data.INICIO_FERIAS_SIT.split('T')[0] : '',
+                    fim: data.FIM_FERIAS_SIT ? data.FIM_FERIAS_SIT.split('T')[0] : ''
+                }],
                 obs: data.OBS_SIT || '',
                 status: data.STATUS_SIT
             });
@@ -124,9 +223,11 @@ const Afastamentos = () => {
             const payload = {
                 servidorId: formData.servidorId,
                 tipo: formData.tipo,
-                inicio: formData.inicio,
-                fim: formData.fim,
-                obs: formData.obs,
+                periodos: formData.periodos,
+                inicio: formData.periodos[0].inicio, // fallback for single-period logic
+                fim: formData.periodos[0].fim,       // fallback for single-period logic
+                observacao: formData.obs,            // backend expects 'observacao'
+                obs: formData.obs,                   // fallback
                 status: formData.status
             };
 
@@ -210,32 +311,64 @@ const Afastamentos = () => {
             </div>
 
             {/* Filters */}
-            <div className="bg-surface-light dark:bg-surface-dark p-4 rounded-xl border border-border-light dark:border-border-dark flex flex-wrap gap-4 items-center">
-                <div className="relative flex-1 min-w-[200px]">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 material-symbols-outlined text-[20px]">search</span>
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Buscar por nome ou matrícula..."
-                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white text-sm focus:ring-primary focus:border-primary outline-none"
-                    />
+            <div className="bg-surface-light dark:bg-surface-dark p-3 sm:p-4 rounded-xl border border-border-light dark:border-border-dark flex flex-wrap gap-4 items-center">
+                <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <span className="material-symbols-outlined text-slate-400">filter_list</span>
+                    Filtros:
                 </div>
+
+                <input
+                    type="text"
+                    name="search"
+                    value={filters.search}
+                    onChange={handleFilterChange}
+                    placeholder="Buscar por nome..."
+                    className="form-input text-sm border-border-light dark:border-border-dark rounded-lg bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 focus:ring-primary focus:border-primary"
+                />
+
                 <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white py-2 px-3 text-sm focus:ring-primary focus:border-primary outline-none"
+                    name="status"
+                    value={filters.status}
+                    onChange={handleFilterChange}
+                    className="px-3 py-2 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 text-sm outline-none focus:ring-primary focus:border-primary min-w-[140px]"
                 >
-                    <option value="">Todos os Status</option>
+                    <option value="">Todos os Status (Afastamento)</option>
                     <option value="Pendente">Pendente</option>
                     <option value="Aprovado">Aprovado</option>
                     <option value="Rejeitado">Rejeitado</option>
                 </select>
+
+                <select
+                    name="setor"
+                    value={filters.setor}
+                    onChange={handleFilterChange}
+                    className="px-3 py-2 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 text-sm outline-none focus:ring-primary focus:border-primary min-w-[140px]"
+                >
+                    <option value="">Todos os Setores</option>
+                    {setoresOpt.map((s, idx) => <option key={idx} value={s}>{s}</option>)}
+                </select>
+
+                <select
+                    name="status_servidor"
+                    value={filters.status_servidor}
+                    onChange={handleFilterChange}
+                    className="px-3 py-2 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 text-sm outline-none focus:ring-primary focus:border-primary min-w-[140px]"
+                >
+                    <option value="">Todos os Status (Servidor)</option>
+                    <option value="ativo">Ativo (+ Em Férias, Afastado)</option>
+                    <option value="inativo">Inativo</option>
+                </select>
+
+                <button
+                    onClick={clearFilters}
+                    className="ml-auto text-sm text-primary hover:text-blue-600 font-medium">
+                    Limpar Filtros
+                </button>
             </div>
 
             {/* Table */}
             <div className="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark overflow-hidden shadow-sm">
-                <div className="overflow-x-auto">
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
                         <thead className="bg-slate-50 dark:bg-slate-800 text-xs uppercase font-semibold text-slate-500 dark:text-slate-400">
                             <tr>
@@ -248,24 +381,18 @@ const Afastamentos = () => {
                                 <th className="px-6 py-4 text-right">Ações</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-border-light dark:divide-border-dark">
+                        <tbody ref={tableRef} className="divide-y divide-border-light dark:divide-border-dark bg-surface-light dark:bg-surface-dark">
                             {loading ? (
-                                Array.from({ length: 5 }).map((_, i) => (
-                                    <tr key={i}>
-                                        <td className="px-6 py-4"><Skeleton className="h-4 w-32" /></td>
-                                        <td className="px-6 py-4"><Skeleton className="h-4 w-20" /></td>
-                                        <td className="px-6 py-4"><Skeleton className="h-4 w-24" /></td>
-                                        <td className="px-6 py-4"><Skeleton className="h-4 w-20" /></td>
-                                        <td className="px-6 py-4"><Skeleton className="h-4 w-20" /></td>
-                                        <td className="px-6 py-4"><Skeleton className="h-6 w-20 rounded-full" /></td>
-                                        <td className="px-6 py-4"><Skeleton className="h-6 w-12 ml-auto" /></td>
-                                    </tr>
-                                ))
+                                <tr>
+                                    <td colSpan="7" className="px-6 py-8 text-center">
+                                        <LottieLoader />
+                                    </td>
+                                </tr>
                             ) : afastamentos.length === 0 ? (
                                 <tr><td colSpan="7" className="px-6 py-8 text-center text-slate-500">Nenhum afastamento encontrado.</td></tr>
                             ) : (
                                 afastamentos.map((a) => (
-                                    <tr key={a._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                                    <tr key={a._id} className="animate-row hover:bg-slate-50 dark:hover:bg-slate-800/50 transition duration-200">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-xs">
@@ -278,8 +405,8 @@ const Afastamentos = () => {
                                         </td>
                                         <td className="px-6 py-4">{a.servidor?.SETOR_LOTACAO_SERV || '-'}</td>
                                         <td className="px-6 py-4">{a.ASSUNTO_SIT}</td>
-                                        <td className="px-6 py-4">{new Date(a.INICIO_FERIAS_SIT).toLocaleDateString()}</td>
-                                        <td className="px-6 py-4">{new Date(a.FIM_FERIAS_SIT).toLocaleDateString()}</td>
+                                        <td className="px-6 py-4">{formatDateUTC(a.INICIO_FERIAS_SIT)}</td>
+                                        <td className="px-6 py-4">{formatDateUTC(a.FIM_FERIAS_SIT)}</td>
                                         <td className="px-6 py-4">{getStatusBadge(a.STATUS_SIT)}</td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex justify-end gap-2">
@@ -299,6 +426,67 @@ const Afastamentos = () => {
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div ref={mobileCardsRef} className="md:hidden flex flex-col gap-3 p-3 sm:p-4 bg-background-light dark:bg-background-dark text-left">
+                    {loading ? (
+                        <div className="py-8 w-full flex justify-center">
+                            <LottieLoader />
+                        </div>
+                    ) : afastamentos.length === 0 ? (
+                        <div className="p-8 text-center text-slate-500 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light">Nenhum afastamento encontrado.</div>
+                    ) : (
+                        afastamentos.map((a) => {
+                            const initials = a.servidor?.NOME_SERV ? a.servidor.NOME_SERV.charAt(0).toUpperCase() : '?';
+
+                            return (
+                                <div
+                                    key={a._id}
+                                    className="animate-card p-3 sm:p-4 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm active:scale-[0.98] transition-transform duration-200"
+                                >
+                                    <div className="flex items-start justify-between mb-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="bg-primary/10 text-primary flex items-center justify-center rounded-full size-12 text-base font-bold border border-primary/20">
+                                                {initials}
+                                            </div>
+                                            <div>
+                                                <h3 className="text-slate-900 dark:text-white font-semibold leading-tight max-w-[200px] truncate">{a.servidor?.NOME_SERV || 'Desconhecido'}</h3>
+                                                <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5 max-w-[200px] truncate">{a.servidor?.SETOR_LOTACAO_SERV || '-'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1 mb-3">
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="text-slate-500 dark:text-slate-400">Tipo:</span>
+                                            <span className="text-slate-700 dark:text-slate-200 font-medium text-right">{a.ASSUNTO_SIT}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="text-slate-500 dark:text-slate-400">Período:</span>
+                                            <span className="text-slate-700 dark:text-slate-200 font-medium text-right">{formatDateUTC(a.INICIO_FERIAS_SIT)} a {formatDateUTC(a.FIM_FERIAS_SIT)}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-xs mt-1">
+                                            <span className="text-slate-500 dark:text-slate-400">Status:</span>
+                                            <span className="text-right">{getStatusBadge(a.STATUS_SIT)}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-end gap-2 pt-3 border-t border-border-light dark:border-border-dark">
+                                        <button onClick={() => handleOpenView(a._id)} className="text-slate-500 hover:text-primary p-2 bg-slate-50 dark:bg-slate-800 rounded-lg transition-colors" title="Visualizar">
+                                            <span className="material-symbols-outlined text-sm">visibility</span>
+                                        </button>
+                                        <button onClick={() => handleOpenEdit(a._id)} className="text-slate-500 hover:text-primary p-2 bg-slate-50 dark:bg-slate-800 rounded-lg transition-colors" title="Editar">
+                                            <span className="material-symbols-outlined text-sm">edit</span>
+                                        </button>
+                                        <button onClick={() => handleDelete(a._id)} className="text-slate-500 hover:text-red-500 p-2 bg-slate-50 dark:bg-slate-800 rounded-lg transition-colors" title="Excluir">
+                                            <span className="material-symbols-outlined text-sm">delete</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
                 </div>
                 {/* Pagination */}
                 <div className="p-4 border-t border-border-light dark:border-border-dark flex items-center justify-between">
@@ -329,7 +517,7 @@ const Afastamentos = () => {
                 <div className="fixed inset-0 z-50 overflow-y-auto">
                     <div className="flex items-center justify-center min-h-screen px-4">
                         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsEditModalOpen(false)}></div>
-                        <div className="relative bg-white dark:bg-surface-dark rounded-xl shadow-xl w-full max-w-lg p-6 border border-slate-200 dark:border-slate-700">
+                        <div ref={editModalRef} className="relative bg-white dark:bg-surface-dark rounded-xl shadow-2xl w-full max-w-lg p-6 border border-slate-200 dark:border-slate-700">
                             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
                                 {isNew ? 'Registrar Novo Afastamento' : 'Editar Afastamento'}
                             </h3>
@@ -341,7 +529,7 @@ const Afastamentos = () => {
                                             required
                                             value={formData.servidorId}
                                             onChange={(e) => setFormData({ ...formData, servidorId: e.target.value })}
-                                            className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-2 text-sm"
+                                            className="form-select w-full"
                                         >
                                             <option value="">Selecione um servidor</option>
                                             {servidores.map(s => (
@@ -353,40 +541,109 @@ const Afastamentos = () => {
 
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tipo</label>
-                                    <select
-                                        value={formData.tipo}
-                                        onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
-                                        className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-2 text-sm"
-                                    >
-                                        <option value="Licença Médica">Licença Médica</option>
-                                        <option value="Licença Prêmio">Licença Prêmio</option>
-                                        <option value="Licença Maternidade">Licença Maternidade</option>
-                                        <option value="Licença Paternidade">Licença Paternidade</option>
-                                        <option value="Outros">Outros</option>
-                                    </select>
+                                    {!isAddingTipo ? (
+                                        <div className="flex gap-2">
+                                            <select
+                                                value={formData.tipo}
+                                                onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+                                                className="form-select w-full"
+                                            >
+                                                {tiposAfastamento.length > 0 ? (
+                                                    tiposAfastamento.map(t => (
+                                                        <option key={t._id} value={t.nome}>{t.nome}</option>
+                                                    ))
+                                                ) : (
+                                                    <option value="Licença Médica">Licença Médica</option>
+                                                )}
+                                            </select>
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsAddingTipo(true)}
+                                                className="shrink-0 px-3 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors border border-slate-300 dark:border-slate-600"
+                                                title="Adicionar Novo Tipo"
+                                            >
+                                                <span className="material-symbols-outlined text-lg">add</span>
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={newTipo}
+                                                onChange={(e) => setNewTipo(e.target.value)}
+                                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTipo())}
+                                                placeholder="Digite o novo tipo..."
+                                                className="form-input w-full focus:border-primary focus:ring-1 focus:ring-primary"
+                                                autoFocus
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={handleAddTipo}
+                                                className="shrink-0 px-3 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors shadow-sm"
+                                                title="Salvar Novo Tipo"
+                                            >
+                                                <span className="material-symbols-outlined text-lg">check</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => { setIsAddingTipo(false); setNewTipo(''); }}
+                                                className="shrink-0 px-3 flex items-center justify-center bg-red-100 hover:bg-red-200 text-red-600 dark:bg-red-900/30 dark:hover:bg-red-800/50 dark:text-red-400 rounded-lg transition-colors border border-red-200 dark:border-red-800/30"
+                                                title="Cancelar"
+                                            >
+                                                <span className="material-symbols-outlined text-lg">close</span>
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Início</label>
-                                        <input
-                                            type="date"
-                                            required
-                                            value={formData.inicio}
-                                            onChange={(e) => setFormData({ ...formData, inicio: e.target.value })}
-                                            className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-2 text-sm"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Fim</label>
-                                        <input
-                                            type="date"
-                                            required
-                                            value={formData.fim}
-                                            onChange={(e) => setFormData({ ...formData, fim: e.target.value })}
-                                            className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-2 text-sm"
-                                        />
-                                    </div>
+                                <div className="flex flex-col gap-3">
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                        Períodos (Máx: 3)
+                                    </label>
+                                    {formData.periodos.map((periodo, index) => (
+                                        <div key={index} className="grid grid-cols-2 gap-4 p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg border border-slate-100 dark:border-slate-700 relative group">
+                                            <div>
+                                                <label className="block text-xs text-slate-500 mb-1">Início {index + 1}</label>
+                                                <input
+                                                    type="date"
+                                                    required
+                                                    value={periodo.inicio}
+                                                    onChange={(e) => updatePeriodo(index, 'inicio', e.target.value)}
+                                                    className="form-input w-full text-sm"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-slate-500 mb-1">Fim {index + 1}</label>
+                                                <input
+                                                    type="date"
+                                                    required
+                                                    value={periodo.fim}
+                                                    onChange={(e) => updatePeriodo(index, 'fim', e.target.value)}
+                                                    className="form-input w-full text-sm"
+                                                />
+                                            </div>
+                                            {index > 0 && isNew && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removePeriodo(index)}
+                                                    className="absolute -top-2 -right-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full p-1 shadow-sm transition-colors"
+                                                    title="Remover período"
+                                                >
+                                                    <span className="material-symbols-outlined text-[16px]">close</span>
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                    {formData.periodos.length < 3 && isNew && (
+                                        <button
+                                            type="button"
+                                            onClick={addPeriodo}
+                                            className="self-start text-xs flex items-center gap-1 text-primary hover:text-blue-700 font-medium px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                                        >
+                                            <span className="material-symbols-outlined text-[16px]">add</span>
+                                            Adicionar Período
+                                        </button>
+                                    )}
                                 </div>
 
                                 <div>
@@ -395,7 +652,7 @@ const Afastamentos = () => {
                                         rows="3"
                                         value={formData.obs}
                                         onChange={(e) => setFormData({ ...formData, obs: e.target.value })}
-                                        className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-2 text-sm"
+                                        className="form-input w-full"
                                     ></textarea>
                                 </div>
 
@@ -405,7 +662,7 @@ const Afastamentos = () => {
                                         <select
                                             value={formData.status}
                                             onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                            className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-2 text-sm"
+                                            className="form-select w-full"
                                         >
                                             <option value="Pendente">Pendente</option>
                                             <option value="Aprovado">Aprovado</option>
@@ -440,7 +697,7 @@ const Afastamentos = () => {
                 <div className="fixed inset-0 z-50 overflow-y-auto">
                     <div className="flex items-center justify-center min-h-screen px-4">
                         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsViewModalOpen(false)}></div>
-                        <div className="relative bg-white dark:bg-surface-dark rounded-xl shadow-xl w-full max-w-lg p-6 border border-slate-200 dark:border-slate-700">
+                        <div ref={viewModalRef} className="relative bg-white dark:bg-surface-dark rounded-xl shadow-2xl w-full max-w-lg p-6 border border-slate-200 dark:border-slate-700">
                             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Detalhes do Afastamento</h3>
                             <div className="space-y-4 text-sm">
                                 <div className="grid grid-cols-2 gap-4">
@@ -454,11 +711,11 @@ const Afastamentos = () => {
                                     </div>
                                     <div>
                                         <span className="block text-xs font-medium text-slate-500 dark:text-slate-400">Início</span>
-                                        <span className="block font-medium text-slate-900 dark:text-white mt-1">{new Date(viewData.INICIO_FERIAS_SIT).toLocaleDateString()}</span>
+                                        <span className="block font-medium text-slate-900 dark:text-white mt-1">{formatDateUTC(viewData.INICIO_FERIAS_SIT)}</span>
                                     </div>
                                     <div>
                                         <span className="block text-xs font-medium text-slate-500 dark:text-slate-400">Fim</span>
-                                        <span className="block font-medium text-slate-900 dark:text-white mt-1">{new Date(viewData.FIM_FERIAS_SIT).toLocaleDateString()}</span>
+                                        <span className="block font-medium text-slate-900 dark:text-white mt-1">{formatDateUTC(viewData.FIM_FERIAS_SIT)}</span>
                                     </div>
                                 </div>
                                 <div>

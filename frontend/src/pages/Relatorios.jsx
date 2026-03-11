@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { CITY_HALL_LOGO } from '../utils/assets';
+import { formatDateUTC, formatDateTime } from '../utils/formatDate';
 
 const getVinculoMacro = (s) => {
     const vinculoTitle = String(s.VINCULO_SERV || '').toUpperCase();
@@ -21,6 +22,7 @@ const Relatorios = () => {
     const [loading, setLoading] = useState(false);
     const [isBulkGenerating, setIsBulkGenerating] = useState(false);
     const [bulkGenerateCount, setBulkGenerateCountLocal] = useState({ current: 0, total: 0 });
+    const [feriasSearchResults, setFeriasSearchResults] = useState([]);
 
     // Filters State
     const [filterNome, setFilterNome] = useState('');
@@ -60,8 +62,8 @@ const Relatorios = () => {
         try {
             const token = localStorage.getItem('token');
             const [setoresRes, cargosRes] = await Promise.all([
-                axios.get('/api/servidores/setores', { headers: { 'x-auth-token': token } }),
-                axios.get('/api/servidores/cargos', { headers: { 'x-auth-token': token } })
+                axios.get(`/api/servidores/setores?_t=${Date.now()}`, { headers: { 'x-auth-token': token } }),
+                axios.get(`/api/servidores/cargos?_t=${Date.now()}`, { headers: { 'x-auth-token': token } })
             ]);
             setSetoresOpt(setoresRes.data || []);
             setCargosOpt(cargosRes.data || []);
@@ -79,12 +81,29 @@ const Relatorios = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get(`/api/servidores?search=${query}&limit=5`, {
+            const res = await axios.get(`/api/servidores?search=${query}&limit=5&_t=${Date.now()}`, {
                 headers: { 'x-auth-token': token }
             });
             setSearchResults(res.data.servidores || []);
         } catch (error) {
             console.error('Error searching servers:', error);
+        }
+    };
+
+    const handleFeriasSearch = async (query) => {
+        setFilterNome(query);
+        if (query.length < 3) {
+            setFeriasSearchResults([]);
+            return;
+        }
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.get(`/api/servidores?search=${query}&limit=5&_t=${Date.now()}`, {
+                headers: { 'x-auth-token': token }
+            });
+            setFeriasSearchResults(res.data.servidores || []);
+        } catch (error) {
+            console.error('Error searching servers for ferias:', error);
         }
     };
 
@@ -180,7 +199,7 @@ const Relatorios = () => {
 
             if (selectedReport === 'dossie') {
                 if (!selectedServer) throw new Error('Selecione um servidor.');
-                const res = await axios.get(`/api/servidores/${selectedServer.IDPK_SERV || selectedServer._id}`, { headers: { 'x-auth-token': token } });
+                const res = await axios.get(`/api/servidores/${selectedServer.IDPK_SERV || selectedServer._id}?_t=${Date.now()}`, { headers: { 'x-auth-token': token } });
                 const s = res.data.servidor;
                 filename = `Dossie_${s.NOME_SERV.replace(/\s+/g, '_')}.pdf`;
 
@@ -226,7 +245,7 @@ const Relatorios = () => {
                         </tr>
                         <tr>
                             <td class="font-bold text-slate-500">Data de Nascimento:</td>
-                            <td>${s.NASCIMENTO_SERV ? new Date(s.NASCIMENTO_SERV).toLocaleDateString('pt-BR') : '-'}</td>
+                            <td>${formatDateUTC(s.NASCIMENTO_SERV)}</td>
                             <td class="font-bold text-slate-500">RG:</td>
                             <td>${s.RG_SERV || '-'} ${s.OE_RG_SERV ? `(${s.OE_RG_SERV})` : ''}</td>
                         </tr>
@@ -290,7 +309,7 @@ const Relatorios = () => {
                             <td style="padding: 0.5rem; border-bottom: 1px solid #f1f5f9; width: 25%; font-weight: bold; color: #64748b;">Matrícula:</td>
                             <td style="padding: 0.5rem; border-bottom: 1px solid #f1f5f9; color: #0f172a;">${s.MATRICULA_SERV || '-'}</td>
                             <td style="padding: 0.5rem; border-bottom: 1px solid #f1f5f9; width: 25%; font-weight: bold; color: #64748b;">Admissão:</td>
-                            <td style="padding: 0.5rem; border-bottom: 1px solid #f1f5f9; color: #0f172a;">${s.ADMISSAO_SERV ? new Date(s.ADMISSAO_SERV).toLocaleDateString('pt-BR') : '-'}</td>
+                            <td style="padding: 0.5rem; border-bottom: 1px solid #f1f5f9; color: #0f172a;">${formatDateUTC(s.ADMISSAO_SERV)}</td>
                         </tr>
                         <tr>
                             <td style="padding: 0.5rem; border-bottom: 1px solid #f1f5f9; font-weight: bold; color: #64748b;">Lotação:</td>
@@ -347,7 +366,7 @@ const Relatorios = () => {
                         ${(s.OBSERVACOES && s.OBSERVACOES.length > 0) ? s.OBSERVACOES.map(obs => `
                             <div class="observation-item">
                                 <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: #64748b; margin-bottom: 0.2rem;">
-                                    <span>${new Date(obs.data).toLocaleDateString('pt-BR')} ${new Date(obs.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                    <span>${formatDateTime(obs.data)}</span>
                                     <span>Por: ${obs.autor || 'Sistema'} | ${obs.categoria || 'Geral'}</span>
                                 </div>
                                 <p style="font-size: 0.8rem; color: #334155; white-space: pre-wrap; margin: 0;">${obs.conteudo}</p>
@@ -549,7 +568,7 @@ const Relatorios = () => {
                 if (mode === 'all') {
                     // Optimized Bulk Generation (Iterative)
                     const res = await axios.get('/api/servidores', {
-                        params: { limit: 10000, sort: 'NOME_SERV:asc', status: 'ativo', cedido: 'false' },
+                        params: { limit: 10000, sort: 'NOME_SERV:asc', status: 'ativo', cedido: 'false', _t: Date.now() },
                         headers: { 'x-auth-token': token }
                     });
                     let allServers = res.data.servidores || [];
@@ -560,7 +579,7 @@ const Relatorios = () => {
 
                     // Fetch Absences (Ideally strictly for the month, but fetching all recent is safer if filter is tricky)
                     const absencesRes = await axios.get('/api/afastamentos', {
-                        params: { limit: 5000 },
+                        params: { limit: 5000, _t: Date.now() },
                         headers: { 'x-auth-token': token }
                     });
                     const allAbsences = absencesRes.data.afastamentos || [];
@@ -649,16 +668,16 @@ const Relatorios = () => {
                     // Single Generation
                     if (!selectedServer) throw new Error('Selecione um servidor para a geração individual.');
 
-                    const res = await axios.get(`/api/servidores/${selectedServer.IDPK_SERV || selectedServer._id}`, { headers: { 'x-auth-token': token } });
+                    const res = await axios.get(`/api/servidores/${selectedServer.IDPK_SERV || selectedServer._id}?_t=${Date.now()}`, { headers: { 'x-auth-token': token } });
                     const s = res.data.servidor;
 
                     // Fetch Calendar Events
-                    const calendarRes = await axios.get('/api/calendario', { headers: { 'x-auth-token': token } });
+                    const calendarRes = await axios.get(`/api/calendario?_t=${Date.now()}`, { headers: { 'x-auth-token': token } });
                     const calendarEvents = calendarRes.data || [];
 
                     // Fetch Absences for this server
                     const absencesRes = await axios.get('/api/afastamentos', {
-                        params: { limit: 1000 }, // Fetch recent absences
+                        params: { limit: 1000, _t: Date.now() }, // Fetch recent absences
                         headers: { 'x-auth-token': token }
                     });
                     // Filter for this server client-side to be safe
@@ -671,7 +690,7 @@ const Relatorios = () => {
                 bodyContent.innerHTML = contentHtml;
             } else if (selectedReport === 'afastamentos') {
                 const res = await axios.get('/api/afastamentos', {
-                    params: { limit: 1000 },
+                    params: { limit: 1000, _t: Date.now() },
                     headers: { 'x-auth-token': token }
                 });
                 let list = res.data.afastamentos || [];
@@ -705,8 +724,8 @@ const Relatorios = () => {
                             <td style="padding: 0.5rem; border-bottom: 1px solid #e2e8f0; font-weight: bold;">${item.servidor?.NOME_SERV || 'Desconhecido'}</td>
                             <td style="padding: 0.5rem; border-bottom: 1px solid #e2e8f0;">${item.servidor?.MATRICULA_SERV || '-'}</td>
                             <td style="padding: 0.5rem; border-bottom: 1px solid #e2e8f0;">${item.ASSUNTO_SIT}</td>
-                            <td style="padding: 0.5rem; border-bottom: 1px solid #e2e8f0;">${new Date(item.INICIO_FERIAS_SIT).toLocaleDateString()}</td>
-                            <td style="padding: 0.5rem; border-bottom: 1px solid #e2e8f0;">${new Date(item.FIM_FERIAS_SIT).toLocaleDateString()}</td>
+                            <td style="padding: 0.5rem; border-bottom: 1px solid #e2e8f0;">${formatDateUTC(item.INICIO_FERIAS_SIT)}</td>
+                            <td style="padding: 0.5rem; border-bottom: 1px solid #e2e8f0;">${formatDateUTC(item.FIM_FERIAS_SIT)}</td>
                             <td style="padding: 0.5rem; border-bottom: 1px solid #e2e8f0;">${item.STATUS_SIT}</td>
                         </tr>`;
                     });
@@ -733,7 +752,8 @@ const Relatorios = () => {
                         limit: 10000,
                         birthMonth: parseInt(month),
                         status: 'ativo',
-                        sort: 'NOME_SERV:asc'
+                        sort: 'NOME_SERV:asc',
+                        _t: Date.now()
                     },
                     headers: { 'x-auth-token': token }
                 });
@@ -797,7 +817,7 @@ const Relatorios = () => {
 
                 if (selectedReport === 'servidores') {
                     const res = await axios.get('/api/servidores', {
-                        params: { limit: 10000 },
+                        params: { limit: 10000, _t: Date.now() },
                         headers: { 'x-auth-token': token }
                     });
                     let list = res.data.servidores || [];
@@ -822,7 +842,7 @@ const Relatorios = () => {
                     headers = ['Nome', 'Matrícula', 'Vínculo', 'Cargo', 'Setor', 'Status'];
                     list.forEach(item => {
                         rows += `
-                        <tr>
+                        <tr style="page-break-inside: avoid; break-inside: avoid;">
                             <td style="padding: 0.5rem; border-bottom: 1px solid #e2e8f0;">${item.NOME_SERV}</td>
                             <td style="padding: 0.5rem; border-bottom: 1px solid #e2e8f0;">${item.MATRICULA_SERV}</td>
                             <td style="padding: 0.5rem; border-bottom: 1px solid #e2e8f0; text-transform: capitalize;">${getVinculoMacro(item) ? getVinculoMacro(item).toLowerCase() : '-'}</td>
@@ -834,9 +854,11 @@ const Relatorios = () => {
                 } else if (selectedReport === 'ferias') {
                     // Build query params - filtering is done server-side
                     const params = new URLSearchParams();
-                    if (filterFeriasAno) params.append('year', filterFeriasAno);
+                    if (filterFeriasAno !== undefined) params.append('year', filterFeriasAno);
                     if (filterSetor) params.append('setor', filterSetor);
                     if (filterFeriasStatus) params.append('status', filterFeriasStatus);
+                    if (filterNome) params.append('nome', filterNome);
+                    params.append('_t', Date.now()); // Cache-buster
 
                     const res = await axios.get('/api/ferias-data?' + params.toString(), { headers: { 'x-auth-token': token } });
                     let list = (res.data && res.data.data) ? res.data.data : (Array.isArray(res.data) ? res.data : []);
@@ -851,23 +873,28 @@ const Relatorios = () => {
                         list = list.filter(f => f.FIM_FERIAS_SIT && new Date(f.FIM_FERIAS_SIT) <= to);
                     }
 
-                    headers = ['Servidor', 'Matricula', 'Setor', 'Solicit.', 'Inicio', 'Fim', 'Status'];
+                    headers = ['Servidor', 'Matricula', 'Setor', 'Período Aquisitivo', 'Solicit.', 'Inicio', 'Fim', 'Status'];
                     if (list.length === 0) {
                         contentHtml = '<p style="text-align:center;color:#64748b;padding:2rem">Nenhum registro de ferias encontrado.</p>';
                     } else {
                         list.forEach(item => {
-                            const solicitacaoDate = item.DATADOC_SIT ? new Date(item.DATADOC_SIT) : (item.DATACAD_SIT ? new Date(item.DATACAD_SIT) : null);
-                            const solicitacaoStr = solicitacaoDate ? solicitacaoDate.toLocaleDateString('pt-BR') : '-';
-                            const inicioStr = item.INICIO_FERIAS_SIT ? new Date(item.INICIO_FERIAS_SIT).toLocaleDateString('pt-BR') : '-';
-                            const fimStr = item.FIM_FERIAS_SIT ? new Date(item.FIM_FERIAS_SIT).toLocaleDateString('pt-BR') : '-';
+                            const solicitacaoDate = item.DATACAD_SIT ? new Date(item.DATACAD_SIT) : (item.createdAt ? new Date(item.createdAt) : null);
+                            const solicitacaoStr = formatDateUTC(solicitacaoDate);
+                            const inicioStr = formatDateUTC(item.INICIO_FERIAS_SIT || item.inicio);
+                            const fimStr = formatDateUTC(item.FIM_FERIAS_SIT || item.fim);
                             const statusStr = item.STATUS_SIT || '-';
                             const nomeStr = item.NOME_SERV || '-';
                             const matStr = item.MATRICULA_SERV || '-';
                             const setorStr = item.SETOR_SERV || '-';
-                            rows += '<tr>'
+                            const pa1 = item.PA_ANO1_SIT || '-';
+                            const pa2 = item.PA_ANO2_SIT || '-';
+                            const aqStr = (pa1 !== '-' && pa2 !== '-') ? `${pa1}/${pa2}` : '-';
+
+                            rows += '<tr style="page-break-inside: avoid; break-inside: avoid;">'
                                 + '<td style="padding:0.5rem;border-bottom:1px solid #e2e8f0;font-weight:bold">' + nomeStr + '</td>'
                                 + '<td style="padding:0.5rem;border-bottom:1px solid #e2e8f0">' + matStr + '</td>'
                                 + '<td style="padding:0.5rem;border-bottom:1px solid #e2e8f0">' + setorStr + '</td>'
+                                + '<td style="padding:0.5rem;border-bottom:1px solid #e2e8f0">' + aqStr + '</td>'
                                 + '<td style="padding:0.5rem;border-bottom:1px solid #e2e8f0">' + solicitacaoStr + '</td>'
                                 + '<td style="padding:0.5rem;border-bottom:1px solid #e2e8f0">' + inicioStr + '</td>'
                                 + '<td style="padding:0.5rem;border-bottom:1px solid #e2e8f0">' + fimStr + '</td>'
@@ -881,8 +908,8 @@ const Relatorios = () => {
 
                 if (rows) {
                     const headerRow = headers.map(h => '<th style="padding:0.5rem;border-bottom:1px solid #e2e8f0">' + h + '</th>').join('');
-                    contentHtml = '<h2 style="font-size:1.25rem;font-weight:bold;margin-bottom:1.5rem;color:#0d7ff2">' + getReportConfig(selectedReport).title + '</h2>'
-                        + '<table style="width:100%;border-collapse:collapse;font-size:0.75rem;text-align:left">'
+                    contentHtml = '<h2 style="font-size:1.25rem;font-weight:bold;margin-bottom:0.5rem;color:#0d7ff2">' + getReportConfig(selectedReport).title + '</h2>'
+                        + '<table style="width:100%;border-collapse:collapse;font-size:0.75rem;text-align:left;page-break-inside:auto;table-layout:fixed;">'
                         + '<thead style="background-color:#f1f5f9;color:#334155;font-weight:bold"><tr>' + headerRow + '</tr></thead>'
                         + '<tbody>' + rows + '</tbody>'
                         + '</table>';
@@ -1094,7 +1121,35 @@ const Relatorios = () => {
             {selectedReport === 'ferias' && (
                 <div className="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark mb-8 transition-all duration-300">
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Filtrar Férias</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+                        <div className="relative">
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nome</label>
+                            <input
+                                type="text"
+                                value={filterNome}
+                                onChange={(e) => handleFeriasSearch(e.target.value)}
+                                placeholder="Buscar nome..."
+                                className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
+                            />
+                            {feriasSearchResults.length > 0 && (
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-20 max-h-60 overflow-y-auto">
+                                    {feriasSearchResults.map(s => (
+                                        <div
+                                            key={s.IDPK_SERV || s._id}
+                                            onClick={() => {
+                                                setFilterNome(s.NOME_SERV);
+                                                setFeriasSearchResults([]);
+                                                setFilterFeriasAno(''); // Auto-select "Todos os Anos"
+                                            }}
+                                            className="p-3 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer border-b border-slate-100 dark:border-slate-700 last:border-0"
+                                        >
+                                            <p className="font-medium text-slate-900 dark:text-white truncate" title={s.NOME_SERV}>{s.NOME_SERV}</p>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">Matr.: {s.MATRICULA_SERV}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Ano</label>
                             <select
@@ -1102,6 +1157,7 @@ const Relatorios = () => {
                                 onChange={(e) => setFilterFeriasAno(e.target.value)}
                                 className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
                             >
+                                <option value="">Todos os Anos</option>
                                 {Array.from({ length: new Date().getFullYear() - 2009 }, (_, i) => new Date().getFullYear() - i).map(y => (
                                     <option key={y} value={String(y)}>{y}</option>
                                 ))}
