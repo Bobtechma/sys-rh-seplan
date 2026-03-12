@@ -10,85 +10,34 @@ import { useStaggerReveal, useCountUp } from '../hooks/useAnimations';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
+import { useDashboard } from '../hooks/useDashboard';
+
 const Dashboard = () => {
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(true);
-    const [stats, setStats] = useState({
-        activeServidores: 0,
-        aniversariantesCount: 0,
-        pendencias: 0,
-        ferias: 0,
-        vinculos: { efetivos: 0, comissionados: 0, contratados: 0, servicosPrestados: 0, outros: 0 },
-        recentActivity: []
-    });
-
-    useEffect(() => {
-        const fetchDashboardStats = async () => {
-            try {
-                const token = localStorage.getItem('token');
-                const response = await axios.get(`/api/dashboard?_t=${Date.now()}`, {
-                    headers: { 'x-auth-token': token }
-                });
-                setStats(response.data);
-            } catch (error) {
-                console.error('Error loading dashboard:', error);
-            } finally {
-                // Artificial delay for smooth skeleton effect (optional, remove in prod if desired)
-                setTimeout(() => setLoading(false), 500);
-            }
-        };
-
-        fetchDashboardStats();
-    }, []);
-
-    // State for History Modal
-    const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
-    const [historyData, setHistoryData] = useState([]);
-    const [historyPage, setHistoryPage] = useState(1);
-    const [historyTotalPages, setHistoryTotalPages] = useState(1);
-    const [historyLoading, setHistoryLoading] = useState(false);
-
-    const fetchHistory = async (page) => {
-        setHistoryLoading(true);
-        try {
-            const token = localStorage.getItem('token');
-            const res = await axios.get(`/api/dashboard/history?page=${page}&limit=10&_t=${Date.now()}`, {
-                headers: { 'x-auth-token': token }
-            });
-            setHistoryData(res.data.history);
-            setHistoryTotalPages(res.data.totalPages);
-            setHistoryPage(res.data.currentPage);
-        } catch (error) {
-            console.error('Error fetching history:', error);
-        } finally {
-            setHistoryLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        if (isHistoryModalOpen) {
-            fetchHistory(1);
-        }
-    }, [isHistoryModalOpen]);
-
-    const handlePageChange = (newPage) => {
-        if (newPage >= 1 && newPage <= historyTotalPages) {
-            fetchHistory(newPage);
-        }
-    };
-
-    const totalVinculos = stats.vinculos.efetivos + stats.vinculos.comissionados + stats.vinculos.contratados + (stats.vinculos.servicosPrestados || 0) + (stats.vinculos.outros || 0);
+    const {
+        stats,
+        loading,
+        totalVinculos,
+        isHistoryModalOpen,
+        setIsHistoryModalOpen,
+        historyData,
+        historyPage,
+        historyTotalPages,
+        historyLoading,
+        handlePageChange,
+        refresh: fetchDashboardStats
+    } = useDashboard();
 
     // Anime.js stagger reveals
     const statsRef = useStaggerReveal('.stat-card', [loading], { staggerDelay: 80 });
     const actionsRef = useStaggerReveal('.action-card', [loading], { staggerDelay: 60, startDelay: 300 });
-    const tableRef = useStaggerReveal('.activity-row', [loading, stats.recentActivity], { staggerDelay: 50, startDelay: 200 });
+    const tableRef = useStaggerReveal('.activity-row', [loading, stats?.recentActivity], { staggerDelay: 50, startDelay: 200 });
 
     // Animated counters
-    const countActive = useCountUp(stats.activeServidores, loading);
-    const countBirthday = useCountUp(stats.aniversariantesCount, loading);
-    const countPendencias = useCountUp(stats.pendencias, loading);
-    const countFerias = useCountUp(stats.ferias, loading);
+    const countActive = useCountUp(stats?.activeServidores || 0, loading);
+    const countBirthday = useCountUp(stats?.aniversariantesCount || 0, loading);
+    const countPendencias = useCountUp(stats?.pendencias || 0, loading);
+    const countFerias = useCountUp(stats?.ferias || 0, loading);
 
     return (
         <div className="max-w-7xl mx-auto flex flex-col gap-8">
@@ -104,79 +53,102 @@ const Dashboard = () => {
             </div>
 
             {/* Stats Cards */}
-            <div ref={statsRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="stat-card bg-surface-light dark:bg-surface-dark p-4 sm:p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                            <span className="material-symbols-outlined text-primary">groups</span>
+            <div ref={statsRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="stat-card glass dark:glass-dark p-6 rounded-3xl transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 group">
+                    <div className="flex justify-between items-start mb-5">
+                        <div className="p-3 bg-primary/10 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all duration-500">
+                            <span className="material-symbols-outlined">group</span>
                         </div>
-                        <span className="flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400 px-2 py-0.5 rounded-full">
+                        <span className="flex items-center text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-400 px-3 py-1 rounded-full uppercase tracking-wider">
                             +1.2%
                         </span>
                     </div>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Servidores Ativos</p>
-                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                        {loading ? <Skeleton className="h-8 w-16" /> : <span ref={countActive}>0</span>}
+                    <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-widest">Servidores Ativos</p>
+                    <h3 className="text-3xl font-black text-slate-900 dark:text-white mt-2 font-display">
+                        {loading ? <Skeleton className="h-10 w-20" /> : <span ref={countActive}>0</span>}
                     </h3>
                 </div>
+
                 <div
                     onClick={() => {
                         const currentMonth = new Date().getMonth() + 1;
                         navigate(`/servidores?birthMonth=${currentMonth}`);
                     }}
-                    className="stat-card bg-surface-light dark:bg-surface-dark p-4 sm:p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer group"
+                    className="stat-card glass dark:glass-dark p-6 rounded-3xl transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 cursor-pointer group"
                 >
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg group-hover:bg-purple-100 dark:group-hover:bg-purple-900/40 transition-colors">
-                            <span className="material-symbols-outlined text-purple-600 dark:text-purple-400">cake</span>
+                    <div className="flex justify-between items-start mb-5">
+                        <div className="p-3 bg-purple-500/10 text-purple-600 rounded-2xl group-hover:bg-purple-500 group-hover:text-white transition-all duration-500">
+                            <span className="material-symbols-outlined">cake</span>
                         </div>
                     </div>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Aniversariantes (Mês)</p>
-                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                        {loading ? <Skeleton className="h-8 w-12" /> : <span ref={countBirthday}>0</span>}
+                    <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-widest">Aniversariantes</p>
+                    <h3 className="text-3xl font-black text-slate-900 dark:text-white mt-2 font-display">
+                        {loading ? <Skeleton className="h-10 w-16" /> : <span ref={countBirthday}>0</span>}
                     </h3>
                 </div>
-                <div className="stat-card bg-surface-light dark:bg-surface-dark p-4 sm:p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                            <span className="material-symbols-outlined text-orange-600 dark:text-orange-400">assignment_late</span>
+
+                <div className="stat-card glass dark:glass-dark p-6 rounded-3xl transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 group">
+                    <div className="flex justify-between items-start mb-5">
+                        <div className="p-3 bg-amber-500/10 text-amber-600 rounded-2xl group-hover:bg-amber-500 group-hover:text-white transition-all duration-500">
+                            <span className="material-symbols-outlined">notification_important</span>
                         </div>
-                        <span className="flex items-center text-xs font-medium text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 px-2 py-0.5 rounded-full">
+                        <span className="flex items-center text-[10px] font-bold text-red-600 bg-red-50 dark:bg-red-950/40 dark:text-red-400 px-3 py-1 rounded-full uppercase tracking-wider">
                             Pendente
                         </span>
                     </div>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Pendências de RH</p>
-                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                        {loading ? <Skeleton className="h-8 w-12" /> : <span ref={countPendencias}>0</span>}
+                    <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-widest">Pendências RH</p>
+                    <h3 className="text-3xl font-black text-slate-900 dark:text-white mt-2 font-display">
+                        {loading ? <Skeleton className="h-10 w-16" /> : <span ref={countPendencias}>0</span>}
                     </h3>
                 </div>
-                <div className="stat-card bg-surface-light dark:bg-surface-dark p-4 sm:p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="p-2 bg-teal-50 dark:bg-teal-900/20 rounded-lg">
-                            <span className="material-symbols-outlined text-teal-600 dark:text-teal-400">beach_access</span>
+
+                <div className="stat-card glass dark:glass-dark p-6 rounded-3xl transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 group">
+                    <div className="flex justify-between items-start mb-5">
+                        <div className="p-3 bg-teal-500/10 text-teal-600 rounded-2xl group-hover:bg-teal-500 group-hover:text-white transition-all duration-500">
+                            <span className="material-symbols-outlined">beach_access</span>
                         </div>
-                        <span className="flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                        <span className="flex items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full uppercase tracking-wider">
                             Atual
                         </span>
                     </div>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Servidores em Férias</p>
-                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                        {loading ? <Skeleton className="h-8 w-12" /> : <span ref={countFerias}>0</span>}
+                    <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-widest">Em Férias</p>
+                    <h3 className="text-3xl font-black text-slate-900 dark:text-white mt-2 font-display">
+                        {loading ? <Skeleton className="h-10 w-16" /> : <span ref={countFerias}>0</span>}
                     </h3>
                 </div>
             </div>
 
             {/* Quick Actions */}
-            <div className="flex flex-col gap-4">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Acesso Rápido</h3>
-                <div ref={actionsRef} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                    <Link to="/adicionar-servidor" className="action-card flex flex-col items-center justify-center gap-3 p-4 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/10 dark:hover:border-primary transition-all duration-300 group h-32 hover:-translate-y-1 shadow-sm hover:shadow-md active:scale-95">
-                        <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full group-hover:bg-white dark:group-hover:bg-blue-900 transition-colors">
-                            <span className="material-symbols-outlined text-primary">person_add</span>
+            <div className="flex flex-col gap-5">
+                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest ml-1">Acesso Rápido</h3>
+                <div ref={actionsRef} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5">
+                    <Link to="/adicionar-servidor" className="action-card flex flex-col items-center justify-center gap-4 p-6 rounded-3xl glass dark:glass-dark hover:border-primary/50 hover:bg-primary/5 dark:hover:bg-primary/10 transition-all duration-500 group h-36 hover:-translate-y-2 hover:shadow-xl active:scale-95 border-transparent">
+                        <div className="bg-primary/10 text-primary p-3.5 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-sm">
+                            <span className="material-symbols-outlined text-[28px]">person_add</span>
                         </div>
-                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 text-center">Cadastrar<br />Servidor</span>
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-200 text-center uppercase tracking-tight">Novo Servidor</span>
                     </Link>
-                    {/* Add other quick actions here from legacy file if needed, keeping simple for now */}
+
+                    <Link to="/ferias" className="action-card flex flex-col items-center justify-center gap-4 p-6 rounded-3xl glass dark:glass-dark hover:border-primary/50 hover:bg-primary/5 dark:hover:bg-primary/10 transition-all duration-500 group h-36 hover:-translate-y-2 hover:shadow-xl active:scale-95 border-transparent">
+                        <div className="bg-teal-500/10 text-teal-600 p-3.5 rounded-2xl group-hover:bg-teal-500 group-hover:text-white transition-all duration-500 shadow-sm">
+                            <span className="material-symbols-outlined text-[28px]">beach_access</span>
+                        </div>
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-200 text-center uppercase tracking-tight">Gestão Férias</span>
+                    </Link>
+
+                    <Link to="/relatorios" className="action-card flex flex-col items-center justify-center gap-4 p-6 rounded-3xl glass dark:glass-dark hover:border-primary/50 hover:bg-primary/5 dark:hover:bg-primary/10 transition-all duration-500 group h-36 hover:-translate-y-2 hover:shadow-xl active:scale-95 border-transparent">
+                        <div className="bg-indigo-500/10 text-indigo-600 p-3.5 rounded-2xl group-hover:bg-indigo-500 group-hover:text-white transition-all duration-500 shadow-sm">
+                            <span className="material-symbols-outlined text-[28px]">description</span>
+                        </div>
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-200 text-center uppercase tracking-tight">Gerar Relatórios</span>
+                    </Link>
+
+                    <Link to="/calendario" className="action-card flex flex-col items-center justify-center gap-4 p-6 rounded-3xl glass dark:glass-dark hover:border-primary/50 hover:bg-primary/5 dark:hover:bg-primary/10 transition-all duration-500 group h-36 hover:-translate-y-2 hover:shadow-xl active:scale-95 border-transparent">
+                        <div className="bg-amber-500/10 text-amber-600 p-3.5 rounded-2xl group-hover:bg-amber-500 group-hover:text-white transition-all duration-500 shadow-sm">
+                            <span className="material-symbols-outlined text-[28px]">event_repeat</span>
+                        </div>
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-200 text-center uppercase tracking-tight">Escalas/Folgas</span>
+                    </Link>
                 </div>
             </div>
 
@@ -218,10 +190,10 @@ const Dashboard = () => {
                                                 <td className="px-6 py-4"><Skeleton className="h-6 w-6 ml-auto" /></td>
                                             </tr>
                                         ))
-                                    ) : stats.recentActivity.length === 0 ? (
+                                    ) : (stats?.recentActivity?.length || 0) === 0 ? (
                                         <tr><td colSpan="5" className="px-6 py-4 text-center text-slate-500">Nenhuma movimentação recente.</td></tr>
                                     ) : (
-                                        stats.recentActivity.map((activity, index) => {
+                                        stats?.recentActivity?.map((activity, index) => {
                                             const date = formatDateUTC(activity.updatedAt);
                                             return (
                                                 <tr
@@ -261,10 +233,10 @@ const Dashboard = () => {
                                         </div>
                                     </div>
                                 ))
-                            ) : stats.recentActivity.length === 0 ? (
+                            ) : (stats?.recentActivity?.length || 0) === 0 ? (
                                 <div className="p-8 text-center text-slate-500 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light">Nenhuma movimentação recente.</div>
                             ) : (
-                                stats.recentActivity.map((activity, index) => {
+                                stats?.recentActivity?.map((activity, index) => {
                                     const date = formatDateUTC(activity.updatedAt);
                                     const initials = activity.NOME_SERV ? activity.NOME_SERV.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '??';
 
@@ -323,11 +295,11 @@ const Dashboard = () => {
                                 <div className="h-64 w-full flex items-center justify-center relative">
                                     {(() => {
                                         const chartDataSrc = [
-                                            { label: 'Efetivos', value: stats.vinculos.efetivos || 0, color: '#3b82f6' }, // Blue-500
-                                            { label: 'Comissionados', value: stats.vinculos.comissionados || 0, color: '#a855f7' }, // Purple-500
-                                            { label: 'Contratados', value: stats.vinculos.contratados || 0, color: '#14b8a6' }, // Teal-500
-                                            { label: 'Serviços Prestados', value: stats.vinculos.servicosPrestados || 0, color: '#f59e0b' }, // Amber-500
-                                            { label: 'Outros', value: stats.vinculos.outros || 0, color: '#cbd5e1' }  // Slate-300
+                                            { label: 'Efetivos', value: stats?.vinculos?.efetivos || 0, color: '#3b82f6' },
+                                            { label: 'Comissionados', value: stats?.vinculos?.comissionados || 0, color: '#a855f7' },
+                                            { label: 'Contratados', value: stats?.vinculos?.contratados || 0, color: '#14b8a6' },
+                                            { label: 'Serviços Prestados', value: stats?.vinculos?.servicosPrestados || 0, color: '#f59e0b' },
+                                            { label: 'Outros', value: stats?.vinculos?.outros || 0, color: '#cbd5e1' }
                                         ];
 
                                         const activeSlices = chartDataSrc.filter(item => item.value > 0);

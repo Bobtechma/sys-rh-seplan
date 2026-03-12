@@ -976,121 +976,304 @@ const Relatorios = () => {
     };
 
     return (
-        <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Relatórios</h1>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Selecione o tipo de relatório que deseja gerar</p>
-                </div>
+        <div className="max-w-[1600px] mx-auto space-y-8 pb-20 font-sans">
+            {/* Header section with refined typography */}
+            <div className="flex flex-col gap-2">
+                <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight font-display">Centro de Relatórios</h1>
+                <p className="text-slate-500 dark:text-slate-400 font-medium">Geração de documentos, dossiês e indicadores de RH.</p>
             </div>
 
-            {/* Report Types Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                {['dossie', 'servidores', 'ferias', 'afastamentos', 'frequencia', 'aniversariantes'].map((type) => {
-                    const config = getReportConfig(type);
-                    const isSelected = selectedReport === type;
-                    return (
-                        <div
-                            key={type}
-                            onClick={() => setSelectedReport(type)}
-                            className={`cursor-pointer bg-surface-light dark:bg-surface-dark p-6 rounded-xl border transition-all group ${isSelected
-                                ? 'border-primary bg-blue-50 dark:bg-blue-900/10'
-                                : 'border-border-light dark:border-border-dark hover:border-primary'}`}
-                        >
-                            <div className={`size-12 rounded-lg flex items-center justify-center mb-4 transition-colors ${isSelected
-                                ? 'bg-primary text-white'
-                                : `bg-${config.color}-50 dark:bg-${config.color}-900/30 text-${config.color}-600 dark:text-${config.color}-400`}`}>
-                                <span className="material-symbols-outlined">{config.icon}</span>
-                            </div>
-                            <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-2">{config.title}</h3>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">{config.desc}</p>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {/* Selection Area for Specific Reports */}
-            {(selectedReport === 'dossie' || selectedReport === 'frequencia') && (
-                <div className="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark mb-8 transition-all duration-300">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Selecionar Servidor</h3>
-
-                    {!selectedServer ? (
-                        <div className="relative max-w-2xl">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 material-symbols-outlined">search</span>
-                            <input
-                                type="text"
-                                value={serverSearch}
-                                onChange={(e) => handleSearch(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white text-sm focus:ring-primary focus:border-primary outline-none"
-                                placeholder="Buscar por nome ou matrícula..."
-                            />
-
-                            {searchResults.length > 0 && (
-                                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
-                                    {searchResults.map(s => (
-                                        <div
-                                            key={s.IDPK_SERV || s._id}
-                                            onClick={() => selectServer(s)}
-                                            className="p-3 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer border-b border-slate-100 dark:border-slate-700 last:border-0"
-                                        >
-                                            <p className="font-medium text-slate-900 dark:text-white">{s.NOME_SERV}</p>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400">Matrícula: {s.MATRICULA_SERV}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800 flex items-center justify-between max-w-2xl">
-                            <div className="flex items-center gap-3">
-                                <div className="size-8 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center text-primary">
-                                    <span className="material-symbols-outlined text-sm">person</span>
-                                </div>
-                                <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                                    {selectedServer.NOME_SERV} ({selectedServer.MATRICULA_SERV})
-                                </span>
-                            </div>
+            <div className="flex flex-col lg:flex-row gap-8 items-start">
+                {/* Reports Sidebar (Navigation) - Modern vertical list */}
+                <div className="w-full lg:w-80 flex flex-col gap-3">
+                    <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] px-4 mb-1">Categorias</p>
+                    {['dossie', 'servidores', 'ferias', 'afastamentos', 'frequencia', 'aniversariantes'].map((type) => {
+                        const config = getReportConfig(type);
+                        const isSelected = selectedReport === type;
+                        return (
                             <button
-                                onClick={() => setSelectedServer(null)}
-                                className="text-slate-400 hover:text-red-500 transition-colors"
+                                key={type}
+                                onClick={() => setSelectedReport(type)}
+                                className={`flex items-center gap-4 p-4 rounded-3xl transition-all duration-300 group ${isSelected
+                                    ? 'bg-primary text-white shadow-xl shadow-primary/20 translate-x-2'
+                                    : 'glass dark:glass-dark text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:translate-x-1'
+                                    }`}
                             >
-                                <span className="material-symbols-outlined">close</span>
+                                <div className={`p-2.5 rounded-2xl transition-colors ${isSelected ? 'bg-white/20' : 'bg-slate-100 dark:bg-slate-700/50 group-hover:bg-primary/10 group-hover:text-primary'}`}>
+                                    <span className="material-symbols-outlined text-[20px]">{config.icon}</span>
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-sm font-black tracking-tight">{config.title}</p>
+                                    <p className={`text-[10px] line-clamp-1 ${isSelected ? 'text-white/70 font-medium' : 'text-slate-400 dark:text-slate-500'}`}>{config.desc}</p>
+                                </div>
                             </button>
-                        </div>
-                    )}
+                        );
+                    })}
+                </div>
 
-                    {selectedReport === 'frequencia' && (
-                        <>
-                            <div className="mt-4 border-t border-border-light dark:border-border-dark pt-4">
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Mês de Referência</label>
-                                <input
-                                    type="month"
-                                    value={referenceMonth}
-                                    onChange={(e) => setReferenceMonth(e.target.value)}
-                                    className="rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
-                                />
+                {/* Content Area - Modern card base */}
+                <div className="flex-1 w-full glass dark:glass-dark rounded-[2.5rem] p-6 lg:p-10 shadow-sm border-none min-h-[600px]">
+                    <div className="max-w-4xl mx-auto space-y-10">
+                        {/* Report Header */}
+                        <div className="flex items-center gap-6 pb-8 border-bottom border-slate-100 dark:border-slate-800">
+                            <div className="p-5 bg-primary/10 rounded-[2rem] text-primary">
+                                <span className="material-symbols-outlined text-[40px] leading-none">{getReportConfig(selectedReport).icon}</span>
                             </div>
+                            <div className="space-y-1">
+                                <h2 className="text-2xl font-black text-slate-800 dark:text-white font-display tracking-tight uppercase">{getReportConfig(selectedReport).title}</h2>
+                                <p className="text-slate-500 dark:text-slate-400 font-medium">{getReportConfig(selectedReport).desc}</p>
+                            </div>
+                        </div>
 
-                            <div className="mt-4 border-t border-border-light dark:border-border-dark pt-4">
-                                <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3">Filtros de Geração em Massa</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Selection Area for Specific Reports */}
+                        {(selectedReport === 'dossie' || selectedReport === 'frequencia') && (
+                            <div className="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark mb-8 transition-all duration-300">
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Selecionar Servidor</h3>
+
+                                {!selectedServer ? (
+                                    <div className="relative max-w-2xl">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 material-symbols-outlined">search</span>
+                                        <input
+                                            type="text"
+                                            value={serverSearch}
+                                            onChange={(e) => handleSearch(e.target.value)}
+                                            className="w-full pl-10 pr-4 py-3 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white text-sm focus:ring-primary focus:border-primary outline-none"
+                                            placeholder="Buscar por nome ou matrícula..."
+                                        />
+
+                                        {searchResults.length > 0 && (
+                                            <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
+                                                {searchResults.map(s => (
+                                                    <div
+                                                        key={s.IDPK_SERV || s._id}
+                                                        onClick={() => selectServer(s)}
+                                                        className="p-3 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer border-b border-slate-100 dark:border-slate-700 last:border-0"
+                                                    >
+                                                        <p className="font-medium text-slate-900 dark:text-white">{s.NOME_SERV}</p>
+                                                        <p className="text-xs text-slate-500 dark:text-slate-400">Matrícula: {s.MATRICULA_SERV}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800 flex items-center justify-between max-w-2xl">
+                                        <div className="flex items-center gap-3">
+                                            <div className="size-8 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center text-primary">
+                                                <span className="material-symbols-outlined text-sm">person</span>
+                                            </div>
+                                            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                                                {selectedServer.NOME_SERV} ({selectedServer.MATRICULA_SERV})
+                                            </span>
+                                        </div>
+                                        <button
+                                            onClick={() => setSelectedServer(null)}
+                                            className="text-slate-400 hover:text-red-500 transition-colors"
+                                        >
+                                            <span className="material-symbols-outlined">close</span>
+                                        </button>
+                                    </div>
+                                )}
+
+                                {selectedReport === 'frequencia' && (
+                                    <>
+                                        <div className="mt-4 border-t border-border-light dark:border-border-dark pt-4">
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Mês de Referência</label>
+                                            <input
+                                                type="month"
+                                                value={referenceMonth}
+                                                onChange={(e) => setReferenceMonth(e.target.value)}
+                                                className="rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
+                                            />
+                                        </div>
+
+                                        <div className="mt-4 border-t border-border-light dark:border-border-dark pt-4">
+                                            <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3">Filtros de Geração em Massa</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div>
+                                                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Setor</label>
+                                                    <select
+                                                        value={filterSetor}
+                                                        onChange={(e) => setFilterSetor(e.target.value)}
+                                                        className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 text-sm outline-none focus:ring-primary focus:border-primary"
+                                                    >
+                                                        <option value="">Todos</option>
+                                                        {setoresOpt.map(s => <option key={s} value={s}>{s}</option>)}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Vínculo</label>
+                                                    <select
+                                                        value={filterVinculo}
+                                                        onChange={(e) => setFilterVinculo(e.target.value)}
+                                                        className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 text-sm outline-none focus:ring-primary focus:border-primary"
+                                                    >
+                                                        <option value="">Todos</option>
+                                                        <option value="EFETIVO">Estatutário/Efetivo</option>
+                                                        <option value="COMISSIONADO">Comissionado</option>
+                                                        <option value="CONTRATADO">Temporário/Contratado</option>
+                                                        <option value="SERVIÇOS PRESTADOS">Serviços Prestados</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Cargo</label>
+                                                    <select
+                                                        value={filterCargo}
+                                                        onChange={(e) => setFilterCargo(e.target.value)}
+                                                        className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 text-sm outline-none focus:ring-primary focus:border-primary"
+                                                    >
+                                                        <option value="">Todos</option>
+                                                        {cargosOpt.map(c => <option key={c} value={c}>{c}</option>)}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Filters for Férias */}
+                        {selectedReport === 'ferias' && (
+                            <div className="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark mb-8 transition-all duration-300">
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Filtrar Férias</h3>
+                                <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+                                    <div className="relative">
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nome</label>
+                                        <input
+                                            type="text"
+                                            value={filterNome}
+                                            onChange={(e) => handleFeriasSearch(e.target.value)}
+                                            placeholder="Buscar nome..."
+                                            className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
+                                        />
+                                        {feriasSearchResults.length > 0 && (
+                                            <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-20 max-h-60 overflow-y-auto">
+                                                {feriasSearchResults.map(s => (
+                                                    <div
+                                                        key={s.IDPK_SERV || s._id}
+                                                        onClick={() => {
+                                                            setFilterNome(s.NOME_SERV);
+                                                            setFeriasSearchResults([]);
+                                                            setFilterFeriasAno(''); // Auto-select "Todos os Anos"
+                                                        }}
+                                                        className="p-3 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer border-b border-slate-100 dark:border-slate-700 last:border-0"
+                                                    >
+                                                        <p className="font-medium text-slate-900 dark:text-white truncate" title={s.NOME_SERV}>{s.NOME_SERV}</p>
+                                                        <p className="text-xs text-slate-500 dark:text-slate-400">Matr.: {s.MATRICULA_SERV}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Setor</label>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Ano</label>
+                                        <select
+                                            value={filterFeriasAno}
+                                            onChange={(e) => setFilterFeriasAno(e.target.value)}
+                                            className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
+                                        >
+                                            <option value="">Todos os Anos</option>
+                                            {Array.from({ length: new Date().getFullYear() - 2009 }, (_, i) => new Date().getFullYear() - i).map(y => (
+                                                <option key={y} value={String(y)}>{y}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Período — De</label>
+                                        <input
+                                            type="date"
+                                            value={filterFeriasPeriodoInicio}
+                                            onChange={(e) => setFilterFeriasPeriodoInicio(e.target.value)}
+                                            className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Período — Até</label>
+                                        <input
+                                            type="date"
+                                            value={filterFeriasPeriodoFim}
+                                            onChange={(e) => setFilterFeriasPeriodoFim(e.target.value)}
+                                            className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Setor</label>
                                         <select
                                             value={filterSetor}
                                             onChange={(e) => setFilterSetor(e.target.value)}
-                                            className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 text-sm outline-none focus:ring-primary focus:border-primary"
+                                            className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
                                         >
                                             <option value="">Todos</option>
                                             {setoresOpt.map(s => <option key={s} value={s}>{s}</option>)}
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Vínculo</label>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label>
+                                        <select
+                                            value={filterFeriasStatus}
+                                            onChange={(e) => setFilterFeriasStatus(e.target.value)}
+                                            className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
+                                        >
+                                            <option value="">Todos</option>
+                                            <option value="APROVADO">Aprovado / Deferido</option>
+                                            <option value="PENDENTE">Aguardando Aprovação</option>
+                                            <option value="REJEITADO">Cancelado / Rejeitado</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Filters for Aniversariantes and Afastamentos */}
+                        {(selectedReport === 'aniversariantes' || selectedReport === 'afastamentos') && (
+                            <div className="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark mb-8 transition-all duration-300">
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
+                                    {selectedReport === 'aniversariantes' ? 'Filtrar Aniversariantes' : 'Filtrar Afastamentos'}
+                                </h3>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Mês de Referência</label>
+                                    <input
+                                        type="month"
+                                        value={referenceMonth}
+                                        onChange={(e) => setReferenceMonth(e.target.value)}
+                                        className="rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Filters for Server List */}
+                        {selectedReport === 'servidores' && (
+                            <div className="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark mb-8 transition-all duration-300">
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Filtrar Relatório</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nome</label>
+                                        <input
+                                            type="text"
+                                            value={filterNome}
+                                            onChange={(e) => setFilterNome(e.target.value)}
+                                            placeholder="Buscar nome..."
+                                            className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Matrícula</label>
+                                        <input
+                                            type="text"
+                                            value={filterMatricula}
+                                            onChange={(e) => setFilterMatricula(e.target.value)}
+                                            placeholder="Buscar matrícula..."
+                                            className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Vínculo</label>
                                         <select
                                             value={filterVinculo}
                                             onChange={(e) => setFilterVinculo(e.target.value)}
-                                            className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 text-sm outline-none focus:ring-primary focus:border-primary"
+                                            className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
                                         >
                                             <option value="">Todos</option>
                                             <option value="EFETIVO">Estatutário/Efetivo</option>
@@ -1100,253 +1283,90 @@ const Relatorios = () => {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Cargo</label>
-                                        <select
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Cargo</label>
+                                        <input
+                                            type="text"
                                             value={filterCargo}
                                             onChange={(e) => setFilterCargo(e.target.value)}
-                                            className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 text-sm outline-none focus:ring-primary focus:border-primary"
+                                            placeholder="Buscar cargo..."
+                                            className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Setor</label>
+                                        <select
+                                            value={filterSetor}
+                                            onChange={(e) => setFilterSetor(e.target.value)}
+                                            className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
                                         >
                                             <option value="">Todos</option>
-                                            {cargosOpt.map(c => <option key={c} value={c}>{c}</option>)}
+                                            <option value="SEPLAN">SEPLAN</option>
+                                            <option value="SEMUS">SEMUS</option>
+                                            <option value="SEMED">SEMED</option>
+                                            <option value="RH">RH</option>
+                                            <option value="Financeiro">Financeiro</option>
+                                            <option value="Administrativo">Administrativo</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label>
+                                        <select
+                                            value={filterStatus}
+                                            onChange={(e) => setFilterStatus(e.target.value)}
+                                            className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
+                                        >
+                                            <option value="">Todos</option>
+                                            <option value="SIM">Ativo</option>
+                                            <option value="NÃO">Inativo</option>
                                         </select>
                                     </div>
                                 </div>
                             </div>
-                        </>
-                    )}
-                </div>
-            )}
-
-            {/* Filters for Férias */}
-            {selectedReport === 'ferias' && (
-                <div className="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark mb-8 transition-all duration-300">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Filtrar Férias</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-                        <div className="relative">
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nome</label>
-                            <input
-                                type="text"
-                                value={filterNome}
-                                onChange={(e) => handleFeriasSearch(e.target.value)}
-                                placeholder="Buscar nome..."
-                                className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
-                            />
-                            {feriasSearchResults.length > 0 && (
-                                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-20 max-h-60 overflow-y-auto">
-                                    {feriasSearchResults.map(s => (
-                                        <div
-                                            key={s.IDPK_SERV || s._id}
-                                            onClick={() => {
-                                                setFilterNome(s.NOME_SERV);
-                                                setFeriasSearchResults([]);
-                                                setFilterFeriasAno(''); // Auto-select "Todos os Anos"
-                                            }}
-                                            className="p-3 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer border-b border-slate-100 dark:border-slate-700 last:border-0"
-                                        >
-                                            <p className="font-medium text-slate-900 dark:text-white truncate" title={s.NOME_SERV}>{s.NOME_SERV}</p>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400">Matr.: {s.MATRICULA_SERV}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Ano</label>
-                            <select
-                                value={filterFeriasAno}
-                                onChange={(e) => setFilterFeriasAno(e.target.value)}
-                                className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
-                            >
-                                <option value="">Todos os Anos</option>
-                                {Array.from({ length: new Date().getFullYear() - 2009 }, (_, i) => new Date().getFullYear() - i).map(y => (
-                                    <option key={y} value={String(y)}>{y}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Período — De</label>
-                            <input
-                                type="date"
-                                value={filterFeriasPeriodoInicio}
-                                onChange={(e) => setFilterFeriasPeriodoInicio(e.target.value)}
-                                className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Período — Até</label>
-                            <input
-                                type="date"
-                                value={filterFeriasPeriodoFim}
-                                onChange={(e) => setFilterFeriasPeriodoFim(e.target.value)}
-                                className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Setor</label>
-                            <select
-                                value={filterSetor}
-                                onChange={(e) => setFilterSetor(e.target.value)}
-                                className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
-                            >
-                                <option value="">Todos</option>
-                                {setoresOpt.map(s => <option key={s} value={s}>{s}</option>)}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label>
-                            <select
-                                value={filterFeriasStatus}
-                                onChange={(e) => setFilterFeriasStatus(e.target.value)}
-                                className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
-                            >
-                                <option value="">Todos</option>
-                                <option value="APROVADO">Aprovado / Deferido</option>
-                                <option value="PENDENTE">Aguardando Aprovação</option>
-                                <option value="REJEITADO">Cancelado / Rejeitado</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Filters for Aniversariantes and Afastamentos */}
-            {(selectedReport === 'aniversariantes' || selectedReport === 'afastamentos') && (
-                <div className="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark mb-8 transition-all duration-300">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
-                        {selectedReport === 'aniversariantes' ? 'Filtrar Aniversariantes' : 'Filtrar Afastamentos'}
-                    </h3>
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Mês de Referência</label>
-                        <input
-                            type="month"
-                            value={referenceMonth}
-                            onChange={(e) => setReferenceMonth(e.target.value)}
-                            className="rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
-                        />
-                    </div>
-                </div>
-            )}
-
-            {/* Filters for Server List */}
-            {selectedReport === 'servidores' && (
-                <div className="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark mb-8 transition-all duration-300">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Filtrar Relatório</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nome</label>
-                            <input
-                                type="text"
-                                value={filterNome}
-                                onChange={(e) => setFilterNome(e.target.value)}
-                                placeholder="Buscar nome..."
-                                className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Matrícula</label>
-                            <input
-                                type="text"
-                                value={filterMatricula}
-                                onChange={(e) => setFilterMatricula(e.target.value)}
-                                placeholder="Buscar matrícula..."
-                                className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Vínculo</label>
-                            <select
-                                value={filterVinculo}
-                                onChange={(e) => setFilterVinculo(e.target.value)}
-                                className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
-                            >
-                                <option value="">Todos</option>
-                                <option value="EFETIVO">Estatutário/Efetivo</option>
-                                <option value="COMISSIONADO">Comissionado</option>
-                                <option value="CONTRATADO">Temporário/Contratado</option>
-                                <option value="SERVIÇOS PRESTADOS">Serviços Prestados</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Cargo</label>
-                            <input
-                                type="text"
-                                value={filterCargo}
-                                onChange={(e) => setFilterCargo(e.target.value)}
-                                placeholder="Buscar cargo..."
-                                className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Setor</label>
-                            <select
-                                value={filterSetor}
-                                onChange={(e) => setFilterSetor(e.target.value)}
-                                className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
-                            >
-                                <option value="">Todos</option>
-                                <option value="SEPLAN">SEPLAN</option>
-                                <option value="SEMUS">SEMUS</option>
-                                <option value="SEMED">SEMED</option>
-                                <option value="RH">RH</option>
-                                <option value="Financeiro">Financeiro</option>
-                                <option value="Administrativo">Administrativo</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label>
-                            <select
-                                value={filterStatus}
-                                onChange={(e) => setFilterStatus(e.target.value)}
-                                className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-900 dark:text-white px-3 py-2 outline-none focus:ring-primary focus:border-primary"
-                            >
-                                <option value="">Todos</option>
-                                <option value="SIM">Ativo</option>
-                                <option value="NÃO">Inativo</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-4">
-                {selectedReport === 'frequencia' && (
-                    <button
-                        onClick={() => generatePDF('all')}
-                        disabled={loading}
-                        className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold transition-all shadow-lg shadow-green-500/30 flex items-center gap-2 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {loading ? (
-                            <>
-                                <span className="animate-spin material-symbols-outlined">progress_activity</span>
-                                Gerando Todos...
-                            </>
-                        ) : (
-                            <>
-                                <span className="material-symbols-outlined">groups</span>
-                                Gerar Todos (Mês)
-                            </>
                         )}
-                    </button>
-                )}
 
-                <button
-                    onClick={() => generatePDF(selectedReport === 'frequencia' ? 'single' : 'default')}
-                    disabled={loading || (selectedReport === 'frequencia' && !selectedServer) || (selectedReport === 'dossie' && !selectedServer)}
-                    className="bg-primary hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-bold transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {loading ? (
-                        <>
-                            <span className="animate-spin material-symbols-outlined">progress_activity</span>
-                            Gerando...
-                        </>
-                    ) : (
-                        <>
-                            <span className="material-symbols-outlined">picture_as_pdf</span>
-                            Visualizar PDF
-                        </>
-                    )}
-                </button>
+                        {/* Action Buttons */}
+                        <div className="flex justify-end gap-4">
+                            {selectedReport === 'frequencia' && (
+                                <button
+                                    onClick={() => generatePDF('all')}
+                                    disabled={loading}
+                                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold transition-all shadow-lg shadow-green-500/30 flex items-center gap-2 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {loading ? (
+                                        <>
+                                            <span className="animate-spin material-symbols-outlined">progress_activity</span>
+                                            Gerando Todos...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="material-symbols-outlined">groups</span>
+                                            Gerar Todos (Mês)
+                                        </>
+                                    )}
+                                </button>
+                            )}
+
+                            <button
+                                onClick={() => generatePDF(selectedReport === 'frequencia' ? 'single' : 'default')}
+                                disabled={loading || (selectedReport === 'frequencia' && !selectedServer) || (selectedReport === 'dossie' && !selectedServer)}
+                                className="bg-primary hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-bold transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {loading ? (
+                                    <>
+                                        <span className="animate-spin material-symbols-outlined">progress_activity</span>
+                                        Gerando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="material-symbols-outlined">picture_as_pdf</span>
+                                        Visualizar PDF
+                                    </>
+                                )}
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
             </div>
 
             {/* Bulk Loading Overlay */}

@@ -7,123 +7,44 @@ import { formatDateUTC } from '../utils/formatDate';
 import { useStaggerReveal } from '../hooks/useAnimations';
 
 
+import { useServidores } from '../hooks/useServidores';
+
 const Servidores = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const [servidores, setServidores] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalItems, setTotalItems] = useState(0);
+
+    // Initialize initial filters from URL
+    const queryParams = new URLSearchParams(location.search);
+    const initialFilters = {
+        birthMonth: queryParams.get('birthMonth') || ''
+    };
+
+    const {
+        servidores,
+        loading,
+        page,
+        setPage,
+        totalPages,
+        totalItems,
+        filters,
+        setoresOpt,
+        cargosOpt,
+        handleFilterChange,
+        clearFilters,
+        deleteServidor,
+        limit
+    } = useServidores(1, initialFilters);
 
     // Animation hook for table rows
     const tableRef = useStaggerReveal('.animate-row', [loading, servidores]);
-    const [filters, setFilters] = useState({
-        search: '',
-        setor: '',
-        cargo: '',
-        vinculo: '',
-        status: '',
-        birthMonth: ''
-    });
-
-    // Options for filters (could be fetched from API)
-    const [setoresOpt, setSetoresOpt] = useState([]);
-    const [cargosOpt, setCargosOpt] = useState([]);
-
-    const limit = 10;
-
-    useEffect(() => {
-        fetchFilters();
-
-        // Initialize filters from URL
-        const params = new URLSearchParams(location.search);
-        const birthMonthParam = params.get('birthMonth');
-        if (birthMonthParam) {
-            setFilters(prev => ({ ...prev, birthMonth: birthMonthParam }));
-        }
-    }, [location.search]);
-
-    useEffect(() => {
-        fetchServidores();
-    }, [page, filters]);
-
-    const fetchFilters = async () => {
-        try {
-            const [setoresRes, cargosRes] = await Promise.all([
-                axios.get('/api/servidores/setores'),
-                axios.get('/api/servidores/cargos')
-            ]);
-            setSetoresOpt(setoresRes.data);
-            setCargosOpt(cargosRes.data);
-        } catch (error) {
-            console.error('Error loading filters:', error);
-        }
-    };
-
-    const fetchServidores = async () => {
-        setLoading(true);
-        try {
-            const params = {
-                page,
-                limit,
-                search: filters.search,
-                setor: filters.setor,
-                cargo: filters.cargo,
-                vinculo: filters.vinculo,
-                status: filters.status,
-                birthMonth: filters.birthMonth,
-                _t: Date.now() // Cache-busting para garantir que a lista atualize imediatamente
-            };
-
-            // Remove empty params
-            Object.keys(params).forEach(key => params[key] === '' && delete params[key]);
-
-            const response = await axios.get('/api/servidores', { params });
-            setServidores(response.data.servidores);
-            setTotalPages(response.data.totalPages);
-            setTotalItems(response.data.totalServidores);
-        } catch (error) {
-            console.error('Error fetching servidores:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleFilterChange = (e) => {
-        const { name, value } = e.target;
-        setFilters(prev => ({ ...prev, [name]: value }));
-        setPage(1); // Reset to page 1 on filter change
-    };
-
-    const clearFilters = () => {
-        setFilters({
-            search: '',
-            setor: '',
-            cargo: '',
-            status: '',
-            birthMonth: '',
-            vinculo: ''
-        });
-        setPage(1);
-    };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Tem certeza que deseja excluir este servidor? Esta ação não pode ser desfeita.')) {
-            return;
-        }
-
         try {
-            const token = localStorage.getItem('token');
-            await axios.delete(`/api/servidores/${id}`, {
-                headers: { 'x-auth-token': token }
-            });
-
-            // Remove from state
-            setServidores(prev => prev.filter(s => s._id !== id));
-            alert('Servidor excluído com sucesso!');
+            const success = await deleteServidor(id);
+            if (success) {
+                alert('Servidor excluído com sucesso!');
+            }
         } catch (error) {
-            console.error('Error deleting servidor:', error);
             alert('Erro ao excluir servidor: ' + (error.response?.data?.msg || error.message));
         }
     };
@@ -131,44 +52,47 @@ const Servidores = () => {
     return (
         <div className="w-full px-2 md:px-4 fade-in flex flex-col gap-6">
             {/* Header e Estatísticas */}
-            <div className="flex flex-col gap-6">
-                <div className="flex flex-wrap justify-between items-end gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Servidores Públicos</h1>
-                        <p className="text-slate-500 dark:text-slate-400 mt-1">Gerencie, filtre e acompanhe o quadro de servidores.</p>
+            <div className="flex flex-col gap-8">
+                <div className="flex flex-wrap justify-between items-end gap-6">
+                    <div className="space-y-1">
+                        <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight font-display">Servidores</h1>
+                        <p className="text-slate-500 dark:text-slate-400 font-medium">Gestão centralizada do quadro de pessoal e lotações.</p>
                     </div>
                     <button
                         onClick={() => navigate('/adicionar-servidor')}
-                        className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 transition shadow-sm active:scale-95"
+                        className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-2xl font-bold hover:bg-blue-600 transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-95 group"
                     >
-                        <span className="material-symbols-outlined">add</span>
-                        Adicionar Servidor
+                        <span className="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">add</span>
+                        Novo Servidor
                     </button>
                 </div>
             </div>
 
             {/* Filters */}
-            <div className="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark p-4 shadow-sm">
+            <div className="glass dark:glass-dark rounded-3xl p-6 shadow-sm">
                 <div className="flex flex-wrap gap-4 items-center">
-                    <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                        <span className="material-symbols-outlined text-slate-400">filter_list</span>
-                        Filtros:
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest mr-2">
+                        <span className="material-symbols-outlined text-primary text-[20px]">tune</span>
+                        Filtros
                     </div>
 
-                    <input
-                        type="text"
-                        name="search"
-                        value={filters.search}
-                        onChange={handleFilterChange}
-                        placeholder="Buscar por nome..."
-                        className="form-input text-sm border-border-light dark:border-border-dark rounded-lg bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 focus:ring-primary focus:border-primary"
-                    />
+                    <div className="relative group">
+                        <input
+                            type="text"
+                            name="search"
+                            value={filters.search}
+                            onChange={handleFilterChange}
+                            placeholder="Buscar servidor..."
+                            className="pl-10 pr-4 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800/50 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all w-64 outline-none"
+                        />
+                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+                    </div>
 
                     <select
                         name="cargo"
                         value={filters.cargo}
                         onChange={handleFilterChange}
-                        className="px-3 py-2 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 text-sm outline-none focus:ring-primary focus:border-primary min-w-[140px]"
+                        className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-700 dark:text-slate-200 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all min-w-[160px] cursor-pointer"
                     >
                         <option value="">Todos os Cargos</option>
                         {cargosOpt.map((c, i) => <option key={i} value={c}>{c}</option>)}
@@ -178,7 +102,7 @@ const Servidores = () => {
                         name="vinculo"
                         value={filters.vinculo}
                         onChange={handleFilterChange}
-                        className="px-3 py-2 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 text-sm outline-none focus:ring-primary focus:border-primary min-w-[140px]"
+                        className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-700 dark:text-slate-200 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all min-w-[160px] cursor-pointer"
                     >
                         <option value="">Todos os Vínculos</option>
                         <option value="EFETIVO">Efetivo</option>
@@ -188,57 +112,27 @@ const Servidores = () => {
                     </select>
 
                     <select
-                        name="birthMonth"
-                        value={filters.birthMonth}
-                        onChange={handleFilterChange}
-                        className="px-3 py-2 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 text-sm outline-none focus:ring-primary focus:border-primary min-w-[140px]"
-                    >
-                        <option value="">Mês Aniversário</option>
-                        <option value="1">Janeiro</option>
-                        <option value="2">Fevereiro</option>
-                        <option value="3">Março</option>
-                        <option value="4">Abril</option>
-                        <option value="5">Maio</option>
-                        <option value="6">Junho</option>
-                        <option value="7">Julho</option>
-                        <option value="8">Agosto</option>
-                        <option value="9">Setembro</option>
-                        <option value="10">Outubro</option>
-                        <option value="11">Novembro</option>
-                        <option value="12">Dezembro</option>
-                    </select>
-
-                    <select
                         name="setor"
                         value={filters.setor}
                         onChange={handleFilterChange}
-                        className="form-select text-sm border-border-light dark:border-border-dark rounded-lg bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 focus:ring-primary focus:border-primary">
+                        className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-700 dark:text-slate-200 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all min-w-[160px] cursor-pointer"
+                    >
                         <option value="">Todos os Setores</option>
                         {setoresOpt.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
 
-                    <select
-                        name="status"
-                        value={filters.status}
-                        onChange={handleFilterChange}
-                        className="form-select text-sm border-border-light dark:border-border-dark rounded-lg bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 focus:ring-primary focus:border-primary">
-                        <option value="">Todos os Status</option>
-                        <option value="ativo">Ativo</option>
-                        <option value="inativo">Inativo</option>
-                        <option value="ferias">Em Férias</option>
-                        <option value="afastado">Afastado</option>
-                    </select>
-
                     <button
                         onClick={clearFilters}
-                        className="ml-auto text-sm text-primary hover:text-blue-600 font-medium">
-                        Limpar Filtros
+                        className="ml-auto text-xs font-bold text-primary hover:text-blue-600 uppercase tracking-widest flex items-center gap-2"
+                    >
+                        <span className="material-symbols-outlined text-[16px]">restart_alt</span>
+                        Resetar
                     </button>
                 </div>
             </div>
 
             {/* Content: Cards (Mobile) & Table (Desktop) */}
-            <div className="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm overflow-hidden">
+            <div className="glass dark:glass-dark rounded-3xl shadow-sm overflow-hidden border-none">
 
                 {/* Desktop Table View */}
                 <div className="hidden md:block overflow-x-auto">

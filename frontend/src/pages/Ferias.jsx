@@ -4,39 +4,27 @@ import { CITY_HALL_LOGO } from '../utils/assets';
 import { formatDateUTC } from '../utils/formatDate';
 import { useStaggerReveal, useCountUp } from '../hooks/useAnimations';
 
+import { useVacations } from '../hooks/useVacations';
+
 const Ferias = () => {
-    const [ferias, setFerias] = useState([]);
+    const {
+        ferias,
+        stats,
+        completionStats,
+        concessivoList,
+        vencidasList,
+        atrasadasList,
+        loading,
+        searchFilters,
+        setoresOpt,
+        cargosOpt,
+        handleFilterChange,
+        clearFilters,
+        updateStatus: updateStatusAPI,
+        refreshAll
+    } = useVacations();
+
     const [servidores, setServidores] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState('pending'); // active, pending, all
-    const [stats, setStats] = useState({ active: 0, pending: 0, total: 0 });
-    const [completionStats, setCompletionStats] = useState({
-        activeServers: 0,
-        with2024: 0,
-        with2025: 0,
-        percent2024: 0,
-        percent2025: 0
-    });
-
-    // Global Filters
-    const [searchFilters, setSearchFilters] = useState({
-        search: '',
-        setor: '',
-        cargo: '',
-        vinculo: '',
-        status_servidor: '',
-        birthMonth: ''
-    });
-    const [setoresOpt, setSetoresOpt] = useState([]);
-    const [cargosOpt, setCargosOpt] = useState([]);
-
-    // Concessivo State
-    const [concessivoList, setConcessivoList] = useState([]);
-    const [vencidasList, setVencidasList] = useState([]);
-    const [atrasadasList, setAtrasadasList] = useState([]);
-    const [showConcessivoModal, setShowConcessivoModal] = useState(false);
-    const [showVencidasModal, setShowVencidasModal] = useState(false);
-    const [showAtrasadasModal, setShowAtrasadasModal] = useState(false);
 
     // Modal State
     const [showModal, setShowModal] = useState(false);
@@ -46,9 +34,12 @@ const Ferias = () => {
         servidorId: '',
         tipo: 'Férias',
         periodos: [{ inicio: '', fim: '' }],
-        observacao: ''
+        observacao: '',
+        pa_ano1: '',
+        pa_ano2: ''
     });
     const [openMenuId, setOpenMenuId] = useState(null);
+    const [filter, setFilter] = useState('pending'); // Local UI filter for tabs
 
     // Animations
     const tableRef = useStaggerReveal('.animate-row', [loading, ferias, filter], { staggerDelay: 40 });
@@ -61,128 +52,30 @@ const Ferias = () => {
     const pendingCountAnim = useCountUp(stats.pending, loading, 800);
     const totalCountAnim = useCountUp(stats.total, loading, 800);
 
+    const [showConcessivoModal, setShowConcessivoModal] = useState(false);
+    const [showVencidasModal, setShowVencidasModal] = useState(false);
+    const [showAtrasadasModal, setShowAtrasadasModal] = useState(false);
+
     useEffect(() => {
-        fetchFilters();
-        fetchFerias();
+        const fetchServidores = async () => {
+            try {
+                const res = await axios.get('/api/servidores?limit=1000');
+                setServidores(res.data.servidores || []);
+            } catch (error) {
+                console.error('Error fetching servers:', error);
+            }
+        };
         fetchServidores();
-        fetchConcessivo();
-        fetchVencidas();
-        fetchAtrasadas();
-        fetchCompletionStats();
     }, []);
 
-    useEffect(() => {
-        const delayDebounceFn = setTimeout(() => {
-            fetchFerias();
-        }, 500);
-        return () => clearTimeout(delayDebounceFn);
-    }, [searchFilters]);
-
-    const fetchFilters = async () => {
+    const handleStatusChange = async (id, newStatus) => {
+        if (!window.confirm(`Tem certeza que deseja alterar o status para ${newStatus}?`)) return;
         try {
-            const [setoresRes, cargosRes] = await Promise.all([
-                axios.get('/api/servidores/setores'),
-                axios.get('/api/servidores/cargos')
-            ]);
-            setSetoresOpt(setoresRes.data);
-            setCargosOpt(cargosRes.data);
+            await updateStatusAPI(id, newStatus);
+            alert('Status atualizado com sucesso!');
         } catch (error) {
-            console.error('Error loading filters:', error);
-        }
-    };
-
-    const handleFilterChange = (e) => {
-        const { name, value } = e.target;
-        setSearchFilters(prev => ({ ...prev, [name]: value }));
-    };
-
-    const clearFilters = () => {
-        setSearchFilters({
-            search: '',
-            setor: '',
-            cargo: '',
-            vinculo: '',
-            status_servidor: '',
-            birthMonth: ''
-        });
-    };
-
-    const fetchConcessivo = async () => {
-        try {
-            const response = await axios.get('/api/servidores/concessivo');
-            setConcessivoList(response.data || []);
-        } catch (error) {
-            console.error('Error fetching concessivo:', error);
-        }
-    };
-
-    const fetchVencidas = async () => {
-        try {
-            const response = await axios.get('/api/servidores/ferias-vencidas');
-            setVencidasList(response.data || []);
-        } catch (error) {
-            console.error('Error fetching vencidas:', error);
-        }
-    };
-
-    const fetchAtrasadas = async () => {
-        try {
-            const response = await axios.get('/api/servidores/ferias-atrasadas');
-            setAtrasadasList(response.data || []);
-        } catch (error) {
-            console.error('Error fetching atrasadas:', error);
-        }
-    };
-
-    const fetchCompletionStats = async () => {
-        try {
-            const response = await axios.get('/api/ferias/stats');
-            setCompletionStats(response.data);
-        } catch (error) {
-            console.error('Error fetching completion stats:', error);
-        }
-    };
-
-    const fetchFerias = async () => {
-        try {
-            const params = { ...searchFilters, limit: 5000 };
-            Object.keys(params).forEach(key => params[key] === '' && delete params[key]);
-
-            const response = await axios.get('/api/ferias', { params });
-            const data = response.data.ferias || [];
-            setFerias(data);
-
-            const now = new Date();
-            setStats({
-                // 'Em Férias' = approved AND currently within vacation period
-                active: data.filter(f => {
-                    const s = (f.STATUS_SIT || f.status || '').toUpperCase();
-                    const isApproved = s === 'APROVADO' || s === 'DEFERIDO' || s === 'EM FÉRIAS' || s === 'EM_FERIAS' || s === 'FÉRIAS';
-                    if (!isApproved) return false;
-                    const inicio = new Date(f.INICIO_FERIAS_SIT || f.inicio);
-                    const fim = new Date(f.FIM_FERIAS_SIT || f.fim);
-                    return inicio <= now && fim >= now;
-                }).length,
-                // 'Pendentes' = any status meaning awaiting approval
-                pending: data.filter(f => {
-                    const s = (f.STATUS_SIT || f.status || '').toUpperCase();
-                    return s === 'PENDENTE' || s === 'AGUARDANDO APROVAÇÃO' || s === 'AGUARDANDO' || s === 'EM ANÁLISE' || s === 'EMTRAMITAÇÃO';
-                }).length,
-                total: data.length
-            });
-        } catch (error) {
-            console.error('Error fetching ferias:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchServidores = async () => {
-        try {
-            const res = await axios.get('/api/servidores?limit=1000');
-            setServidores(res.data.servidores || []);
-        } catch (error) {
-            console.error('Error fetching servers:', error);
+            console.error('Error updating status:', error);
+            alert('Erro ao atualizar status');
         }
     };
 
@@ -198,7 +91,9 @@ const Ferias = () => {
                     inicio: p.inicio,
                     fim: p.fim,
                     obs: formData.observacao,
-                    tipo: formData.tipo
+                    tipo: formData.tipo,
+                    pa_ano1: formData.pa_ano1,
+                    pa_ano2: formData.pa_ano2
                 }, {
                     headers: { 'x-auth-token': token }
                 });
@@ -212,10 +107,10 @@ const Ferias = () => {
             }
 
             setShowModal(false);
-            setFormData({ servidorId: '', tipo: 'Férias', periodos: [{ inicio: '', fim: '' }], observacao: '' });
+            setFormData({ servidorId: '', tipo: 'Férias', periodos: [{ inicio: '', fim: '' }], observacao: '', pa_ano1: '', pa_ano2: '' });
             setIsEditing(false);
             setSelectedItemId(null);
-            fetchFerias(); // Refresh list
+            refreshAll(); // Refresh list
         } catch (error) {
             console.error('Error saving request:', error);
             alert('Erro ao salvar solicitação');
@@ -233,7 +128,9 @@ const Ferias = () => {
             servidorId: item.IDFK_SERV || item.servidor?.IDPK_SERV,
             tipo: item.ASSUNTO_SIT || item.tipo || 'Férias',
             periodos: [{ inicio: fmt(inicio), fim: fmt(fim) }],
-            observacao: item.OBS_SIT || item.observacao || ''
+            observacao: item.OBS_SIT || item.observacao || '',
+            pa_ano1: item.PA_ANO1_SIT || '',
+            pa_ano2: item.PA_ANO2_SIT || ''
         });
         setSelectedItemId(item._id || item.IDPK_SIT);
         setIsEditing(true);
@@ -263,19 +160,6 @@ const Ferias = () => {
         setShowModal(true);
     };
 
-    const updateStatus = async (id, newStatus) => {
-        if (!window.confirm(`Tem certeza que deseja alterar o status para ${newStatus}?`)) return;
-        try {
-            const token = localStorage.getItem('token');
-            await axios.put(`/api/afastamentos/${id}`, { status: newStatus }, {
-                headers: { 'x-auth-token': token }
-            });
-            fetchFerias();
-        } catch (error) {
-            console.error('Error updating status:', error);
-            alert('Erro ao atualizar status');
-        }
-    };
 
     const generateVacationDocument = async (request, type) => {
         const s = request.servidor;
@@ -556,21 +440,21 @@ const Ferias = () => {
 
     return (
         <div className="max-w-[1600px] mx-auto flex flex-col gap-8">
-            <div className="flex flex-col gap-6">
-                <div className="flex flex-wrap justify-between items-end gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Gestão de Férias</h1>
-                        <p className="text-slate-500 dark:text-slate-400 mt-1">Gerencie solicitações e histórico de férias.</p>
+            <div className="flex flex-col gap-8">
+                <div className="flex flex-wrap justify-between items-end gap-6">
+                    <div className="space-y-1">
+                        <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight font-display">Gestão de Férias</h1>
+                        <p className="text-slate-500 dark:text-slate-400 font-medium">Controle de períodos aquisitivos, gozos e solicitações.</p>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-4">
                         {vencidasList.length > 0 && (
                             <button
                                 onClick={() => setShowVencidasModal(true)}
-                                className="relative flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-4 py-2 rounded-lg font-semibold transition shadow-sm dark:bg-red-900/20 dark:text-red-300 dark:border-red-800"
+                                className="relative flex items-center gap-2 bg-red-500/10 text-red-600 border border-red-200/50 px-5 py-2.5 rounded-2xl font-bold transition-all hover:bg-red-500 hover:text-white shadow-lg shadow-red-500/10 active:scale-95 group"
                             >
-                                <span className="material-symbols-outlined">warning</span>
-                                Férias Vencidas
-                                <span className="absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white shadow-sm ring-2 ring-white dark:ring-surface-dark">
+                                <span className="material-symbols-outlined text-[20px]">warning</span>
+                                Vencidas
+                                <span className="absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-full bg-red-600 text-[10px] font-black text-white shadow-xl ring-2 ring-white dark:ring-surface-dark group-hover:scale-110 transition-transform">
                                     {vencidasList.length}
                                 </span>
                             </button>
@@ -578,11 +462,11 @@ const Ferias = () => {
                         {atrasadasList.length > 0 && (
                             <button
                                 onClick={() => setShowAtrasadasModal(true)}
-                                className="relative flex items-center gap-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 px-4 py-2 rounded-lg font-semibold transition shadow-sm dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800"
+                                className="relative flex items-center gap-2 bg-amber-500/10 text-amber-600 border border-amber-200/50 px-5 py-2.5 rounded-2xl font-bold transition-all hover:bg-amber-500 hover:text-white shadow-lg shadow-amber-500/10 active:scale-95 group"
                             >
-                                <span className="material-symbols-outlined">history_toggle_off</span>
-                                Férias Atrasadas
-                                <span className="absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white shadow-sm ring-2 ring-white dark:ring-surface-dark">
+                                <span className="material-symbols-outlined text-[20px]">history_toggle_off</span>
+                                Atrasadas
+                                <span className="absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-full bg-amber-500 text-[10px] font-black text-white shadow-xl ring-2 ring-white dark:ring-surface-dark group-hover:scale-110 transition-transform">
                                     {atrasadasList.length}
                                 </span>
                             </button>
@@ -590,186 +474,136 @@ const Ferias = () => {
                         {concessivoList.length > 0 && (
                             <button
                                 onClick={() => setShowConcessivoModal(true)}
-                                className="relative flex items-center gap-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 px-4 py-2 rounded-lg font-semibold transition shadow-sm dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800"
+                                className="relative flex items-center gap-2 bg-purple-500/10 text-purple-600 border border-purple-200/50 px-5 py-2.5 rounded-2xl font-bold transition-all hover:bg-purple-500 hover:text-white shadow-lg shadow-purple-500/10 active:scale-95 group"
                             >
-                                <span className="material-symbols-outlined">notifications_active</span>
-                                Início Período Concessivo
-                                <span className="absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-sm ring-2 ring-white dark:ring-surface-dark">
+                                <span className="material-symbols-outlined text-[20px]">notifications_active</span>
+                                Urgentes
+                                <span className="absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-full bg-red-600 text-[10px] font-black text-white shadow-xl ring-2 ring-white dark:ring-surface-dark group-hover:scale-110 transition-transform">
                                     {concessivoList.length}
                                 </span>
                             </button>
                         )}
                         <button
                             onClick={() => setShowModal(true)}
-                            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 transition shadow-sm"
+                            className="flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-2xl font-bold hover:bg-blue-600 transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-95 group"
                         >
-                            <span className="material-symbols-outlined">add</span>
+                            <span className="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">add</span>
                             Nova Solicitação
                         </button>
                     </div>
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div
                         onClick={() => setFilter('active')}
-                        className={`cursor-pointer bg-surface-light dark:bg-surface-dark rounded-xl p-4 sm:p-5 border shadow-sm transition-all ${filter === 'active' ? 'ring-2 ring-primary border-primary' : 'border-border-light dark:border-border-dark'}`}>
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-primary">
-                                <span className="material-symbols-outlined">beach_access</span>
+                        className={`cursor-pointer glass dark:glass-dark rounded-3xl p-6 shadow-sm transition-all duration-500 hover:shadow-2xl active:scale-95 group ${filter === 'active' ? 'ring-2 ring-primary border-primary/30' : 'border-none'}`}>
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="p-3 bg-primary/10 rounded-2xl text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
+                                <span className="material-symbols-outlined text-[24px]">beach_access</span>
                             </div>
-                            <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Em Férias Agora</span>
+                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Em Férias Agora</span>
                         </div>
-                        <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats.active}</p>
+                        <p className="text-4xl font-black text-slate-900 dark:text-white font-display leading-none">{stats.active}</p>
                     </div>
 
                     <div
                         onClick={() => setFilter('pending')}
-                        className={`cursor-pointer bg-surface-light dark:bg-surface-dark rounded-xl p-4 sm:p-5 border shadow-sm transition-all ${filter === 'pending' ? 'ring-2 ring-yellow-500 border-yellow-500' : 'border-border-light dark:border-border-dark'}`}>
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg text-yellow-600">
-                                <span className="material-symbols-outlined">pending_actions</span>
+                        className={`cursor-pointer glass dark:glass-dark rounded-3xl p-6 shadow-sm transition-all duration-500 hover:shadow-2xl active:scale-95 group ${filter === 'pending' ? 'ring-2 ring-amber-500 border-amber-500/30' : 'border-none'}`}>
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="p-3 bg-amber-500/10 rounded-2xl text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-all duration-500">
+                                <span className="material-symbols-outlined text-[24px]">pending_actions</span>
                             </div>
-                            <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Pendentes</span>
+                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Pendentes</span>
                         </div>
-                        <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats.pending}</p>
+                        <p className="text-4xl font-black text-slate-900 dark:text-white font-display leading-none">{stats.pending}</p>
                     </div>
 
                     <div
                         onClick={() => setFilter('all')}
-                        className={`cursor-pointer bg-surface-light dark:bg-surface-dark rounded-xl p-4 sm:p-5 border shadow-sm transition-all ${filter === 'all' ? 'ring-2 ring-slate-500 border-slate-500' : 'border-border-light dark:border-border-dark'}`}>
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-400">
-                                <span className="material-symbols-outlined">list</span>
+                        className={`cursor-pointer glass dark:glass-dark rounded-3xl p-6 shadow-sm transition-all duration-500 hover:shadow-2xl active:scale-95 group ${filter === 'all' ? 'ring-2 ring-slate-500 border-slate-500/30' : 'border-none'}`}>
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="p-3 bg-slate-500/10 rounded-2xl text-slate-600 dark:text-slate-400 group-hover:bg-slate-500 group-hover:text-white transition-all duration-500">
+                                <span className="material-symbols-outlined text-[24px]">list</span>
                             </div>
-                            <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Total de Registros</span>
+                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Registros Totais</span>
                         </div>
-                        <h3 className="text-3xl font-bold text-slate-900 dark:text-white">
+                        <p className="text-4xl font-black text-slate-900 dark:text-white font-display leading-none">
                             {loading ? '...' : <span ref={totalCountAnim}>0</span>}
-                        </h3>
+                        </p>
                     </div>
                 </div>
 
                 {/* Completion Progress Bars */}
-                <div className="bg-surface-light dark:bg-surface-dark p-4 sm:p-5 rounded-xl border border-border-light dark:border-border-dark shadow-sm">
-                    <div className="flex items-center gap-2 mb-4">
-                        <span className="material-symbols-outlined text-primary">donut_large</span>
-                        <h3 className="font-semibold text-slate-800 dark:text-slate-200">Progresso de Lançamentos de Férias</h3>
+                <div className="glass dark:glass-dark p-6 sm:p-8 rounded-3xl shadow-sm">
+                    <div className="flex items-center gap-3 mb-6">
+                        <span className="material-symbols-outlined text-primary text-[28px]">donut_large</span>
+                        <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 font-display tracking-tight">Status de Lançamentos</h3>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                         {/* 2024 Progress */}
-                        <div>
-                            <div className="flex justify-between text-sm mb-1">
-                                <span className="font-medium text-slate-700 dark:text-slate-300">Ano 2024</span>
-                                <span className="text-slate-500">{completionStats.with2024} / {completionStats.activeServers} servidores ({completionStats.percent2024}%)</span>
+                        <div className="space-y-3">
+                            <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
+                                <span className="text-slate-500 dark:text-slate-400">Ano 2024</span>
+                                <span className="text-primary">{completionStats.with2024} / {completionStats.activeServers} ({completionStats.percent2024}%)</span>
                             </div>
-                            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
-                                <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${completionStats.percent2024}%` }}></div>
+                            <div className="w-full bg-slate-200/50 dark:bg-slate-700/50 rounded-full h-3 overflow-hidden p-0.5 border border-slate-200 dark:border-slate-800">
+                                <div className="bg-primary h-full rounded-full transition-all duration-1000 ease-out shadow-sm shadow-primary/40" style={{ width: `${completionStats.percent2024}%` }}></div>
                             </div>
                         </div>
                         {/* 2025 Progress */}
-                        <div>
-                            <div className="flex justify-between text-sm mb-1">
-                                <span className="font-medium text-slate-700 dark:text-slate-300">Ano 2025</span>
-                                <span className="text-slate-500">{completionStats.with2025} / {completionStats.activeServers} servidores ({completionStats.percent2025}%)</span>
+                        <div className="space-y-3">
+                            <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
+                                <span className="text-slate-500 dark:text-slate-400">Ano 2025</span>
+                                <span className="text-emerald-500">{completionStats.with2025} / {completionStats.activeServers} ({completionStats.percent2025}%)</span>
                             </div>
-                            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
-                                <div className="bg-emerald-500 h-2.5 rounded-full" style={{ width: `${completionStats.percent2025}%` }}></div>
+                            <div className="w-full bg-slate-200/50 dark:bg-slate-700/50 rounded-full h-3 overflow-hidden p-0.5 border border-slate-200 dark:border-slate-800">
+                                <div className="bg-emerald-500 h-full rounded-full transition-all duration-1000 ease-out shadow-sm shadow-emerald-500/40" style={{ width: `${completionStats.percent2025}%` }}></div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Filters */}
-                <div className="bg-surface-light dark:bg-surface-dark p-3 sm:p-4 rounded-xl border border-border-light dark:border-border-dark flex flex-wrap gap-4 items-center">
-                    <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                        <span className="material-symbols-outlined text-slate-400">filter_list</span>
-                        Filtros Globais:
+                <div className="glass dark:glass-dark p-6 rounded-3xl flex flex-wrap gap-4 items-center shadow-sm">
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest mr-2">
+                        <span className="material-symbols-outlined text-primary text-[20px]">tune</span>
+                        Filtros
                     </div>
 
-                    <input
-                        type="text"
-                        name="search"
-                        value={searchFilters.search}
-                        onChange={handleFilterChange}
-                        placeholder="Buscar por nome..."
-                        className="form-input text-sm border-border-light dark:border-border-dark rounded-lg bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 focus:ring-primary focus:border-primary"
-                    />
-
-                    <select
-                        name="cargo"
-                        value={searchFilters.cargo}
-                        onChange={handleFilterChange}
-                        className="px-3 py-2 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 text-sm outline-none focus:ring-primary focus:border-primary min-w-[140px]"
-                    >
-                        <option value="">Todos os Cargos</option>
-                        {cargosOpt.map((c, i) => <option key={i} value={c}>{c}</option>)}
-                    </select>
+                    <div className="relative group">
+                        <input
+                            type="text"
+                            name="search"
+                            value={searchFilters.search}
+                            onChange={handleFilterChange}
+                            placeholder="Buscar servidor..."
+                            className="pl-10 pr-4 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800/50 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all w-64 outline-none"
+                        />
+                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+                    </div>
 
                     <select
                         name="setor"
                         value={searchFilters.setor}
                         onChange={handleFilterChange}
-                        className="px-3 py-2 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 text-sm outline-none focus:ring-primary focus:border-primary min-w-[140px]"
+                        className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-700 dark:text-slate-200 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all min-w-[160px] cursor-pointer"
                     >
                         <option value="">Todos os Setores</option>
                         {setoresOpt.map((s, idx) => <option key={idx} value={s}>{s}</option>)}
                     </select>
 
-                    <select
-                        name="vinculo"
-                        value={searchFilters.vinculo}
-                        onChange={handleFilterChange}
-                        className="px-3 py-2 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 text-sm outline-none focus:ring-primary focus:border-primary min-w-[140px]"
-                    >
-                        <option value="">Todos os Vínculos</option>
-                        <option value="EFETIVO">Efetivo</option>
-                        <option value="COMISSIONADO">Comissionado</option>
-                        <option value="CONTRATADO">Contratado</option>
-                        <option value="SERVIÇOS PRESTADOS">Serviços Prestados</option>
-                    </select>
-
-                    <select
-                        name="birthMonth"
-                        value={searchFilters.birthMonth}
-                        onChange={handleFilterChange}
-                        className="px-3 py-2 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 text-sm outline-none focus:ring-primary focus:border-primary min-w-[140px]"
-                    >
-                        <option value="">Mês Aniversário</option>
-                        <option value="1">Janeiro</option>
-                        <option value="2">Fevereiro</option>
-                        <option value="3">Março</option>
-                        <option value="4">Abril</option>
-                        <option value="5">Maio</option>
-                        <option value="6">Junho</option>
-                        <option value="7">Julho</option>
-                        <option value="8">Agosto</option>
-                        <option value="9">Setembro</option>
-                        <option value="10">Outubro</option>
-                        <option value="11">Novembro</option>
-                        <option value="12">Dezembro</option>
-                    </select>
-
-                    <select
-                        name="status_servidor"
-                        value={searchFilters.status_servidor}
-                        onChange={handleFilterChange}
-                        className="px-3 py-2 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 text-sm outline-none focus:ring-primary focus:border-primary min-w-[140px]"
-                    >
-                        <option value="">Todos os Status (Servidor)</option>
-                        <option value="ativo">Ativo (+ Em Férias, Afastado)</option>
-                        <option value="inativo">Inativo</option>
-                    </select>
-
                     <button
                         onClick={clearFilters}
-                        className="ml-auto text-sm text-primary hover:text-blue-600 font-medium">
-                        Limpar Filtros
+                        className="ml-auto text-xs font-bold text-primary hover:text-blue-600 uppercase tracking-widest flex items-center gap-2"
+                    >
+                        <span className="material-symbols-outlined text-[16px]">restart_alt</span>
+                        Resetar
                     </button>
                 </div>
 
                 {/* Content: Cards (Mobile) & Table (Desktop) */}
-                <div className="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm">
+                <div className="glass dark:glass-dark rounded-3xl shadow-sm border-none overflow-hidden">
 
                     {/* Mobile Card View */}
                     <div className="md:hidden">
@@ -1267,17 +1101,58 @@ const Ferias = () => {
                         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Servidor</label>
-                                <select
-                                    className="form-select w-full"
-                                    value={formData.servidorId}
-                                    onChange={e => setFormData({ ...formData, servidorId: e.target.value })}
-                                    required
-                                >
-                                    <option value="">Selecione um servidor...</option>
-                                    {servidores.map(s => (
-                                        <option key={s._id} value={s._id || s.IDPK_SERV}>{s.NOME_SERV}</option>
-                                    ))}
-                                </select>
+                                {isEditing ? (
+                                    <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-600">
+                                        <div className="size-10 rounded-full bg-primary flex items-center justify-center text-white font-bold shrink-0">
+                                            {(servidores.find(s => String(s._id) === String(formData.servidorId) || String(s.IDPK_SERV) === String(formData.servidorId))?.NOME_SERV || '??').substring(0, 2).toUpperCase()}
+                                        </div>
+                                        <div className="overflow-hidden">
+                                            <div className="font-bold text-slate-900 dark:text-white truncate">
+                                                {servidores.find(s => String(s._id) === String(formData.servidorId) || String(s.IDPK_SERV) === String(formData.servidorId))?.NOME_SERV || 'Servidor não encontrado'}
+                                            </div>
+                                            <div className="text-xs text-slate-500">
+                                                Matrícula: {servidores.find(s => String(s._id) === String(formData.servidorId) || String(s.IDPK_SERV) === String(formData.servidorId))?.MATRICULA_SERV || '-'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <select
+                                        className="form-select w-full"
+                                        value={formData.servidorId}
+                                        onChange={e => setFormData({ ...formData, servidorId: e.target.value })}
+                                        required
+                                    >
+                                        <option value="">Selecione um servidor...</option>
+                                        {servidores.map(s => (
+                                            <option key={s._id} value={s._id || s.IDPK_SERV}>{s.NOME_SERV}</option>
+                                        ))}
+                                    </select>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">P. Aquisitivo (Início)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Ex: 2023"
+                                        className="form-input w-full"
+                                        value={formData.pa_ano1}
+                                        onChange={e => setFormData({ ...formData, pa_ano1: e.target.value })}
+                                        required={formData.tipo === 'Férias'}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">P. Aquisitivo (Fim)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Ex: 2024"
+                                        className="form-input w-full"
+                                        value={formData.pa_ano2}
+                                        onChange={e => setFormData({ ...formData, pa_ano2: e.target.value })}
+                                        required={formData.tipo === 'Férias'}
+                                    />
+                                </div>
                             </div>
 
                             <div className="flex flex-col gap-3">

@@ -15,8 +15,8 @@ const Layout = () => {
 
     const isActive = (path) => {
         return location.pathname === path
-            ? 'bg-primary/10 text-primary'
-            : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300';
+            ? 'bg-primary/10 text-primary shadow-sm shadow-primary/5'
+            : 'hover:bg-slate-100/80 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300';
     };
 
     const toggleDesktopSidebar = () => {
@@ -29,78 +29,81 @@ const Layout = () => {
     };
 
     return (
-        <div className="flex h-screen w-full relative overflow-hidden bg-background-light dark:bg-background-dark">
+        <div className="flex h-screen w-full relative overflow-hidden bg-background-light dark:bg-background-dark font-body antialiased">
             {/* Mobile Sidebar Overlay */}
-            <div
-                className={`
-                    fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300 lg:hidden
-                    ${isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}
-                `}
-                onClick={() => setIsMobileMenuOpen(false)}
-            />
+            <AnimatePresence>
+                {isMobileMenuOpen && (
+                    <div
+                        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-md transition-opacity duration-300 lg:hidden"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                    />
+                )}
+            </AnimatePresence>
 
             {/* Sidebar */}
             <aside
                 className={`
                     fixed lg:static inset-y-0 left-0 z-50
-                    flex flex-col border-r border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark h-full shrink-0
-                    transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]
+                    flex flex-col border-r border-border-light dark:border-border-dark 
+                    bg-white/80 dark:bg-surface-dark/80 backdrop-blur-xl h-full shrink-0
+                    transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]
                     ${isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0 lg:shadow-none'}
-                    ${isDesktopCollapsed ? 'lg:w-[72px]' : 'lg:w-72'}
+                    ${isDesktopCollapsed ? 'lg:w-[80px]' : 'lg:w-72'}
                     w-72
                 `}>
 
                 {/* Logo Section */}
-                <div className={`h-16 flex items-center ${isDesktopCollapsed ? 'justify-center px-0' : 'justify-between px-6'} border-b border-border-light dark:border-border-dark shrink-0 transition-all duration-300`}>
-                    <div className="flex items-center gap-3 overflow-hidden">
-                        <div className="bg-center bg-no-repeat bg-contain rounded-lg size-10 shrink-0"
+                <div className={`h-24 flex items-center ${isDesktopCollapsed ? 'justify-center px-0' : 'justify-between px-8'} shrink-0 transition-all duration-300`}>
+                    <div className="flex items-center gap-4 overflow-hidden">
+                        <div className="bg-center bg-no-repeat bg-contain rounded-2xl size-12 shrink-0 shadow-premium p-2 bg-white dark:bg-slate-800"
                             style={{ backgroundImage: 'url("/logo.png")' }}>
                         </div>
-                        <div className={`flex flex-col transition-opacity duration-300 ${isDesktopCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100'}`}>
-                            <h1 className="text-slate-900 dark:text-white text-sm font-bold leading-tight whitespace-nowrap">Sys RH SEPLAN</h1>
-                            <p className="text-slate-500 dark:text-slate-400 text-[10px] font-normal leading-normal whitespace-nowrap">Prefeitura de São Luís</p>
+                        <div className={`flex flex-col transition-all duration-300 ${isDesktopCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100'}`}>
+                            <h1 className="text-slate-900 dark:text-white text-base font-bold tracking-tight leading-tight whitespace-nowrap font-display">Sys RH</h1>
+                            <p className="text-primary font-bold text-[10px] tracking-widest uppercase">SEPLAN</p>
                         </div>
                     </div>
                     {/* Close button for Mobile only */}
                     <button
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className="lg:hidden text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                        className="lg:hidden p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
                     >
                         <span className="material-symbols-outlined">close</span>
                     </button>
                 </div>
 
                 {/* Navigation Links */}
-                <div className="flex flex-col gap-1 p-3 flex-1 overflow-y-auto no-scrollbar">
-                    <NavItem to="/dashboard" icon="dashboard" label="Painel Principal" isActive={isActive('/dashboard')} collapsed={isDesktopCollapsed} onClick={() => setIsMobileMenuOpen(false)} />
-                    <NavItem to="/servidores" icon="groups" label="Servidores" isActive={isActive('/servidores')} collapsed={isDesktopCollapsed} onClick={() => setIsMobileMenuOpen(false)} />
+                <div className="flex flex-col gap-2 p-4 flex-1 overflow-y-auto no-scrollbar">
+                    <NavItem to="/dashboard" icon="grid_view" label="Painel Principal" isActive={isActive('/dashboard')} collapsed={isDesktopCollapsed} onClick={() => setIsMobileMenuOpen(false)} />
+                    <NavItem to="/servidores" icon="group" label="Servidores" isActive={isActive('/servidores')} collapsed={isDesktopCollapsed} onClick={() => setIsMobileMenuOpen(false)} />
                     <NavItem to="/ferias" icon="beach_access" label="Férias" isActive={isActive('/ferias')} collapsed={isDesktopCollapsed} onClick={() => setIsMobileMenuOpen(false)} />
-                    <NavItem to="/calendario" icon="calendar_month" label="Calendário" isActive={isActive('/calendario')} collapsed={isDesktopCollapsed} onClick={() => setIsMobileMenuOpen(false)} />
-                    <NavItem to="/afastamentos" icon="medical_services" label="Afastamentos" isActive={isActive('/afastamentos')} collapsed={isDesktopCollapsed} onClick={() => setIsMobileMenuOpen(false)} />
-                    <NavItem to="/relatorios" icon="description" label="Relatórios" isActive={isActive('/relatorios')} collapsed={isDesktopCollapsed} onClick={() => setIsMobileMenuOpen(false)} />
+                    <NavItem to="/calendario" icon="calendar_today" label="Calendário" isActive={isActive('/calendario')} collapsed={isDesktopCollapsed} onClick={() => setIsMobileMenuOpen(false)} />
+                    <NavItem to="/afastamentos" icon="medical_information" label="Afastamentos" isActive={isActive('/afastamentos')} collapsed={isDesktopCollapsed} onClick={() => setIsMobileMenuOpen(false)} />
+                    <NavItem to="/relatorios" icon="analytics" label="Relatórios" isActive={isActive('/relatorios')} collapsed={isDesktopCollapsed} onClick={() => setIsMobileMenuOpen(false)} />
                 </div>
 
                 {/* Bottom Section */}
-                <div className="p-3 mt-auto border-t border-border-light dark:border-border-dark space-y-1">
+                <div className="p-4 mt-auto border-t border-border-light dark:border-border-dark space-y-2">
                     <NavItem to="/configuracoes" icon="settings" label="Configurações" isActive={isActive('/configuracoes')} collapsed={isDesktopCollapsed} onClick={() => setIsMobileMenuOpen(false)} />
-
-                    {/* Help Item */}
-                    {/* Help Item */}
-                    <NavItem to="/ajuda" icon="help" label="Ajuda" isActive={isActive('/ajuda')} collapsed={isDesktopCollapsed} onClick={() => setIsMobileMenuOpen(false)} />
+                    <NavItem to="/ajuda" icon="help_outline" label="Ajuda" isActive={isActive('/ajuda')} collapsed={isDesktopCollapsed} onClick={() => setIsMobileMenuOpen(false)} />
 
                     {/* User Info */}
                     <div className={`
-                        flex items-center ${isDesktopCollapsed ? 'justify-center px-0' : 'gap-3 px-3'} 
-                        py-2 mb-1 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700
+                        flex items-center ${isDesktopCollapsed ? 'justify-center px-0' : 'gap-3 px-4'} 
+                        py-3 mt-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/50
+                        transition-all duration-300
                     `}>
-                        <div className="size-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                        <div className="size-9 shrink-0 rounded-xl bg-primary shadow-lg shadow-primary/20 flex items-center justify-center text-white font-bold text-sm">
                             {(localStorage.getItem('userName') || 'U').charAt(0).toUpperCase()}
                         </div>
                         <div className={`flex flex-col overflow-hidden transition-all duration-300 ${isDesktopCollapsed ? 'w-0 opacity-0 hidden' : 'w-full opacity-100'}`}>
-                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate" title={localStorage.getItem('userName') || 'Usuário'}>
+                            <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate" title={localStorage.getItem('userName') || 'Usuário'}>
                                 {localStorage.getItem('userName') || 'Usuário'}
                             </span>
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate">Online</span>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span className="text-[9px] font-bold text-slate-500/80 dark:text-slate-400 uppercase tracking-tighter">Online</span>
+                            </div>
                         </div>
                     </div>
 
@@ -108,17 +111,15 @@ const Layout = () => {
                     <button
                         onClick={handleLogout}
                         className={`
-                            w-full flex items-center ${isDesktopCollapsed ? 'justify-center px-0' : 'gap-3 px-3'} 
-                            py-2.5 rounded-lg hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 text-slate-700 dark:text-slate-300 transition-all cursor-pointer group relative
+                            w-full flex items-center ${isDesktopCollapsed ? 'justify-center px-0' : 'gap-3 px-4'} 
+                            py-3 rounded-xl hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 text-slate-600 dark:text-slate-400 transition-all cursor-pointer group relative
                         `}
                         title={isDesktopCollapsed ? "Sair" : ""}
                     >
-                        <span className="material-symbols-outlined shrink-0">logout</span>
-                        {!isDesktopCollapsed && <p className="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">Sair</p>}
+                        <span className="material-symbols-outlined shrink-0 text-[20px]">logout</span>
+                        {!isDesktopCollapsed && <p className="text-sm font-semibold tracking-tight">Sair da Conta</p>}
                     </button>
                 </div>
-
-
             </aside>
 
             {/* Main Content */}
@@ -230,11 +231,6 @@ const NavItem = ({ to, icon, label, isActive, collapsed, onClick }) => (
 
 export default Layout;
 
-const isActive = (path) => {
-    return location.pathname === path
-        ? 'bg-primary/10 text-primary'
-        : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300';
-};
 
 const GlobalSearch = () => {
     const [query, setQuery] = useState('');

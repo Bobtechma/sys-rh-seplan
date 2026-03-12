@@ -5,23 +5,28 @@ import LottieLoader from '../components/LottieLoader';
 import { formatDateUTC } from '../utils/formatDate';
 import { useStaggerReveal, useModalReveal } from '../hooks/useAnimations';
 
+import { useAbsences } from '../hooks/useAbsences';
+
 const Afastamentos = () => {
-    const [afastamentos, setAfastamentos] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [filters, setFilters] = useState({
-        search: '',
-        setor: '',
-        cargo: '',
-        vinculo: '',
-        status: '', // Afastamento status
-        status_servidor: '',
-        birthMonth: ''
-    });
-    const [setoresOpt, setSetoresOpt] = useState([]);
-    const [cargosOpt, setCargosOpt] = useState([]);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalResults, setTotalResults] = useState(0);
+    const {
+        afastamentos,
+        loading,
+        page: currentPage,
+        setPage: setCurrentPage,
+        totalPages,
+        totalItems: totalResults,
+        searchFilters: filters,
+        tiposAfastamento,
+        setoresOpt,
+        cargosOpt,
+        handleFilterChange,
+        clearFilters,
+        deleteAbsence,
+        addAbsenceType,
+        refresh: fetchAfastamentos
+    } = useAbsences();
+
+    const [servidores, setServidores] = useState([]);
 
     // Modal States
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -39,8 +44,6 @@ const Afastamentos = () => {
     });
 
     const [viewData, setViewData] = useState(null);
-    const [servidores, setServidores] = useState([]); // For select dropdown
-    const [tiposAfastamento, setTiposAfastamento] = useState([]);
     const [isAddingTipo, setIsAddingTipo] = useState(false);
     const [newTipo, setNewTipo] = useState('');
 
@@ -49,78 +52,6 @@ const Afastamentos = () => {
     const mobileCardsRef = useStaggerReveal('.animate-card', [loading, afastamentos, currentPage], { staggerDelay: 50 });
     const editModalRef = useModalReveal(isEditModalOpen);
     const viewModalRef = useModalReveal(isViewModalOpen);
-
-    useEffect(() => {
-        fetchFilters();
-        fetchAfastamentos(1);
-        fetchTiposAfastamento();
-    }, []);
-
-    useEffect(() => {
-        const delayDebounceFn = setTimeout(() => {
-            fetchAfastamentos(1);
-        }, 500);
-        return () => clearTimeout(delayDebounceFn);
-    }, [filters]);
-
-    const fetchFilters = async () => {
-        try {
-            const [setoresRes, cargosRes] = await Promise.all([
-                axios.get('/api/servidores/setores'),
-                axios.get('/api/servidores/cargos')
-            ]);
-            setSetoresOpt(setoresRes.data);
-            setCargosOpt(cargosRes.data);
-        } catch (error) {
-            console.error('Error loading filters:', error);
-        }
-    };
-
-    const handleFilterChange = (e) => {
-        const { name, value } = e.target;
-        setFilters(prev => ({ ...prev, [name]: value }));
-        setCurrentPage(1);
-    };
-
-    const clearFilters = () => {
-        setFilters({
-            search: '',
-            setor: '',
-            cargo: '',
-            vinculo: '',
-            status: '',
-            status_servidor: '',
-            birthMonth: ''
-        });
-        setCurrentPage(1);
-    };
-
-    const fetchAfastamentos = async (page = 1) => {
-        setLoading(true);
-        try {
-            const token = localStorage.getItem('token');
-            const params = {
-                page,
-                limit: 10,
-                ...filters
-            };
-            Object.keys(params).forEach(key => params[key] === '' && delete params[key]);
-
-            const response = await axios.get('/api/afastamentos', {
-                params,
-                headers: { 'x-auth-token': token }
-            });
-
-            setAfastamentos(response.data.afastamentos);
-            setCurrentPage(response.data.currentPage);
-            setTotalPages(response.data.totalPages);
-            setTotalResults(response.data.totalAfastamentos);
-        } catch (error) {
-            console.error('Error loading afastamentos:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const fetchServidores = async () => {
         try {
@@ -134,28 +65,18 @@ const Afastamentos = () => {
         }
     };
 
-    const fetchTiposAfastamento = async () => {
-        try {
-            const response = await axios.get('/api/tipos-afastamento');
-            setTiposAfastamento(response.data || []);
-        } catch (error) {
-            console.error('Error fetching tipos afastamento:', error);
-        }
-    };
+    useEffect(() => {
+        fetchServidores();
+    }, []);
 
-    const handleAddTipo = async () => {
+    const handleAddTipoLocal = async () => {
         if (!newTipo.trim()) return;
         try {
-            const token = localStorage.getItem('token');
-            const response = await axios.post('/api/tipos-afastamento', { nome: newTipo.trim() }, {
-                headers: { 'x-auth-token': token }
-            });
-            setTiposAfastamento([...tiposAfastamento, response.data].sort((a, b) => a.nome.localeCompare(b.nome)));
-            setFormData({ ...formData, tipo: response.data.nome });
+            const addedType = await addAbsenceType(newTipo.trim());
+            setFormData({ ...formData, tipo: addedType.nome });
             setNewTipo('');
             setIsAddingTipo(false);
         } catch (error) {
-            console.error('Error adding new tipo:', error);
             alert('Erro ao adicionar tipo. Talvez já exista.');
         }
     };
@@ -295,128 +216,172 @@ const Afastamentos = () => {
     };
 
     return (
-        <div className="max-w-7xl mx-auto flex flex-col gap-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Afastamentos</h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1">Gerencie as licenças e afastamentos dos servidores</p>
+        <div className="max-w-[1600px] mx-auto space-y-8 pb-20 font-sans">
+            {/* Header section with refined typography */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div className="flex flex-col gap-2">
+                    <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight font-display">Afastamentos</h1>
+                    <p className="text-slate-500 dark:text-slate-400 font-medium">Gerencie as licenças e afastamentos dos servidores.</p>
                 </div>
                 <button
                     onClick={handleOpenNew}
-                    className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-600 transition-all shadow-lg shadow-blue-500/30 hover:-translate-y-0.5"
+                    className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-2xl font-bold hover:bg-blue-600 transition-all shadow-xl shadow-primary/20 hover:-translate-y-1 active:scale-95"
                 >
-                    <span className="material-symbols-outlined">add</span>
+                    <span className="material-symbols-outlined">add_circle</span>
                     Novo Afastamento
                 </button>
             </div>
 
-            {/* Filters */}
-            <div className="bg-surface-light dark:bg-surface-dark p-3 sm:p-4 rounded-xl border border-border-light dark:border-border-dark flex flex-wrap gap-4 items-center">
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                    <span className="material-symbols-outlined text-slate-400">filter_list</span>
-                    Filtros:
+            {/* Filters Section - Glassmorphism */}
+            <div className="glass dark:glass-dark p-6 rounded-[2.5rem] border border-white/20 dark:border-white/5 shadow-2xl overflow-hidden relative group">
+                {/* Decorative background glow */}
+                <div className="absolute -top-24 -right-24 size-48 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors duration-700"></div>
+
+                <div className="relative flex flex-col gap-6">
+                    <div className="flex items-center gap-3">
+                        <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                            <span className="material-symbols-outlined text-primary text-xl">tune</span>
+                        </div>
+                        <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Refinar Busca</h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                        <div className="relative group/input">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 group-focus-within/input:text-primary transition-colors">search</span>
+                            <input
+                                type="text"
+                                name="search"
+                                value={filters.search}
+                                onChange={handleFilterChange}
+                                placeholder="Nome do servidor..."
+                                className="w-full pl-12 pr-4 py-3.5 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium"
+                            />
+                        </div>
+
+                        <select
+                            name="status"
+                            value={filters.status}
+                            onChange={handleFilterChange}
+                            className="w-full px-4 py-3.5 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium appearance-none cursor-pointer"
+                        >
+                            <option value="">Status (Afastamento)</option>
+                            <option value="Pendente">Pendente</option>
+                            <option value="Aprovado">Aprovado</option>
+                            <option value="Rejeitado">Rejeitado</option>
+                        </select>
+
+                        <select
+                            name="setor"
+                            value={filters.setor}
+                            onChange={handleFilterChange}
+                            className="w-full px-4 py-3.5 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium appearance-none cursor-pointer"
+                        >
+                            <option value="">Lotação / Setor</option>
+                            {setoresOpt.map((s, idx) => <option key={idx} value={s}>{s}</option>)}
+                        </select>
+
+                        <select
+                            name="status_servidor"
+                            value={filters.status_servidor}
+                            onChange={handleFilterChange}
+                            className="w-full px-4 py-3.5 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium appearance-none cursor-pointer"
+                        >
+                            <option value="">Status do Servidor</option>
+                            <option value="ativo">Ativos (+ Afastados)</option>
+                            <option value="inativo">Inativos</option>
+                        </select>
+
+                        <button
+                            onClick={clearFilters}
+                            className="flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl font-bold text-sm transition-all active:scale-95"
+                        >
+                            <span className="material-symbols-outlined text-xl">restart_alt</span>
+                            Limpar
+                        </button>
+                    </div>
                 </div>
-
-                <input
-                    type="text"
-                    name="search"
-                    value={filters.search}
-                    onChange={handleFilterChange}
-                    placeholder="Buscar por nome..."
-                    className="form-input text-sm border-border-light dark:border-border-dark rounded-lg bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 focus:ring-primary focus:border-primary"
-                />
-
-                <select
-                    name="status"
-                    value={filters.status}
-                    onChange={handleFilterChange}
-                    className="px-3 py-2 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 text-sm outline-none focus:ring-primary focus:border-primary min-w-[140px]"
-                >
-                    <option value="">Todos os Status (Afastamento)</option>
-                    <option value="Pendente">Pendente</option>
-                    <option value="Aprovado">Aprovado</option>
-                    <option value="Rejeitado">Rejeitado</option>
-                </select>
-
-                <select
-                    name="setor"
-                    value={filters.setor}
-                    onChange={handleFilterChange}
-                    className="px-3 py-2 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 text-sm outline-none focus:ring-primary focus:border-primary min-w-[140px]"
-                >
-                    <option value="">Todos os Setores</option>
-                    {setoresOpt.map((s, idx) => <option key={idx} value={s}>{s}</option>)}
-                </select>
-
-                <select
-                    name="status_servidor"
-                    value={filters.status_servidor}
-                    onChange={handleFilterChange}
-                    className="px-3 py-2 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 text-sm outline-none focus:ring-primary focus:border-primary min-w-[140px]"
-                >
-                    <option value="">Todos os Status (Servidor)</option>
-                    <option value="ativo">Ativo (+ Em Férias, Afastado)</option>
-                    <option value="inativo">Inativo</option>
-                </select>
-
-                <button
-                    onClick={clearFilters}
-                    className="ml-auto text-sm text-primary hover:text-blue-600 font-medium">
-                    Limpar Filtros
-                </button>
             </div>
 
-            {/* Table */}
-            <div className="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark overflow-hidden shadow-sm">
+            {/* Table / List Section */}
+            <div className="glass dark:glass-dark rounded-[2.5rem] border border-white/20 dark:border-white/5 shadow-2xl overflow-hidden">
                 <div className="hidden md:block overflow-x-auto">
-                    <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
-                        <thead className="bg-slate-50 dark:bg-slate-800 text-xs uppercase font-semibold text-slate-500 dark:text-slate-400">
-                            <tr>
-                                <th className="px-6 py-4">Servidor</th>
-                                <th className="px-6 py-4">Setor</th>
-                                <th className="px-6 py-4">Tipo</th>
-                                <th className="px-6 py-4">Início</th>
-                                <th className="px-6 py-4">Fim</th>
-                                <th className="px-6 py-4">Status</th>
-                                <th className="px-6 py-4 text-right">Ações</th>
+                    <table className="w-full text-left text-sm">
+                        <thead>
+                            <tr className="border-b border-slate-100 dark:border-slate-800">
+                                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Servidor</th>
+                                <th className="px-6 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Setor</th>
+                                <th className="px-6 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Tipo</th>
+                                <th className="px-6 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Início</th>
+                                <th className="px-6 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Fim</th>
+                                <th className="px-6 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Status</th>
+                                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 text-right">Ações</th>
                             </tr>
                         </thead>
-                        <tbody ref={tableRef} className="divide-y divide-border-light dark:divide-border-dark bg-surface-light dark:bg-surface-dark">
+                        <tbody ref={tableRef} className="divide-y divide-slate-50 dark:divide-slate-800/50">
                             {loading ? (
                                 <tr>
-                                    <td colSpan="7" className="px-6 py-8 text-center">
+                                    <td colSpan="7" className="px-8 py-20 text-center">
                                         <LottieLoader />
                                     </td>
                                 </tr>
                             ) : afastamentos.length === 0 ? (
-                                <tr><td colSpan="7" className="px-6 py-8 text-center text-slate-500">Nenhum afastamento encontrado.</td></tr>
+                                <tr>
+                                    <td colSpan="7" className="px-8 py-20 text-center">
+                                        <div className="flex flex-col items-center gap-3 text-slate-400">
+                                            <span className="material-symbols-outlined text-5xl">folder_off</span>
+                                            <p className="font-medium text-lg">Nenhum afastamento encontrado.</p>
+                                        </div>
+                                    </td>
+                                </tr>
                             ) : (
                                 afastamentos.map((a) => (
-                                    <tr key={a._id} className="animate-row hover:bg-slate-50 dark:hover:bg-slate-800/50 transition duration-200">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-xs">
+                                    <tr key={a._id} className="animate-row hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-all duration-300 group">
+                                        <td className="px-8 py-5">
+                                            <div className="flex items-center gap-4">
+                                                <div className="size-10 rounded-2xl bg-primary/10 flex items-center justify-center font-black text-primary text-sm shadow-inner group-hover:scale-110 transition-transform duration-300">
                                                     {a.servidor?.NOME_SERV?.charAt(0) || '?'}
                                                 </div>
-                                                <div className="font-medium text-slate-900 dark:text-white max-w-[140px] truncate" title={a.servidor?.NOME_SERV}>
-                                                    {a.servidor?.NOME_SERV || 'Desconhecido'}
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors truncate max-w-[200px]">
+                                                        {a.servidor?.NOME_SERV || 'Desconhecido'}
+                                                    </span>
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">RH Master</span>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">{a.servidor?.SETOR_LOTACAO_SERV || '-'}</td>
-                                        <td className="px-6 py-4">{a.ASSUNTO_SIT}</td>
-                                        <td className="px-6 py-4">{formatDateUTC(a.INICIO_FERIAS_SIT)}</td>
-                                        <td className="px-6 py-4">{formatDateUTC(a.FIM_FERIAS_SIT)}</td>
-                                        <td className="px-6 py-4">{getStatusBadge(a.STATUS_SIT)}</td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex justify-end gap-2">
-                                                <button onClick={() => handleOpenView(a._id)} className="text-slate-400 hover:text-primary transition-colors" title="Visualizar">
+                                        <td className="px-6 py-5">
+                                            <div className="flex flex-col">
+                                                <span className="text-slate-600 dark:text-slate-300 font-semibold">{a.servidor?.SETOR_LOTACAO_SERV || '-'}</span>
+                                                <span className="text-[10px] text-slate-400 font-medium">Departamento</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold border border-slate-200 dark:border-slate-700">
+                                                {a.ASSUNTO_SIT}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <div className="flex flex-col">
+                                                <span className="text-slate-600 dark:text-slate-300 font-bold">{formatDateUTC(a.INICIO_FERIAS_SIT)}</span>
+                                                <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap">Data Início</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <div className="flex flex-col">
+                                                <span className="text-slate-600 dark:text-slate-300 font-bold">{formatDateUTC(a.FIM_FERIAS_SIT)}</span>
+                                                <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap">Data Fim</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-5">{getStatusBadge(a.STATUS_SIT)}</td>
+                                        <td className="px-8 py-5 text-right">
+                                            <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0">
+                                                <button onClick={() => handleOpenView(a._id)} className="size-9 rounded-xl flex items-center justify-center text-slate-400 hover:bg-primary/10 hover:text-primary transition-all" title="Visualizar">
                                                     <span className="material-symbols-outlined text-[20px]">visibility</span>
                                                 </button>
-                                                <button onClick={() => handleOpenEdit(a._id)} className="text-slate-400 hover:text-primary transition-colors" title="Editar">
+                                                <button onClick={() => handleOpenEdit(a._id)} className="size-9 rounded-xl flex items-center justify-center text-slate-400 hover:bg-primary/10 hover:text-primary transition-all" title="Editar">
                                                     <span className="material-symbols-outlined text-[20px]">edit</span>
                                                 </button>
-                                                <button onClick={() => handleDelete(a._id)} className="text-slate-400 hover:text-red-500 transition-colors" title="Excluir">
+                                                <button onClick={() => handleDelete(a._id)} className="size-9 rounded-xl flex items-center justify-center text-slate-400 hover:bg-red-500/10 hover:text-red-500 transition-all" title="Excluir">
                                                     <span className="material-symbols-outlined text-[20px]">delete</span>
                                                 </button>
                                             </div>
@@ -429,84 +394,92 @@ const Afastamentos = () => {
                 </div>
 
                 {/* Mobile Card View */}
-                <div ref={mobileCardsRef} className="md:hidden flex flex-col gap-3 p-3 sm:p-4 bg-background-light dark:bg-background-dark text-left">
+                <div ref={mobileCardsRef} className="md:hidden flex flex-col gap-4 p-6 bg-slate-50/30 dark:bg-black/10">
                     {loading ? (
-                        <div className="py-8 w-full flex justify-center">
+                        <div className="py-12 w-full flex justify-center">
                             <LottieLoader />
                         </div>
                     ) : afastamentos.length === 0 ? (
-                        <div className="p-8 text-center text-slate-500 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light">Nenhum afastamento encontrado.</div>
+                        <div className="py-20 text-center text-slate-400 font-medium">Nenhum afastamento encontrado.</div>
                     ) : (
                         afastamentos.map((a) => {
                             const initials = a.servidor?.NOME_SERV ? a.servidor.NOME_SERV.charAt(0).toUpperCase() : '?';
-
                             return (
                                 <div
                                     key={a._id}
-                                    className="animate-card p-3 sm:p-4 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm active:scale-[0.98] transition-transform duration-200"
+                                    className="animate-card p-5 bg-white dark:bg-slate-900/50 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm active:scale-[0.98] transition-all group"
                                 >
-                                    <div className="flex items-start justify-between mb-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="bg-primary/10 text-primary flex items-center justify-center rounded-full size-12 text-base font-bold border border-primary/20">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="flex items-center gap-4">
+                                            <div className="bg-primary/10 text-primary flex items-center justify-center rounded-2xl size-12 text-lg font-black border border-primary/20 shadow-inner">
                                                 {initials}
                                             </div>
-                                            <div>
-                                                <h3 className="text-slate-900 dark:text-white font-semibold leading-tight max-w-[200px] truncate">{a.servidor?.NOME_SERV || 'Desconhecido'}</h3>
-                                                <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5 max-w-[200px] truncate">{a.servidor?.SETOR_LOTACAO_SERV || '-'}</p>
+                                            <div className="flex flex-col min-w-0">
+                                                <h3 className="text-slate-900 dark:text-white font-bold leading-tight truncate pr-2">{a.servidor?.NOME_SERV || 'Desconhecido'}</h3>
+                                                <p className="text-slate-400 text-[10px] font-black uppercase tracking-wider mt-0.5 truncate">{a.servidor?.SETOR_LOTACAO_SERV || '-'}</p>
                                             </div>
                                         </div>
+                                        {getStatusBadge(a.STATUS_SIT)}
                                     </div>
 
-                                    <div className="space-y-1 mb-3">
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="text-slate-500 dark:text-slate-400">Tipo:</span>
-                                            <span className="text-slate-700 dark:text-slate-200 font-medium text-right">{a.ASSUNTO_SIT}</span>
+                                    <div className="grid grid-cols-2 gap-4 py-4 border-y border-slate-50 dark:border-slate-800/50">
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest">Início</span>
+                                            <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{formatDateUTC(a.INICIO_FERIAS_SIT)}</span>
                                         </div>
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="text-slate-500 dark:text-slate-400">Período:</span>
-                                            <span className="text-slate-700 dark:text-slate-200 font-medium text-right">{formatDateUTC(a.INICIO_FERIAS_SIT)} a {formatDateUTC(a.FIM_FERIAS_SIT)}</span>
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest">Fim</span>
+                                            <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{formatDateUTC(a.FIM_FERIAS_SIT)}</span>
                                         </div>
-                                        <div className="flex items-center justify-between text-xs mt-1">
-                                            <span className="text-slate-500 dark:text-slate-400">Status:</span>
-                                            <span className="text-right">{getStatusBadge(a.STATUS_SIT)}</span>
+                                        <div className="flex flex-col gap-1 col-span-2">
+                                            <span className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest">Tipo de Afastamento</span>
+                                            <span className="text-sm font-bold text-slate-900 dark:text-white">{a.ASSUNTO_SIT}</span>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-end gap-2 pt-3 border-t border-border-light dark:border-border-dark">
-                                        <button onClick={() => handleOpenView(a._id)} className="text-slate-500 hover:text-primary p-2 bg-slate-50 dark:bg-slate-800 rounded-lg transition-colors" title="Visualizar">
-                                            <span className="material-symbols-outlined text-sm">visibility</span>
-                                        </button>
-                                        <button onClick={() => handleOpenEdit(a._id)} className="text-slate-500 hover:text-primary p-2 bg-slate-50 dark:bg-slate-800 rounded-lg transition-colors" title="Editar">
-                                            <span className="material-symbols-outlined text-sm">edit</span>
-                                        </button>
-                                        <button onClick={() => handleDelete(a._id)} className="text-slate-500 hover:text-red-500 p-2 bg-slate-50 dark:bg-slate-800 rounded-lg transition-colors" title="Excluir">
-                                            <span className="material-symbols-outlined text-sm">delete</span>
-                                        </button>
+                                    <div className="flex items-center justify-between mt-4">
+                                        <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Ações Rápidas</span>
+                                        <div className="flex items-center gap-1">
+                                            <button onClick={() => handleOpenView(a._id)} className="size-9 rounded-xl flex items-center justify-center bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-primary transition-all shadow-sm border border-slate-100 dark:border-slate-700">
+                                                <span className="material-symbols-outlined text-[18px]">visibility</span>
+                                            </button>
+                                            <button onClick={() => handleOpenEdit(a._id)} className="size-9 rounded-xl flex items-center justify-center bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-primary transition-all shadow-sm border border-slate-100 dark:border-slate-700">
+                                                <span className="material-symbols-outlined text-[18px]">edit</span>
+                                            </button>
+                                            <button onClick={() => handleDelete(a._id)} className="size-9 rounded-xl flex items-center justify-center bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-red-500 transition-all shadow-sm border border-slate-100 dark:border-slate-700">
+                                                <span className="material-symbols-outlined text-[18px]">delete</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             );
                         })
                     )}
                 </div>
+
                 {/* Pagination */}
-                <div className="p-4 border-t border-border-light dark:border-border-dark flex items-center justify-between">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Total de <span className="font-bold text-slate-900 dark:text-white">{totalResults}</span> registros
-                    </p>
+                <div className="px-8 py-6 border-t border-slate-50 dark:border-slate-800/50 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/10 active:bg-transparent transition-colors">
+                    <div className="flex flex-col items-center sm:items-start">
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-none">Total de Registros</p>
+                        <span className="text-xl font-black text-slate-900 dark:text-white mt-1">{totalResults}</span>
+                    </div>
+
                     <div className="flex gap-2">
                         <button
                             onClick={() => fetchAfastamentos(currentPage - 1)}
                             disabled={currentPage === 1}
-                            className="px-3 py-1 text-sm border border-border-light dark:border-border-dark rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+                            className="bg-white dark:bg-slate-900/50 text-slate-600 dark:text-slate-300 px-6 py-2.5 rounded-2xl font-bold text-sm shadow-sm border border-slate-200 dark:border-slate-800 transition-all disabled:opacity-30 hover:bg-slate-50 active:scale-95 flex items-center gap-2"
                         >
+                            <span className="material-symbols-outlined text-xl">chevron_left</span>
                             Anterior
                         </button>
                         <button
                             onClick={() => fetchAfastamentos(currentPage + 1)}
                             disabled={currentPage === totalPages || totalPages === 0}
-                            className="px-3 py-1 text-sm border border-border-light dark:border-border-dark rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+                            className="bg-white dark:bg-slate-900/50 text-slate-600 dark:text-slate-300 px-6 py-2.5 rounded-2xl font-bold text-sm shadow-sm border border-slate-200 dark:border-slate-800 transition-all disabled:opacity-30 hover:bg-slate-50 active:scale-95 flex items-center gap-2"
                         >
                             Próximo
+                            <span className="material-symbols-outlined text-xl">chevron_right</span>
                         </button>
                     </div>
                 </div>
@@ -515,178 +488,202 @@ const Afastamentos = () => {
             {/* Edit/Create Modal */}
             {isEditModalOpen && (
                 <div className="fixed inset-0 z-50 overflow-y-auto">
-                    <div className="flex items-center justify-center min-h-screen px-4">
-                        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsEditModalOpen(false)}></div>
-                        <div ref={editModalRef} className="relative bg-white dark:bg-surface-dark rounded-xl shadow-2xl w-full max-w-lg p-6 border border-slate-200 dark:border-slate-700">
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
-                                {isNew ? 'Registrar Novo Afastamento' : 'Editar Afastamento'}
-                            </h3>
-                            <form onSubmit={handleSave} className="space-y-4">
-                                {isNew && (
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Servidor</label>
-                                        <select
-                                            required
-                                            value={formData.servidorId}
-                                            onChange={(e) => setFormData({ ...formData, servidorId: e.target.value })}
-                                            className="form-select w-full"
-                                        >
-                                            <option value="">Selecione um servidor</option>
-                                            {servidores.map(s => (
-                                                <option key={s.IDPK_SERV} value={s.IDPK_SERV}>{s.NOME_SERV}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                )}
+                    <div className="flex items-center justify-center min-h-screen px-4 py-12">
+                        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={() => setIsEditModalOpen(false)}></div>
+                        <div ref={editModalRef} className="relative glass dark:glass-dark rounded-[2.5rem] shadow-2xl w-full max-w-xl p-8 border border-white/20 dark:border-white/5 overflow-hidden">
+                            {/* Accent Glow */}
+                            <div className="absolute -top-24 -right-24 size-48 bg-primary/10 rounded-full blur-3xl"></div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tipo</label>
-                                    {!isAddingTipo ? (
-                                        <div className="flex gap-2">
-                                            <select
-                                                value={formData.tipo}
-                                                onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
-                                                className="form-select w-full"
-                                            >
-                                                {tiposAfastamento.length > 0 ? (
-                                                    tiposAfastamento.map(t => (
-                                                        <option key={t._id} value={t.nome}>{t.nome}</option>
-                                                    ))
-                                                ) : (
-                                                    <option value="Licença Médica">Licença Médica</option>
-                                                )}
-                                            </select>
-                                            <button
-                                                type="button"
-                                                onClick={() => setIsAddingTipo(true)}
-                                                className="shrink-0 px-3 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors border border-slate-300 dark:border-slate-600"
-                                                title="Adicionar Novo Tipo"
-                                            >
-                                                <span className="material-symbols-outlined text-lg">add</span>
-                                            </button>
+                            <div className="relative">
+                                <div className="flex items-center justify-between mb-8">
+                                    <div className="flex items-center gap-3">
+                                        <div className="size-10 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+                                            <span className="material-symbols-outlined">{isNew ? 'add_circle' : 'edit_square'}</span>
                                         </div>
-                                    ) : (
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                value={newTipo}
-                                                onChange={(e) => setNewTipo(e.target.value)}
-                                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTipo())}
-                                                placeholder="Digite o novo tipo..."
-                                                className="form-input w-full focus:border-primary focus:ring-1 focus:ring-primary"
-                                                autoFocus
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={handleAddTipo}
-                                                className="shrink-0 px-3 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors shadow-sm"
-                                                title="Salvar Novo Tipo"
-                                            >
-                                                <span className="material-symbols-outlined text-lg">check</span>
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => { setIsAddingTipo(false); setNewTipo(''); }}
-                                                className="shrink-0 px-3 flex items-center justify-center bg-red-100 hover:bg-red-200 text-red-600 dark:bg-red-900/30 dark:hover:bg-red-800/50 dark:text-red-400 rounded-lg transition-colors border border-red-200 dark:border-red-800/30"
-                                                title="Cancelar"
-                                            >
-                                                <span className="material-symbols-outlined text-lg">close</span>
-                                            </button>
+                                        <div>
+                                            <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                                                {isNew ? 'Novo Afastamento' : 'Editar Registro'}
+                                            </h3>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Controle de Fluxo</p>
                                         </div>
-                                    )}
+                                    </div>
+                                    <button onClick={() => setIsEditModalOpen(false)} className="size-10 rounded-2xl flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                        <span className="material-symbols-outlined">close</span>
+                                    </button>
                                 </div>
 
-                                <div className="flex flex-col gap-3">
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                        Períodos (Máx: 3)
-                                    </label>
-                                    {formData.periodos.map((periodo, index) => (
-                                        <div key={index} className="grid grid-cols-2 gap-4 p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg border border-slate-100 dark:border-slate-700 relative group">
-                                            <div>
-                                                <label className="block text-xs text-slate-500 mb-1">Início {index + 1}</label>
-                                                <input
-                                                    type="date"
+                                <form onSubmit={handleSave} className="space-y-6">
+                                    {isNew && (
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 ml-2">Servidor Beneficiário</label>
+                                            <div className="relative group">
+                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 group-focus-within:text-primary transition-colors">person</span>
+                                                <select
                                                     required
-                                                    value={periodo.inicio}
-                                                    onChange={(e) => updatePeriodo(index, 'inicio', e.target.value)}
-                                                    className="form-input w-full text-sm"
-                                                />
+                                                    value={formData.servidorId}
+                                                    onChange={(e) => setFormData({ ...formData, servidorId: e.target.value })}
+                                                    className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-[2rem] outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-semibold appearance-none cursor-pointer"
+                                                >
+                                                    <option value="">Selecione um servidor na rede...</option>
+                                                    {servidores.map(s => (
+                                                        <option key={s.IDPK_SERV} value={s.IDPK_SERV}>{s.NOME_SERV}</option>
+                                                    ))}
+                                                </select>
                                             </div>
-                                            <div>
-                                                <label className="block text-xs text-slate-500 mb-1">Fim {index + 1}</label>
-                                                <input
-                                                    type="date"
-                                                    required
-                                                    value={periodo.fim}
-                                                    onChange={(e) => updatePeriodo(index, 'fim', e.target.value)}
-                                                    className="form-input w-full text-sm"
-                                                />
-                                            </div>
-                                            {index > 0 && isNew && (
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 ml-2">Tipo de Afastamento</label>
+                                        {!isAddingTipo ? (
+                                            <div className="flex gap-2 relative group">
+                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 group-focus-within:text-primary transition-colors z-10">category</span>
+                                                <select
+                                                    value={formData.tipo}
+                                                    onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+                                                    className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-[2rem] outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-semibold appearance-none cursor-pointer"
+                                                >
+                                                    {tiposAfastamento.length > 0 ? (
+                                                        tiposAfastamento.map(t => (
+                                                            <option key={t._id} value={t.nome}>{t.nome}</option>
+                                                        ))
+                                                    ) : (
+                                                        <option value="Licença Médica">Licença Médica</option>
+                                                    )}
+                                                </select>
                                                 <button
                                                     type="button"
-                                                    onClick={() => removePeriodo(index)}
-                                                    className="absolute -top-2 -right-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full p-1 shadow-sm transition-colors"
-                                                    title="Remover período"
+                                                    onClick={() => setIsAddingTipo(true)}
+                                                    className="shrink-0 size-[52px] flex items-center justify-center glass dark:glass-dark text-primary rounded-2xl hover:scale-110 active:scale-95 transition-all border border-primary/20"
+                                                    title="Adicionar Novo Tipo"
                                                 >
-                                                    <span className="material-symbols-outlined text-[16px]">close</span>
+                                                    <span className="material-symbols-outlined font-black">add</span>
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={newTipo}
+                                                    onChange={(e) => setNewTipo(e.target.value)}
+                                                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTipo())}
+                                                    placeholder="Digite o novo tipo..."
+                                                    className="flex-1 px-6 py-4 bg-white dark:bg-slate-900 border border-primary/50 rounded-[2rem] outline-none ring-2 ring-primary/10 text-sm font-semibold"
+                                                    autoFocus
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={handleAddTipo}
+                                                    className="shrink-0 size-[52px] flex items-center justify-center bg-green-500 text-white rounded-2xl hover:scale-110 active:scale-95 transition-all shadow-lg shadow-green-500/20"
+                                                >
+                                                    <span className="material-symbols-outlined font-black">check</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => { setIsAddingTipo(false); setNewTipo(''); }}
+                                                    className="shrink-0 size-[52px] flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl hover:scale-110 active:scale-95 transition-all border border-slate-200 dark:border-slate-700"
+                                                >
+                                                    <span className="material-symbols-outlined font-black">close</span>
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between ml-2">
+                                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Períodos de Ausência</label>
+                                            {formData.periodos.length < 3 && isNew && (
+                                                <button
+                                                    type="button"
+                                                    onClick={addPeriodo}
+                                                    className="text-[10px] font-black text-primary uppercase tracking-[0.1em] hover:underline"
+                                                >
+                                                    + Adicionar Período
                                                 </button>
                                             )}
                                         </div>
-                                    ))}
-                                    {formData.periodos.length < 3 && isNew && (
+
+                                        <div className="space-y-3">
+                                            {formData.periodos.map((periodo, index) => (
+                                                <div key={index} className="grid grid-cols-2 gap-4 p-5 bg-slate-50/50 dark:bg-slate-900/50 rounded-[2rem] border border-slate-100 dark:border-slate-800 relative animate-fade-in">
+                                                    <div className="space-y-1">
+                                                        <label className="text-[10px] font-bold text-slate-400 ml-2">Início</label>
+                                                        <input
+                                                            type="date"
+                                                            required
+                                                            value={periodo.inicio}
+                                                            onChange={(e) => updatePeriodo(index, 'inicio', e.target.value)}
+                                                            className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[1.5rem] outline-none focus:ring-2 focus:ring-primary/20 text-sm font-semibold transition-all"
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <label className="text-[10px] font-bold text-slate-400 ml-2">Fim</label>
+                                                        <input
+                                                            type="date"
+                                                            required
+                                                            value={periodo.fim}
+                                                            onChange={(e) => updatePeriodo(index, 'fim', e.target.value)}
+                                                            className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[1.5rem] outline-none focus:ring-2 focus:ring-primary/20 text-sm font-semibold transition-all"
+                                                        />
+                                                    </div>
+                                                    {index > 0 && isNew && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removePeriodo(index)}
+                                                            className="absolute -top-2 -right-2 size-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all"
+                                                        >
+                                                            <span className="material-symbols-outlined text-[16px] font-black">close</span>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 ml-2">Observações Detalhadas</label>
+                                        <textarea
+                                            rows="3"
+                                            value={formData.obs}
+                                            onChange={(e) => setFormData({ ...formData, obs: e.target.value })}
+                                            placeholder="Detalhes relevantes sobre o afastamento..."
+                                            className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-[2rem] outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-semibold resize-none"
+                                        ></textarea>
+                                    </div>
+
+                                    {!isNew && (
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 ml-2">Status da Solicitação</label>
+                                            <select
+                                                value={formData.status}
+                                                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                                                className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-[2rem] outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-black appearance-none cursor-pointer text-primary"
+                                            >
+                                                <option value="Pendente">🕒 Pendente de Análise</option>
+                                                <option value="Aprovado">✅ Homologado / Aprovado</option>
+                                                <option value="Rejeitado">❌ Não Autorizado / Negado</option>
+                                            </select>
+                                        </div>
+                                    )}
+
+                                    <div className="flex gap-3 pt-4">
                                         <button
                                             type="button"
-                                            onClick={addPeriodo}
-                                            className="self-start text-xs flex items-center gap-1 text-primary hover:text-blue-700 font-medium px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                                            onClick={() => setIsEditModalOpen(false)}
+                                            className="flex-1 px-8 py-4 px-8 py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-[2rem] font-black text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95"
                                         >
-                                            <span className="material-symbols-outlined text-[16px]">add</span>
-                                            Adicionar Período
+                                            CANCELAR
                                         </button>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Observação</label>
-                                    <textarea
-                                        rows="3"
-                                        value={formData.obs}
-                                        onChange={(e) => setFormData({ ...formData, obs: e.target.value })}
-                                        className="form-input w-full"
-                                    ></textarea>
-                                </div>
-
-                                {!isNew && (
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label>
-                                        <select
-                                            value={formData.status}
-                                            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                            className="form-select w-full"
+                                        <button
+                                            type="submit"
+                                            className="flex-[2] px-8 py-4 bg-primary text-white rounded-[2rem] font-black text-sm shadow-xl shadow-primary/20 hover:bg-blue-600 transition-all active:scale-95 flex items-center justify-center gap-2"
                                         >
-                                            <option value="Pendente">Pendente</option>
-                                            <option value="Aprovado">Aprovado</option>
-                                            <option value="Rejeitado">Rejeitado</option>
-                                        </select>
+                                            {isNew ? 'REGISTRAR AGORA' : 'SALVAR ALTERAÇÕES'}
+                                            <span className="material-symbols-outlined">send</span>
+                                        </button>
                                     </div>
-                                )}
-
-                                <div className="flex justify-end gap-2 pt-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsEditModalOpen(false)}
-                                        className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800"
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="px-4 py-2 text-sm font-bold text-white bg-primary rounded-lg hover:bg-blue-600"
-                                    >
-                                        Salvar
-                                    </button>
-                                </div>
-                            </form>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -695,48 +692,73 @@ const Afastamentos = () => {
             {/* View Modal */}
             {isViewModalOpen && viewData && (
                 <div className="fixed inset-0 z-50 overflow-y-auto">
-                    <div className="flex items-center justify-center min-h-screen px-4">
-                        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsViewModalOpen(false)}></div>
-                        <div ref={viewModalRef} className="relative bg-white dark:bg-surface-dark rounded-xl shadow-2xl w-full max-w-lg p-6 border border-slate-200 dark:border-slate-700">
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Detalhes do Afastamento</h3>
-                            <div className="space-y-4 text-sm">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <span className="block text-xs font-medium text-slate-500 dark:text-slate-400">Servidor</span>
-                                        <span className="block font-medium text-slate-900 dark:text-white mt-1">{viewData.servidor?.NOME_SERV || 'Desconhecido'}</span>
-                                    </div>
-                                    <div>
-                                        <span className="block text-xs font-medium text-slate-500 dark:text-slate-400">Tipo</span>
-                                        <span className="block font-medium text-slate-900 dark:text-white mt-1">{viewData.ASSUNTO_SIT}</span>
-                                    </div>
-                                    <div>
-                                        <span className="block text-xs font-medium text-slate-500 dark:text-slate-400">Início</span>
-                                        <span className="block font-medium text-slate-900 dark:text-white mt-1">{formatDateUTC(viewData.INICIO_FERIAS_SIT)}</span>
-                                    </div>
-                                    <div>
-                                        <span className="block text-xs font-medium text-slate-500 dark:text-slate-400">Fim</span>
-                                        <span className="block font-medium text-slate-900 dark:text-white mt-1">{formatDateUTC(viewData.FIM_FERIAS_SIT)}</span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <span className="block text-xs font-medium text-slate-500 dark:text-slate-400">Observação</span>
-                                    <p className="mt-1 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg">
-                                        {viewData.OBS_SIT || '-'}
-                                    </p>
-                                </div>
-                                <div>
-                                    <span className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Status</span>
-                                    {getStatusBadge(viewData.STATUS_SIT)}
-                                </div>
+                    <div className="flex items-center justify-center min-h-screen px-4 py-12">
+                        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={() => setIsViewModalOpen(false)}></div>
+                        <div ref={viewModalRef} className="relative glass dark:glass-dark rounded-[2.5rem] shadow-2xl w-full max-w-xl p-10 border border-white/20 dark:border-white/5 overflow-hidden">
+                            {/* Decorative Elements */}
+                            <div className="absolute top-0 right-0 p-8 text-primary opacity-10">
+                                <span className="material-symbols-outlined text-[120px]">assignment_turned_in</span>
                             </div>
-                            <div className="flex justify-end pt-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsViewModalOpen(false)}
-                                    className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800"
-                                >
-                                    Fechar
-                                </button>
+
+                            <div className="relative">
+                                <div className="flex items-center gap-4 mb-10">
+                                    <div className="size-16 rounded-[2rem] bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-inner">
+                                        <span className="material-symbols-outlined text-4xl">text_snippet</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none">Dossiê do Afastamento</h3>
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.3em] mt-2">SYS RH SEPLAN • 2026</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-8">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                                        <div className="space-y-1">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Servidor</span>
+                                            <p className="text-lg font-bold text-slate-900 dark:text-white">{viewData.servidor?.NOME_SERV || 'Desconhecido'}</p>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipo Legal</span>
+                                            <p className="text-lg font-bold text-primary">{viewData.ASSUNTO_SIT}</p>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Início do Período</span>
+                                            <div className="flex items-center gap-2 text-lg font-black text-slate-900 dark:text-white">
+                                                <span className="material-symbols-outlined text-green-500">event</span>
+                                                {formatDateUTC(viewData.INICIO_FERIAS_SIT)}
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Término do Período</span>
+                                            <div className="flex items-center gap-2 text-lg font-black text-slate-900 dark:text-white">
+                                                <span className="material-symbols-outlined text-red-500">event_busy</span>
+                                                {formatDateUTC(viewData.FIM_FERIAS_SIT)}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Informações Adicionais</span>
+                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-medium leading-relaxed italic shadow-inner">
+                                            "{viewData.OBS_SIT || 'Sem observações registradas para este afastamento.'}"
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Status Atual</span>
+                                        {getStatusBadge(viewData.STATUS_SIT)}
+                                    </div>
+                                </div>
+
+                                <div className="mt-12 flex justify-center">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsViewModalOpen(false)}
+                                        className="px-12 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[2rem] font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-2xl"
+                                    >
+                                        FECHAR RELATÓRIO
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -494,16 +494,17 @@
                 document.getElementById('stats-pendencias').innerText = stats.pendencias;
                 document.getElementById('stats-ferias').innerText = stats.ferias;
 
+                const v = stats.vinculos || { efetivos: 0, comissionados: 0, contratados: 0, outros: 0 };
                 // Vínculos
-                document.getElementById('count-efetivos').innerText = stats.vinculos.efetivos;
-                document.getElementById('count-comissionados').innerText = stats.vinculos.comissionados;
-                document.getElementById('count-contratados').innerText = stats.vinculos.contratados;
+                document.getElementById('count-efetivos').innerText = v.efetivos || 0;
+                document.getElementById('count-comissionados').innerText = v.comissionados || 0;
+                document.getElementById('count-contratados').innerText = v.contratados || 0;
 
-                const total = stats.vinculos.efetivos + stats.vinculos.comissionados + stats.vinculos.contratados + (stats.vinculos.outros || 0);
+                const total = (v.efetivos || 0) + (v.comissionados || 0) + (v.contratados || 0) + (v.outros || 0);
 
-                const pEfetivos = total ? (stats.vinculos.efetivos / total) * 100 : 0;
-                const pComissionados = total ? (stats.vinculos.comissionados / total) * 100 : 0;
-                const pContratados = total ? (stats.vinculos.contratados / total) * 100 : 0;
+                const pEfetivos = total ? ((v.efetivos || 0) / total) * 100 : 0;
+                const pComissionados = total ? ((v.comissionados || 0) / total) * 100 : 0;
+                const pContratados = total ? ((v.contratados || 0) / total) * 100 : 0;
 
                 // Animate Bars
                 // Small timeout to Ensure DOM transition triggers if loaded very fast

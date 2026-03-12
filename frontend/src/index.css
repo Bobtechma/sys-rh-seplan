@@ -3,16 +3,39 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-primary: #0d7ff2;
+  --color-primary: oklch(0.61 0.22 254.43);
+  /* Refined Vibrant Blue */
+  --color-primary-hover: oklch(0.55 0.22 254.43);
   --color-primary-content: #ffffff;
-  --color-background-light: #ffffff;
-  --color-background-dark: #101922;
+
+  --color-background-light: oklch(0.98 0.01 254);
+  --color-background-dark: oklch(0.14 0.02 254);
+
   --color-surface-light: #ffffff;
-  --color-surface-dark: #1e2936;
-  --color-border-light: #e7edf4;
-  --color-border-dark: #2d3b4e;
-  --font-display: "Public Sans", "Noto Sans", sans-serif;
+  --color-surface-dark: oklch(0.2 0.03 254);
+
+  --color-border-light: oklch(0.92 0.01 254);
+  --color-border-dark: oklch(0.25 0.03 254);
+
+  --color-accent: oklch(0.84 0.16 90.17);
+  /* Golden accent for "premium" feel */
+
+  --font-display: "Outfit", "Public Sans", sans-serif;
   --font-body: "Public Sans", "Noto Sans", sans-serif;
+
+  --shadow-premium: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-bg-dark: rgba(30, 41, 54, 0.7);
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-premium;
+  }
+
+  .glass-dark {
+    @apply bg-surface-dark/70 backdrop-blur-md border border-white/10 shadow-premium;
+  }
 }
 
 @layer base {

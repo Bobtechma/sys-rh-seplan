@@ -16,112 +16,15 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'x-auth-token', 'Authorization']
 }));
 
-// Debug Auth Route - To verify what the server sees
-app.get('/api/debug-auth', (req, res) => {
-    const token = req.header('x-auth-token');
-    const jwt = require('jsonwebtoken');
-
-    if (!token) {
-        return res.json({ status: 'no_token_received', headers: req.headers });
-    }
-
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secrettoken');
-        return res.json({ status: 'valid', user: decoded.user });
-    } catch (err) {
-        return res.json({ status: 'invalid', error: err.message, token_snippet: token.substring(0, 10) + '...' });
-    }
-});
 
 // Health Check Route
 app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'ok', timestamp: new Date(), env: process.env.NODE_ENV });
 });
 
-// Diagnostics Route (To pinpoint 500 errors)
-app.get('/api/diagnose', async (req, res) => {
-    const mongoose = require('mongoose');
-    const diagnostics = {
-        timestamp: new Date(),
-        env: {
-            NODE_ENV: process.env.NODE_ENV,
-            MONGO_URI_CONFIGURED: !!process.env.MONGO_URI,
-        },
-        mongoose: {
-            readyState: require('mongoose').connection.readyState, // 0: disconnected, 1: connected, 2: connecting, 3: disconnecting
-            host: require('mongoose').connection.host
-        },
-        modules: {}
-    };
-
-    // Try requiring routes to see if they crash
-    try {
-        require('./routes/api');
-        diagnostics.modules.apiRoute = 'Loaded successfully';
-    } catch (e) {
-        diagnostics.modules.apiRoute = { error: e.message, stack: e.stack };
-    }
-
-    try {
-        require('./routes/auth');
-        diagnostics.modules.authRoute = 'Loaded successfully';
-    } catch (e) {
-        diagnostics.modules.authRoute = { error: e.message, stack: e.stack };
-    }
-
-    // Try basic DB ping
-    try {
-        if (mongoose.connection.readyState === 1) {
-            const admin = new mongoose.mongo.Admin(mongoose.connection.db);
-            const pingResult = await admin.ping();
-            diagnostics.mongoose.ping = pingResult;
-        } else {
-            diagnostics.mongoose.ping = 'Skipped (Not Connected)';
-        }
-    } catch (e) {
-        diagnostics.mongoose.ping = { error: e.message };
-    }
-
-    res.json(diagnostics);
-});
 
 
 
-// Debug Files Route
-app.get('/api/debug-files', (req, res) => {
-    const fs = require('fs');
-    const path = require('path');
-
-    const listDir = (dir, depth = 0) => {
-        if (depth > 3) return ['(max depth allowed)'];
-        try {
-            const files = fs.readdirSync(dir);
-            const result = [];
-            for (const file of files) {
-                if (file === 'node_modules') {
-                    result.push('node_modules/');
-                    continue;
-                }
-                const fullPath = path.join(dir, file);
-                const stats = fs.statSync(fullPath);
-                if (stats.isDirectory()) {
-                    result.push({ [file]: listDir(fullPath, depth + 1) });
-                } else {
-                    result.push(file);
-                }
-            }
-            return result;
-        } catch (e) {
-            return `[Error: ${e.message}]`;
-        }
-    };
-
-    res.json({
-        cwd: process.cwd(),
-        dirname: __dirname,
-        files: listDir(process.cwd())
-    });
-});
 
 // Force UTF-8 for all responses
 app.use((req, res, next) => {
@@ -171,9 +74,13 @@ try {
 }
 
 try {
-    app.use('/api', require('./routes/api'));
+    app.use('/api', require('./routes/servidores'));
+    app.use('/api', require('./routes/ferias'));
+    app.use('/api', require('./routes/afastamentos'));
+    app.use('/api', require('./routes/dashboard'));
+    app.use('/api', require('./routes/utils'));
 } catch (error) {
-    console.error('CRITICAL ERROR: Failed to load API routes:', error);
+    console.error('CRITICAL ERROR: Failed to load modular API routes:', error);
     app.use('/api', (req, res, next) => {
         if (req.path === '/debug-status') return next();
         res.status(500).json({ error: 'API routes failed to load', details: error.message });

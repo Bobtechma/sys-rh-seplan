@@ -11,7 +11,11 @@ const ProtectedRoute = () => {
 
     try {
         // Simple client-side token expiry check
-        const base64Url = token.split('.')[1];
+        const parts = token.split('.');
+        if (parts.length < 2) {
+            throw new Error('Malformed token: missing payload');
+        }
+        const base64Url = parts[1];
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
         const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
             return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
